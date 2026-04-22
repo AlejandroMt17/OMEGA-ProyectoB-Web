@@ -1,0 +1,4 @@
+/* Estilos globales para vistas Blade (Tailwind). La app Flutter tiene su propio tema. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
