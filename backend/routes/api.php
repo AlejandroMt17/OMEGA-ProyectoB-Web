@@ -1,5 +1,11 @@
 <?php
 
+use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
 
-// Rutas API del Sistema de Control de Asistencias
+/*
+ * Rutas API REST — Sistema de Control de Asistencias
+ * Prefijo automático: /api
+ */
+
+Route::apiResource('usuarios', UsuarioController::class);
