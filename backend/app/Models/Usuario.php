@@ -4,14 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 /**
  * Modelo Eloquent — tabla: usuarios
  * Roles: 1 = Docente, 2 = Alumno
  */
-class Usuario extends Model
+class Usuario extends Authenticatable
 {
-    use HasFactory;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $table = 'usuarios';
     protected $primaryKey = 'id_usuario';
@@ -32,7 +35,7 @@ class Usuario extends Model
     protected function casts(): array
     {
         return [
-            'rol' => 'integer',
+            'rol'         => 'integer',
             'contrasenia' => 'hashed',
         ];
     }
