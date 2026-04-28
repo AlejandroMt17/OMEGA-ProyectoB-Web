@@ -7,6 +7,7 @@ use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\InstitucionController;
 use App\Http\Controllers\RubroEvaluacionController;
 use App\Http\Controllers\SesionController;
+use App\Http\Controllers\SuscripcionController;
 use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
 
@@ -53,8 +54,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('grupos/{grupo}/codigo-inv', [GrupoController::class, 'generarCodigo']);
 
     // Alumnos en grupos
-    Route::get('grupos/{idGrupo}/alumnos',   [GrupoAlumnoController::class, 'index']);
-    Route::post('grupos/matricular',         [GrupoAlumnoController::class, 'matricular']);
+    Route::get('grupos/{idGrupo}/alumnos',       [GrupoAlumnoController::class, 'index']);
+    Route::post('grupos/matricular',             [GrupoAlumnoController::class, 'matricular']);
     Route::delete('grupo-alumnos/{grupoAlumno}', [GrupoAlumnoController::class, 'destroy']);
 
     // Sesiones
@@ -67,4 +68,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('asistencias/registrar',          [AsistenciaController::class, 'registrar']);
     Route::get('sesiones/{idSesion}/asistencias', [AsistenciaController::class, 'porSesion']);
     Route::put('asistencias/{asistencia}/estado', [AsistenciaController::class, 'editarEstado']);
+
+    // Suscripciones
+    Route::get('suscripcion',         [SuscripcionController::class, 'show']);
+    Route::post('suscripcion/basico', [SuscripcionController::class, 'activarBasico']);
 });
