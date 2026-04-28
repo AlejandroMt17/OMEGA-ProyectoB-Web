@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\InstitucionController;
@@ -43,9 +44,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('grupos/{grupo}',          [GrupoController::class, 'destroy']);
     Route::post('grupos/{grupo}/codigo-inv', [GrupoController::class, 'generarCodigo']);
 
-    // Sesiones (anidadas bajo grupos)
-    Route::get('grupos/{idGrupo}/sesiones',         [SesionController::class, 'index']);
-    Route::post('grupos/{idGrupo}/sesiones/abrir',  [SesionController::class, 'abrir']);
-    Route::get('sesiones/{sesion}',                 [SesionController::class, 'show']);
-    Route::post('sesiones/{sesion}/cerrar',         [SesionController::class, 'cerrar']);
+    // Sesiones
+    Route::get('grupos/{idGrupo}/sesiones',       [SesionController::class, 'index']);
+    Route::post('grupos/{idGrupo}/sesiones/abrir', [SesionController::class, 'abrir']);
+    Route::get('sesiones/{sesion}',               [SesionController::class, 'show']);
+    Route::post('sesiones/{sesion}/cerrar',        [SesionController::class, 'cerrar']);
+
+    // Asistencias
+    Route::post('asistencias/registrar',              [AsistenciaController::class, 'registrar']);
+    Route::get('sesiones/{idSesion}/asistencias',     [AsistenciaController::class, 'porSesion']);
+    Route::put('asistencias/{asistencia}/estado',     [AsistenciaController::class, 'editarEstado']);
 });

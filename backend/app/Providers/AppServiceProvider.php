@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
+use App\Repositories\Contracts\AsistenciaRepositoryInterface;
 use App\Repositories\Contracts\GrupoRepositoryInterface;
 use App\Repositories\Contracts\InstitucionRepositoryInterface;
 use App\Repositories\Contracts\SesionRepositoryInterface;
 use App\Repositories\Contracts\UsuarioRepositoryInterface;
+use App\Repositories\AsistenciaRepository;
 use App\Repositories\GrupoRepository;
 use App\Repositories\InstitucionRepository;
 use App\Repositories\SesionRepository;
@@ -20,6 +22,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(InstitucionRepositoryInterface::class, InstitucionRepository::class);
         $this->app->bind(GrupoRepositoryInterface::class, GrupoRepository::class);
         $this->app->bind(SesionRepositoryInterface::class, SesionRepository::class);
+        $this->app->bind(AsistenciaRepositoryInterface::class, AsistenciaRepository::class);
     }
 
     public function boot(): void
