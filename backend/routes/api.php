@@ -4,6 +4,7 @@ use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\InstitucionController;
+use App\Http\Controllers\RubroEvaluacionController;
 use App\Http\Controllers\SesionController;
 use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
@@ -36,6 +37,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('instituciones/{institucion}',    [InstitucionController::class, 'update']);
     Route::delete('instituciones/{institucion}', [InstitucionController::class, 'destroy']);
 
+    // Rubros de Evaluación
+    Route::get('instituciones/{idInstitucion}/rubros',         [RubroEvaluacionController::class, 'index']);
+    Route::post('instituciones/{idInstitucion}/rubros',        [RubroEvaluacionController::class, 'store']);
+    Route::put('rubros/{rubroEvaluacion}',                     [RubroEvaluacionController::class, 'update']);
+    Route::delete('rubros/{rubroEvaluacion}',                  [RubroEvaluacionController::class, 'destroy']);
+
     // Grupos
     Route::get('grupos',                     [GrupoController::class, 'index']);
     Route::post('grupos',                    [GrupoController::class, 'store']);
@@ -45,13 +52,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('grupos/{grupo}/codigo-inv', [GrupoController::class, 'generarCodigo']);
 
     // Sesiones
-    Route::get('grupos/{idGrupo}/sesiones',       [SesionController::class, 'index']);
+    Route::get('grupos/{idGrupo}/sesiones',        [SesionController::class, 'index']);
     Route::post('grupos/{idGrupo}/sesiones/abrir', [SesionController::class, 'abrir']);
-    Route::get('sesiones/{sesion}',               [SesionController::class, 'show']);
+    Route::get('sesiones/{sesion}',                [SesionController::class, 'show']);
     Route::post('sesiones/{sesion}/cerrar',        [SesionController::class, 'cerrar']);
 
     // Asistencias
-    Route::post('asistencias/registrar',              [AsistenciaController::class, 'registrar']);
-    Route::get('sesiones/{idSesion}/asistencias',     [AsistenciaController::class, 'porSesion']);
-    Route::put('asistencias/{asistencia}/estado',     [AsistenciaController::class, 'editarEstado']);
+    Route::post('asistencias/registrar',          [AsistenciaController::class, 'registrar']);
+    Route::get('sesiones/{idSesion}/asistencias', [AsistenciaController::class, 'porSesion']);
+    Route::put('asistencias/{asistencia}/estado', [AsistenciaController::class, 'editarEstado']);
 });
