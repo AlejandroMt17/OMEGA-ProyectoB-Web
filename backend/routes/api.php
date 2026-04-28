@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GrupoAlumnoController;
 use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\InstitucionController;
+use App\Http\Controllers\PagoController;
 use App\Http\Controllers\RubroEvaluacionController;
 use App\Http\Controllers\SesionController;
 use App\Http\Controllers\SuscripcionController;
@@ -72,4 +73,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Suscripciones
     Route::get('suscripcion',         [SuscripcionController::class, 'show']);
     Route::post('suscripcion/basico', [SuscripcionController::class, 'activarBasico']);
+
+    // Pagos PayPal
+    Route::post('pagos/crear-orden',   [PagoController::class, 'crearOrden']);
+    Route::post('pagos/capturar',      [PagoController::class, 'capturarPago']);
+    Route::get('pagos/historial',      [PagoController::class, 'historial']);
 });

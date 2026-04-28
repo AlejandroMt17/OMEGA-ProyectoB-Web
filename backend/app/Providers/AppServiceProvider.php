@@ -6,6 +6,7 @@ use App\Repositories\Contracts\AsistenciaRepositoryInterface;
 use App\Repositories\Contracts\GrupoAlumnoRepositoryInterface;
 use App\Repositories\Contracts\GrupoRepositoryInterface;
 use App\Repositories\Contracts\InstitucionRepositoryInterface;
+use App\Repositories\Contracts\PagoRepositoryInterface;
 use App\Repositories\Contracts\RubroEvaluacionRepositoryInterface;
 use App\Repositories\Contracts\SesionRepositoryInterface;
 use App\Repositories\Contracts\SuscripcionRepositoryInterface;
@@ -14,6 +15,7 @@ use App\Repositories\AsistenciaRepository;
 use App\Repositories\GrupoAlumnoRepository;
 use App\Repositories\GrupoRepository;
 use App\Repositories\InstitucionRepository;
+use App\Repositories\PagoRepository;
 use App\Repositories\RubroEvaluacionRepository;
 use App\Repositories\SesionRepository;
 use App\Repositories\SuscripcionRepository;
@@ -32,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(RubroEvaluacionRepositoryInterface::class, RubroEvaluacionRepository::class);
         $this->app->bind(GrupoAlumnoRepositoryInterface::class, GrupoAlumnoRepository::class);
         $this->app->bind(SuscripcionRepositoryInterface::class, SuscripcionRepository::class);
+        $this->app->bind(PagoRepositoryInterface::class, PagoRepository::class);
     }
 
     public function boot(): void
