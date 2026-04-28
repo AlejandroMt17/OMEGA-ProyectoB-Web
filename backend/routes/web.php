@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\Web\AuthWebController;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\Web\DashboardController;
 /*
  * Rutas Web — Sistema de Control de Asistencias
  * Prefijo: /p/ca
@@ -27,9 +27,7 @@ Route::prefix('p/ca')->group(function () {
         Route::post('logout', [AuthWebController::class, 'logout'])->name('ca.logout');
 
         // Dashboard
-        Route::get('dashboard', function () {
-            return view('modules.dashboard.index');
-        })->name('ca.dashboard.index');
+        Route::get('dashboard', [DashboardController::class, 'index'])->name('ca.dashboard.index');
 
         // Instituciones
         Route::get('instituciones', function () {
