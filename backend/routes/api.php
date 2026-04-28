@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\InstitucionController;
+use App\Http\Controllers\SesionController;
 use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
 
@@ -35,10 +36,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('instituciones/{institucion}', [InstitucionController::class, 'destroy']);
 
     // Grupos
-    Route::get('grupos',                        [GrupoController::class, 'index']);
-    Route::post('grupos',                       [GrupoController::class, 'store']);
-    Route::get('grupos/{grupo}',                [GrupoController::class, 'show']);
-    Route::put('grupos/{grupo}',                [GrupoController::class, 'update']);
-    Route::delete('grupos/{grupo}',             [GrupoController::class, 'destroy']);
-    Route::post('grupos/{grupo}/codigo-inv',    [GrupoController::class, 'generarCodigo']);
+    Route::get('grupos',                     [GrupoController::class, 'index']);
+    Route::post('grupos',                    [GrupoController::class, 'store']);
+    Route::get('grupos/{grupo}',             [GrupoController::class, 'show']);
+    Route::put('grupos/{grupo}',             [GrupoController::class, 'update']);
+    Route::delete('grupos/{grupo}',          [GrupoController::class, 'destroy']);
+    Route::post('grupos/{grupo}/codigo-inv', [GrupoController::class, 'generarCodigo']);
+
+    // Sesiones (anidadas bajo grupos)
+    Route::get('grupos/{idGrupo}/sesiones',         [SesionController::class, 'index']);
+    Route::post('grupos/{idGrupo}/sesiones/abrir',  [SesionController::class, 'abrir']);
+    Route::get('sesiones/{sesion}',                 [SesionController::class, 'show']);
+    Route::post('sesiones/{sesion}/cerrar',         [SesionController::class, 'cerrar']);
 });
