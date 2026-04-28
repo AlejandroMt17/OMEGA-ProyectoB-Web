@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GrupoAlumnoController;
 use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\InstitucionController;
 use App\Http\Controllers\RubroEvaluacionController;
@@ -38,10 +39,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('instituciones/{institucion}', [InstitucionController::class, 'destroy']);
 
     // Rubros de Evaluación
-    Route::get('instituciones/{idInstitucion}/rubros',         [RubroEvaluacionController::class, 'index']);
-    Route::post('instituciones/{idInstitucion}/rubros',        [RubroEvaluacionController::class, 'store']);
-    Route::put('rubros/{rubroEvaluacion}',                     [RubroEvaluacionController::class, 'update']);
-    Route::delete('rubros/{rubroEvaluacion}',                  [RubroEvaluacionController::class, 'destroy']);
+    Route::get('instituciones/{idInstitucion}/rubros',  [RubroEvaluacionController::class, 'index']);
+    Route::post('instituciones/{idInstitucion}/rubros', [RubroEvaluacionController::class, 'store']);
+    Route::put('rubros/{rubroEvaluacion}',              [RubroEvaluacionController::class, 'update']);
+    Route::delete('rubros/{rubroEvaluacion}',           [RubroEvaluacionController::class, 'destroy']);
 
     // Grupos
     Route::get('grupos',                     [GrupoController::class, 'index']);
@@ -50,6 +51,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('grupos/{grupo}',             [GrupoController::class, 'update']);
     Route::delete('grupos/{grupo}',          [GrupoController::class, 'destroy']);
     Route::post('grupos/{grupo}/codigo-inv', [GrupoController::class, 'generarCodigo']);
+
+    // Alumnos en grupos
+    Route::get('grupos/{idGrupo}/alumnos',   [GrupoAlumnoController::class, 'index']);
+    Route::post('grupos/matricular',         [GrupoAlumnoController::class, 'matricular']);
+    Route::delete('grupo-alumnos/{grupoAlumno}', [GrupoAlumnoController::class, 'destroy']);
 
     // Sesiones
     Route::get('grupos/{idGrupo}/sesiones',        [SesionController::class, 'index']);
