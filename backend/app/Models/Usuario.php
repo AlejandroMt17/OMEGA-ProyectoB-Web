@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -31,6 +30,12 @@ class Usuario extends Authenticatable
     protected $hidden = [
         'contrasenia',
     ];
+
+    // Alias para que Laravel Auth use 'contrasenia' como 'password'
+    public function getAuthPassword(): string
+    {
+        return $this->contrasenia;
+    }
 
     protected function casts(): array
     {
