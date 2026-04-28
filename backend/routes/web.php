@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Web\AuthWebController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\InstitucionWebController;
+use Illuminate\Support\Facades\Route;
+
 /*
  * Rutas Web — Sistema de Control de Asistencias
  * Prefijo: /p/ca
@@ -30,9 +32,12 @@ Route::prefix('p/ca')->group(function () {
         Route::get('dashboard', [DashboardController::class, 'index'])->name('ca.dashboard.index');
 
         // Instituciones
-        Route::get('instituciones', function () {
-            return view('modules.instituciones.index');
-        })->name('ca.instituciones.index');
+        Route::get('instituciones',                        [InstitucionWebController::class, 'index'])->name('ca.instituciones.index');
+        Route::get('instituciones/crear',                  [InstitucionWebController::class, 'create'])->name('ca.instituciones.create');
+        Route::post('instituciones',                       [InstitucionWebController::class, 'store'])->name('ca.instituciones.store');
+        Route::get('instituciones/{institucion}/editar',   [InstitucionWebController::class, 'edit'])->name('ca.instituciones.edit');
+        Route::put('instituciones/{institucion}',          [InstitucionWebController::class, 'update'])->name('ca.instituciones.update');
+        Route::delete('instituciones/{institucion}',       [InstitucionWebController::class, 'destroy'])->name('ca.instituciones.destroy');
 
         // Grupos
         Route::get('grupos', function () {
