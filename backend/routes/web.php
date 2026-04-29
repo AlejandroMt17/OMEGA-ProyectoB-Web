@@ -4,6 +4,7 @@ use App\Http\Controllers\Web\AuthWebController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\GrupoWebController;
 use App\Http\Controllers\Web\InstitucionWebController;
+use App\Http\Controllers\Web\JustificanteWebController;
 use App\Http\Controllers\Web\SesionWebController;
 use Illuminate\Support\Facades\Route;
 
@@ -57,9 +58,9 @@ Route::prefix('p/ca')->group(function () {
         Route::get('sesiones/{sesion}/asistencias',    [SesionWebController::class, 'asistencias'])->name('ca.sesiones.asistencias');
 
         // Justificantes
-        Route::get('justificantes', function () {
-            return view('modules.justificantes.index');
-        })->name('ca.justificantes.index');
+        Route::get('justificantes',                              [JustificanteWebController::class, 'index'])->name('ca.justificantes.index');
+        Route::post('justificantes/{asistencia}/justificar',     [JustificanteWebController::class, 'justificar'])->name('ca.justificantes.justificar');
+        Route::post('justificantes/{asistencia}/marcar-ausente', [JustificanteWebController::class, 'marcarAusente'])->name('ca.justificantes.ausente');
 
         // Reportes
         Route::get('reportes', function () {
