@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Web\AuthWebController;
 use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\GrupoWebController;
 use App\Http\Controllers\Web\InstitucionWebController;
 use Illuminate\Support\Facades\Route;
 
@@ -40,9 +41,13 @@ Route::prefix('p/ca')->group(function () {
         Route::delete('instituciones/{institucion}',       [InstitucionWebController::class, 'destroy'])->name('ca.instituciones.destroy');
 
         // Grupos
-        Route::get('grupos', function () {
-            return view('modules.grupos.index');
-        })->name('ca.grupos.index');
+        Route::get('grupos',                           [GrupoWebController::class, 'index'])->name('ca.grupos.index');
+        Route::get('grupos/crear',                     [GrupoWebController::class, 'create'])->name('ca.grupos.create');
+        Route::post('grupos',                          [GrupoWebController::class, 'store'])->name('ca.grupos.store');
+        Route::get('grupos/{grupo}/editar',            [GrupoWebController::class, 'edit'])->name('ca.grupos.edit');
+        Route::put('grupos/{grupo}',                   [GrupoWebController::class, 'update'])->name('ca.grupos.update');
+        Route::delete('grupos/{grupo}',                [GrupoWebController::class, 'destroy'])->name('ca.grupos.destroy');
+        Route::post('grupos/{grupo}/codigo-inv',       [GrupoWebController::class, 'generarCodigo'])->name('ca.grupos.codigo-inv');
 
         // Justificantes
         Route::get('justificantes', function () {
