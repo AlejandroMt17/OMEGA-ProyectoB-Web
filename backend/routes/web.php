@@ -4,6 +4,7 @@ use App\Http\Controllers\Web\AuthWebController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\GrupoWebController;
 use App\Http\Controllers\Web\InstitucionWebController;
+use App\Http\Controllers\Web\SesionWebController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -48,6 +49,12 @@ Route::prefix('p/ca')->group(function () {
         Route::put('grupos/{grupo}',                   [GrupoWebController::class, 'update'])->name('ca.grupos.update');
         Route::delete('grupos/{grupo}',                [GrupoWebController::class, 'destroy'])->name('ca.grupos.destroy');
         Route::post('grupos/{grupo}/codigo-inv',       [GrupoWebController::class, 'generarCodigo'])->name('ca.grupos.codigo-inv');
+
+        // Sesiones
+        Route::get('grupos/{grupo}/sesiones',          [SesionWebController::class, 'index'])->name('ca.grupos.sesiones');
+        Route::post('grupos/{grupo}/sesiones/abrir',   [SesionWebController::class, 'abrir'])->name('ca.grupos.sesiones.abrir');
+        Route::post('sesiones/{sesion}/cerrar',        [SesionWebController::class, 'cerrar'])->name('ca.sesiones.cerrar');
+        Route::get('sesiones/{sesion}/asistencias',    [SesionWebController::class, 'asistencias'])->name('ca.sesiones.asistencias');
 
         // Justificantes
         Route::get('justificantes', function () {

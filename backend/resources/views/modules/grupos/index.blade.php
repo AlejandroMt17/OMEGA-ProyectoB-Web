@@ -67,6 +67,11 @@
                     </td>
                     <td class="px-5 py-4">
                         <div class="flex items-center justify-end gap-2">
+                            <a href="{{ route('ca.grupos.sesiones', $grupo->id_grupo) }}"
+                            class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-nile hover:bg-omg-nile-dark text-white rounded-lg text-xs font-body transition-colors">
+                                <i class="fa-solid fa-calendar-day"></i>
+                                Sesiones
+                            </a>
                             <a href="{{ route('ca.grupos.edit', $grupo->id_grupo) }}"
                                class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-pastel hover:bg-omg-nile hover:text-white text-omg-nile rounded-lg text-xs font-body transition-colors">
                                 <i class="fa-regular fa-pen-to-square"></i>
