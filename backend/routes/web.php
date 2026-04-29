@@ -8,8 +8,9 @@ use App\Http\Controllers\Web\JustificanteWebController;
 use App\Http\Controllers\Web\PerfilWebController;
 use App\Http\Controllers\Web\ReporteWebController;
 use App\Http\Controllers\Web\SesionWebController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Web\SuscripcionWebController;
 
+use Illuminate\Support\Facades\Route;
 /*
  * Rutas Web — Sistema de Control de Asistencias
  * Prefijo: /p/ca
@@ -73,9 +74,8 @@ Route::prefix('p/ca')->group(function () {
         Route::get('reportes',                [ReporteWebController::class, 'index'])->name('ca.reportes.index');
         Route::get('reportes/{idGrupo}',      [ReporteWebController::class, 'detalle'])->name('ca.reportes.detalle');
 
+
         // Suscripción
-        Route::get('suscripcion', function () {
-            return view('modules.suscripcion.index');
-        })->name('ca.suscripcion.index');
+        Route::get('suscripcion', [SuscripcionWebController::class, 'index'])->name('ca.suscripcion.index');
     });
 });
