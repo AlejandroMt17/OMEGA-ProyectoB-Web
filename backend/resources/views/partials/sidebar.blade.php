@@ -86,8 +86,9 @@
     {{-- Usuario y logout --}}
     @auth
     <div class="px-4 py-4 border-t border-omg-nile-light">
-        <div class="flex items-center gap-3 mb-3">
-            <div class="w-8 h-8 bg-omg-coral rounded-full flex items-center justify-center">
+        <a href="{{ route('ca.perfil.index') }}"
+        class="flex items-center gap-3 mb-3 px-3 py-2 rounded-lg hover:bg-omg-nile-dark transition-colors">
+            <div class="w-8 h-8 bg-omg-coral rounded-full flex items-center justify-center flex-shrink-0">
                 <span class="text-white text-xs font-semibold">
                     {{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}{{ strtoupper(substr(auth()->user()->ap_pat, 0, 1)) }}
                 </span>
@@ -98,7 +99,7 @@
                 </p>
                 <p class="text-omg-kashmir text-xs truncate">{{ auth()->user()->email }}</p>
             </div>
-        </div>
+        </a>
         <form method="POST" action="{{ route('ca.logout') }}">
             @csrf
             <button type="submit"

@@ -5,6 +5,7 @@ use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\GrupoWebController;
 use App\Http\Controllers\Web\InstitucionWebController;
 use App\Http\Controllers\Web\JustificanteWebController;
+use App\Http\Controllers\Web\PerfilWebController;
 use App\Http\Controllers\Web\ReporteWebController;
 use App\Http\Controllers\Web\SesionWebController;
 use Illuminate\Support\Facades\Route;
@@ -34,6 +35,11 @@ Route::prefix('p/ca')->group(function () {
 
         // Dashboard
         Route::get('dashboard', [DashboardController::class, 'index'])->name('ca.dashboard.index');
+
+        // Perfil
+        Route::get('perfil',                        [PerfilWebController::class, 'index'])->name('ca.perfil.index');
+        Route::put('perfil',                        [PerfilWebController::class, 'actualizar'])->name('ca.perfil.actualizar');
+        Route::put('perfil/contrasenia',            [PerfilWebController::class, 'cambiarContrasenia'])->name('ca.perfil.contrasenia');
 
         // Instituciones
         Route::get('instituciones',                        [InstitucionWebController::class, 'index'])->name('ca.instituciones.index');
