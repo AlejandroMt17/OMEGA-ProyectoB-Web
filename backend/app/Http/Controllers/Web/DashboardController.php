@@ -23,11 +23,11 @@ class DashboardController extends Controller
     {
         $docente = Auth::user();
 
-        // Aulas activas del docente
-        $aulasActivas = $this->grupos->todosPorDocente($docente->id_usuario)->count();
+        // Una sola query para evitar duplicados
+        $grupos      = $this->grupos->todosPorDocente($docente->id_usuario);
+        $aulasActivas = $grupos->count();
+        $gruposIds   = $grupos->pluck('id_grupo');
 
-        // Sesiones de hoy
-        $gruposIds = $this->grupos->todosPorDocente($docente->id_usuario)->pluck('id_grupo');
         $sesionesHoy = \App\Models\Sesion::query()
             ->whereIn('id_grupo', $gruposIds)
             ->whereDate('fec_sesion', today())
