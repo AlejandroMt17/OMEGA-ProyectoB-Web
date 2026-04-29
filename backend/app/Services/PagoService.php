@@ -46,6 +46,10 @@ class PagoService
                     ],
                     'description' => 'Plan Mensual - Control de Asistencias',
                 ]],
+                'application_context' => [
+                    'return_url' => url('/p/ca/suscripcion?status=success'),
+                    'cancel_url' => url('/p/ca/suscripcion?status=cancel'),
+                ],
             ]);
 
         if (!$response->successful()) {
@@ -74,7 +78,7 @@ class PagoService
         return [
             'order_id'    => $orden['id'],
             'approve_url' => collect($orden['links'])
-                ->firstWhere('rel', 'payer-action')['href'] ?? null,
+                ->firstWhere('rel', 'approve')['href'] ?? null,
         ];
     }
 
@@ -94,17 +98,21 @@ class PagoService
         $token = $this->obtenerToken();
 
         $response = Http::withToken($token)
-            ->post("{$this->baseUrl}/v2/checkout/orders/{$orderId}/capture");
-
+            ->withHeaders([
+                'Content-Type' => 'application/json',
+                'Content-Length' => '0',
+            ])
+            ->post("{$this->baseUrl}/v2/checkout/orders/{$orderId}/capture", null);
+            
         if (!$response->successful()) {
             $this->pagos->guardar($pago, ['est_pago' => 'FAILED']);
             throw ValidationException::withMessages([
-                'paypal' => ['Error al capturar el pago en PayPal.'],
+                'paypal' => ['Error captura PayPal: ' . $response->body()],
             ]);
         }
 
-        $captura    = $response->json();
-        $transaccion = $captura['purchase_units'][0]['payments']['captures'][0] ?? null;
+        $captura       = $response->json();
+        $transaccion   = $captura['purchase_units'][0]['payments']['captures'][0] ?? null;
         $transaccionId = $transaccion['id'] ?? null;
         $estado        = $transaccion['status'] ?? 'FAILED';
 
@@ -121,7 +129,6 @@ class PagoService
         }
 
         // Activar plan mensual
-        $suscripcion = $this->suscripciones->buscarPorUsuario($docente->id_usuario);
         $this->suscripcionService->activarPlanMensual($docente, []);
 
         return $this->serializar($pago->fresh());
