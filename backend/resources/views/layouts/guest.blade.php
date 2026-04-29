@@ -14,13 +14,13 @@
     @livewireStyles
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
-<body class="min-h-screen flex items-center justify-center bg-omg-white">
+<body class="min-h-screen flex flex-col items-center justify-center bg-omg-white py-10">
 
-    <div class="w-full max-w-md px-4">
+    <div class="w-full px-4" style="max-width: 480px;">
         @yield('content')
     </div>
 
-    <footer class="fixed bottom-0 w-full py-4 text-center">
+    <footer class="mt-8 w-full text-center pb-4">
         <div class="flex justify-center gap-4 mb-1">
             <a href="#" class="text-xs text-omg-nile-light hover:underline">Términos de uso</a>
             <a href="#" class="text-xs text-omg-nile-light hover:underline">Aviso de privacidad</a>
