@@ -6,6 +6,7 @@ use App\Http\Controllers\InstitucionController;
 use App\Http\Controllers\RubroController;
 use App\Http\Controllers\SesionController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AlumnoController;
 
 Route::prefix('auth')->group(function () {
     Route::post('login',    [AuthController::class, 'login']);
@@ -32,4 +33,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('rubros/{rubro}',                        [RubroController::class, 'show']);
     Route::put('rubros/{rubro}',                        [RubroController::class, 'update']);
     Route::delete('rubros/{rubro}',                     [RubroController::class, 'destroy']);
+    Route::get('alumno/grupos', [AlumnoController::class, 'grupos']);
 });
