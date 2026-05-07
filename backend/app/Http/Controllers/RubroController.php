@@ -1,0 +1,45 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Services\RubroService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+
+class RubroController extends Controller
+{
+    public function __construct(
+        private readonly RubroService $rubros
+    ) {}
+
+    public function index(int $institucion): JsonResponse
+    {
+        $data = $this->rubros->listar($institucion);
+        return response()->json(['data' => $data]);
+    }
+
+    public function store(Request $request, int $institucion): JsonResponse
+    {
+        $data = $this->rubros->crear($institucion, $request->all());
+        return response()->json(['data' => $data], 201);
+    }
+
+    public function show(int $rubro): JsonResponse
+    {
+        $data = $this->rubros->obtener($rubro);
+        return response()->json(['data' => $data]);
+    }
+
+    public function update(Request $request, int $rubro): JsonResponse
+    {
+        $data = $this->rubros->actualizar($rubro, $request->all());
+        return response()->json(['data' => $data]);
+    }
+
+    public function destroy(int $rubro): Response
+    {
+        $this->rubros->eliminar($rubro);
+        return response()->noContent();
+    }
+}
