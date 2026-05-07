@@ -1,11 +1,19 @@
 <?php
 
-/**
- * Rutas API REST (prefijo /api).
- * Definir aquí los recursos expuestos al cliente (p. ej. la app Flutter).
- */
-
-use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\InstitucionController;
 use Illuminate\Support\Facades\Route;
 
-Route::apiResource('usuarios', UsuarioController::class);
+Route::prefix('auth')->group(function () {
+    Route::post('login',    [AuthController::class, 'login']);
+    Route::post('register', [AuthController::class, 'register']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('logout', [AuthController::class, 'logout']);
+        Route::get('me',      [AuthController::class, 'me']);
+    });
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('instituciones', InstitucionController::class);
+});
