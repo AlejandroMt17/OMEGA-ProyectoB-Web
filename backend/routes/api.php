@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\InstitucionController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,4 +17,5 @@ Route::prefix('auth')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('instituciones', InstitucionController::class);
+    Route::apiResource('instituciones.grupos', GrupoController::class)->shallow();
 });

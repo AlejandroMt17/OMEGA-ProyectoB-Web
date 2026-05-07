@@ -16,6 +16,11 @@ class Institucion extends Model
         'logo',
     ];
 
+    public function getRouteKeyName(): string
+    {
+        return 'id_institucion';
+    }
+
     public function docente()
     {
         return $this->belongsTo(Usuario::class, 'id_docente', 'id_usuario');

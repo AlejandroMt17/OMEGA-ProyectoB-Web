@@ -44,4 +44,9 @@ class Grupo extends Model
         return $this->hasOne(Sesion::class, 'id_grupo', 'id_grupo')
             ->where('est_sesion', 1);
     }
+
+    public function getRouteKeyName(): string
+    {
+        return 'id_grupo';
+    }
 }
