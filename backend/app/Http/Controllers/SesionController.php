@@ -41,4 +41,9 @@ class SesionController extends Controller
         $data = $this->sesiones->actualizarAsistencia($sesion, $alumno, $request->all());
         return response()->json(['data' => $data]);
     }
+    public function historial(int $grupo): JsonResponse
+    {
+        $data = $this->sesiones->historial($grupo);
+        return response()->json(['data' => $data]);
+    }
 }

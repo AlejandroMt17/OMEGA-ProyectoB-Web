@@ -130,4 +130,29 @@ class SesionService
             ])->values()->all(),
         ]);
     }
+    public function historial(int $grupoId): array
+    {
+        return $this->sesiones->porGrupo($grupoId)
+            ->where('est_sesion', 2)
+            ->map(function (Sesion $s) {
+                $asistencias  = $this->asistencias->porSesion($s->id_sesion);
+                $total        = $asistencias->count();
+                $presentes    = $asistencias->where('est_asistencia', 1)->count();
+                $faltas       = $asistencias->where('est_asistencia', 2)->count();
+                $justificadas = $asistencias->where('est_asistencia', 3)->count();
+
+                return [
+                    'id_sesion'      => $s->id_sesion,
+                    'fec_sesion'     => $s->fec_sesion?->toDateString(),
+                    'hora_apertura'  => $s->hora_apertura?->toTimeString(),
+                    'hora_cierre'    => $s->hora_cierre?->toTimeString(),
+                    'total_alumnos'  => $total,
+                    'presentes'      => $presentes,
+                    'faltas'         => $faltas,
+                    'justificadas'   => $justificadas,
+                ];
+            })
+            ->values()
+            ->all();
+    }
 }
