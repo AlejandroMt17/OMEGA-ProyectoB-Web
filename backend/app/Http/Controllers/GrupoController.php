@@ -6,6 +6,7 @@ use App\Models\Grupo;
 use App\Services\GrupoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class GrupoController extends Controller
 {
@@ -37,9 +38,19 @@ class GrupoController extends Controller
         return response()->json(['data' => $data]);
     }
 
-    public function destroy(int $grupo): JsonResponse
+    public function destroy(int $grupo): Response
     {
         $this->grupos->eliminarPorId($grupo);
+        return response()->noContent();
+    }
+    public function alumnos(int $grupo): JsonResponse
+    {
+        $data = $this->grupos->alumnos($grupo);
+        return response()->json(['data' => $data]);
+    }
+    public function eliminarAlumno(int $grupo, int $alumno): Response
+    {
+        $this->grupos->eliminarAlumno($grupo, $alumno);
         return response()->noContent();
     }
 }

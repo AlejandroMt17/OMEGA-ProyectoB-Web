@@ -35,4 +35,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('rubros/{rubro}',                     [RubroController::class, 'destroy']);
     Route::get('alumno/grupos', [AlumnoController::class, 'grupos']);
     Route::get('grupos/{grupo}/sesiones/historial', [SesionController::class, 'historial']);
+    Route::get('grupos/{grupo}/alumnos', [GrupoController::class, 'alumnos']);
+    Route::delete('grupos/{grupo}/alumnos/{alumno}', [GrupoController::class, 'eliminarAlumno']);
 });

@@ -106,4 +106,40 @@ class GrupoService
         }
         return $validator->validated();
     }
+    public function alumnos(int $grupoId): array
+    {
+        $grupo = $this->grupos->buscarPorId($grupoId);
+        abort_if(!$grupo, 404, 'Grupo no encontrado.');
+
+        return $grupo->alumnos->map(function ($alumno) use ($grupoId) {
+            $asistencias = \App\Models\Asistencia::query()
+                ->whereHas('sesion', fn($q) => $q
+                    ->where('id_grupo', $grupoId)
+                    ->where('est_sesion', 2))
+                ->where('id_alumno', $alumno->id_usuario)
+                ->get();
+
+            $total     = $asistencias->count();
+            $asistidas = $asistencias->where('est_asistencia', 1)->count()
+                    + $asistencias->where('est_asistencia', 3)->count();
+
+            return [
+                'alumno_id'          => $alumno->id_usuario,
+                'nombre'             => $alumno->nombre,
+                'ap_pat'             => $alumno->ap_pat,
+                'ap_mat'             => $alumno->ap_mat ?? '',
+                'email'              => $alumno->email,
+                'total_sesiones'     => $total,
+                'sesiones_asistidas' => $asistidas,
+                'fecha_inscripcion'  => $alumno->pivot->fec_inscripcion ?? '',
+            ];
+        })->values()->all();
+    }
+    public function eliminarAlumno(int $grupoId, int $alumnoId): void
+    {
+        $grupo = $this->grupos->buscarPorId($grupoId);
+        abort_if(!$grupo, 404, 'Grupo no encontrado.');
+
+        $grupo->alumnos()->detach($alumnoId);
+    }
 }
