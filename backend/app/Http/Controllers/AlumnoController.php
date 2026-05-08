@@ -47,4 +47,34 @@ class AlumnoController extends Controller
 
         return response()->json(['data' => $grupos]);
     }
+    public function unirseGrupo(Request $request): JsonResponse
+    {
+        $codigo   = $request->input('codigo');
+        $alumnoId = $request->user()->id_usuario;
+
+        $grupo = \App\Models\Grupo::query()
+            ->where('codigo_inv', strtoupper($codigo))
+            ->first();
+
+        if (!$grupo) {
+            return response()->json(['message' => 'Codigo invalido o grupo no encontrado.'], 404);
+        }
+
+        $yaInscrito = $grupo->alumnos()->where('id_alumno', $alumnoId)->exists();
+
+        if ($yaInscrito) {
+            return response()->json(['message' => 'Ya estas inscrito en este grupo.'], 422);
+        }
+
+        $grupo->alumnos()->attach($alumnoId, [
+            'fec_inscripcion' => now()->toDateString(),
+        ]);
+
+        return response()->json(['data' => [
+            'id_grupo'   => $grupo->id_grupo,
+            'nombre'     => $grupo->nombre,
+            'materia'    => $grupo->materia,
+            'codigo_inv' => $grupo->codigo_inv,
+        ]], 201);
+    }
 }
