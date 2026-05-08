@@ -14,7 +14,7 @@ class AlumnoController extends Controller
         $alumnoId = $request->user()->id_usuario;
 
         $grupos = GrupoAlumno::query()
-            ->with(['grupo.institucion'])
+            ->with(['grupo.institucion.rubros', 'grupo.sesionActiva'])
             ->where('id_alumno', $alumnoId)
             ->get()
             ->map(function ($ga) use ($alumnoId) {
@@ -25,28 +25,45 @@ class AlumnoController extends Controller
                     ->where('id_alumno', $alumnoId)
                     ->get();
 
-                $total       = $asistencias->count();
-                $presentes   = $asistencias->where('est_asistencia', 1)->count();
-                $faltas      = $asistencias->where('est_asistencia', 2)->count();
+                $total        = $asistencias->count();
+                $presentes    = $asistencias->where('est_asistencia', 1)->count();
+                $faltas       = $asistencias->where('est_asistencia', 2)->count();
                 $justificadas = $asistencias->where('est_asistencia', 3)->count();
 
+                $sesionActiva = $grupo->sesionActiva;
+
+                $rubros = $grupo->institucion?->rubros
+                    ->sortByDesc('porcentaje_minimo')
+                    ->values()
+                    ->map(fn($r) => [
+                        'nombre'            => $r->nombre,
+                        'porcentaje_minimo' => (float) $r->porcentaje_minimo,
+                    ])->all() ?? [];
+
                 return [
-                    'id_grupo'        => $grupo->id_grupo,
-                    'nombre'          => $grupo->nombre,
-                    'materia'         => $grupo->materia,
-                    'periodo'         => $grupo->periodo,
-                    'codigo_inv'      => $grupo->codigo_inv,
-                    'id_institucion'  => $grupo->id_institucion,
+                    'id_grupo'           => $grupo->id_grupo,
+                    'nombre'             => $grupo->nombre,
+                    'materia'            => $grupo->materia,
+                    'periodo'            => $grupo->periodo,
+                    'codigo_inv'         => $grupo->codigo_inv,
+                    'id_institucion'     => $grupo->id_institucion,
                     'nombre_institucion' => $grupo->institucion?->nombre,
-                    'total_sesiones'  => $total,
-                    'presentes'       => $presentes,
-                    'faltas'          => $faltas,
-                    'justificadas'    => $justificadas,
+                    'total_sesiones'     => $total,
+                    'presentes'          => $presentes,
+                    'faltas'             => $faltas,
+                    'justificadas'       => $justificadas,
+                    'rubros'             => $rubros,
+                    'sesion_activa'      => $sesionActiva ? [
+                        'id_sesion'     => $sesionActiva->id_sesion,
+                        'hora_apertura' => $sesionActiva->hora_apertura?->toDateTimeString(),
+                        'clave'         => $sesionActiva->clave,
+                    ] : null,
                 ];
             });
 
         return response()->json(['data' => $grupos]);
     }
+
     public function unirseGrupo(Request $request): JsonResponse
     {
         $codigo   = $request->input('codigo');

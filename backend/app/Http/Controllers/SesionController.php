@@ -46,4 +46,13 @@ class SesionController extends Controller
         $data = $this->sesiones->historial($grupo);
         return response()->json(['data' => $data]);
     }
+    public function registrarAsistenciaAlumno(Request $request, int $sesion): JsonResponse
+    {
+        $alumnoId = $request->user()->id_usuario;
+        $clave    = $request->input('clave', '');
+
+        $data = $this->sesiones->registrarAsistenciaAlumno($sesion, $alumnoId, $clave);
+
+        return response()->json(['data' => $data]);
+    }
 }

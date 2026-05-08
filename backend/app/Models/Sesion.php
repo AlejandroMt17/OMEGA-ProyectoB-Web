@@ -16,6 +16,7 @@ class Sesion extends Model
         'fec_sesion',
         'hora_apertura',
         'hora_cierre',
+        'clave',
     ];
 
     protected function casts(): array

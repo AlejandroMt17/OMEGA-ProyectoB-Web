@@ -46,4 +46,5 @@ Route::middleware('auth:sanctum')->group(function () {
     // Alumnos de grupo
     Route::get('grupos/{grupo}/alumnos',                [GrupoController::class, 'alumnos']);
     Route::delete('grupos/{grupo}/alumnos/{alumno}',    [GrupoController::class, 'eliminarAlumno']);
+    Route::post('sesiones/{sesion}/registrar-asistencia', [SesionController::class, 'registrarAsistenciaAlumno']);
 });

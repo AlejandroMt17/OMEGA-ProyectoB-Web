@@ -8,14 +8,15 @@ use App\Repositories\Contracts\GrupoRepositoryInterface;
 use App\Repositories\Contracts\SesionRepositoryInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class SesionService
 {
     public function __construct(
-        private readonly SesionRepositoryInterface    $sesiones,
+        private readonly SesionRepositoryInterface     $sesiones,
         private readonly AsistenciaRepositoryInterface $asistencias,
-        private readonly GrupoRepositoryInterface     $grupos,
+        private readonly GrupoRepositoryInterface      $grupos,
     ) {}
 
     public function listar(int $grupoId): array
@@ -43,14 +44,15 @@ class SesionService
         }
 
         $sesion = $this->sesiones->crear([
-            'id_grupo'     => $grupoId,
-            'est_sesion'   => 1,
-            'fec_sesion'   => Carbon::today(),
+            'id_grupo'      => $grupoId,
+            'est_sesion'    => 1,
+            'fec_sesion'    => Carbon::today(),
             'hora_apertura' => Carbon::now(),
-            'hora_cierre'  => null,
+            'hora_cierre'   => null,
+            'clave'         => strtoupper(Str::random(6)),
         ]);
 
-        $grupo = $this->grupos->buscarPorId($grupoId);
+        $grupo     = $this->grupos->buscarPorId($grupoId);
         $alumnoIds = $grupo->alumnos->pluck('id_usuario')->toArray();
 
         if (!empty($alumnoIds)) {
@@ -69,9 +71,37 @@ class SesionService
         $this->sesiones->actualizar($sesion, [
             'est_sesion'  => 2,
             'hora_cierre' => Carbon::now(),
+            'clave'       => null,
         ]);
 
         return $this->serializar($sesion->fresh());
+    }
+
+    public function registrarAsistenciaAlumno(int $sesionId, int $alumnoId, string $clave): array
+    {
+        $sesion = $this->sesiones->buscarPorId($sesionId);
+        abort_if(!$sesion,                  404, 'Sesion no encontrada.');
+        abort_if($sesion->est_sesion !== 1, 422, 'La sesion no esta activa.');
+        abort_if(
+            strtoupper(trim($clave)) !== $sesion->clave,
+            422,
+            'Clave incorrecta.'
+        );
+
+        $asistencia = $this->asistencias->buscarPorSesionYAlumno($sesionId, $alumnoId);
+        abort_if(!$asistencia, 404, 'No estas inscrito en este grupo.');
+        abort_if($asistencia->est_asistencia === 1, 422, 'Ya registraste tu asistencia.');
+
+        $this->asistencias->actualizar($asistencia, [
+            'est_asistencia' => 1,
+            'hora_registro'  => Carbon::now(),
+        ]);
+
+        return [
+            'id_asistencia'  => $asistencia->id_asistencia,
+            'est_asistencia' => 1,
+            'hora_registro'  => Carbon::now()->toDateTimeString(),
+        ];
     }
 
     public function actualizarAsistencia(int $sesionId, int $alumnoId, array $entrada): array
@@ -102,6 +132,32 @@ class SesionService
         ];
     }
 
+    public function historial(int $grupoId): array
+    {
+        return $this->sesiones->porGrupo($grupoId)
+            ->where('est_sesion', 2)
+            ->map(function (Sesion $s) {
+                $asistencias  = $this->asistencias->porSesion($s->id_sesion);
+                $total        = $asistencias->count();
+                $presentes    = $asistencias->where('est_asistencia', 1)->count();
+                $faltas       = $asistencias->where('est_asistencia', 2)->count();
+                $justificadas = $asistencias->where('est_asistencia', 3)->count();
+
+                return [
+                    'id_sesion'     => $s->id_sesion,
+                    'fec_sesion'    => $s->fec_sesion?->toDateString(),
+                    'hora_apertura' => $s->hora_apertura?->toTimeString(),
+                    'hora_cierre'   => $s->hora_cierre?->toTimeString(),
+                    'total_alumnos' => $total,
+                    'presentes'     => $presentes,
+                    'faltas'        => $faltas,
+                    'justificadas'  => $justificadas,
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
     private function serializar(Sesion $sesion): array
     {
         return [
@@ -111,6 +167,7 @@ class SesionService
             'fec_sesion'    => $sesion->fec_sesion?->toDateString(),
             'hora_apertura' => $sesion->hora_apertura?->toDateTimeString(),
             'hora_cierre'   => $sesion->hora_cierre?->toDateTimeString(),
+            'clave'         => $sesion->clave,
         ];
     }
 
@@ -129,30 +186,5 @@ class SesionService
                 'hora_registro'  => $a->hora_registro?->toDateTimeString(),
             ])->values()->all(),
         ]);
-    }
-    public function historial(int $grupoId): array
-    {
-        return $this->sesiones->porGrupo($grupoId)
-            ->where('est_sesion', 2)
-            ->map(function (Sesion $s) {
-                $asistencias  = $this->asistencias->porSesion($s->id_sesion);
-                $total        = $asistencias->count();
-                $presentes    = $asistencias->where('est_asistencia', 1)->count();
-                $faltas       = $asistencias->where('est_asistencia', 2)->count();
-                $justificadas = $asistencias->where('est_asistencia', 3)->count();
-
-                return [
-                    'id_sesion'      => $s->id_sesion,
-                    'fec_sesion'     => $s->fec_sesion?->toDateString(),
-                    'hora_apertura'  => $s->hora_apertura?->toTimeString(),
-                    'hora_cierre'    => $s->hora_cierre?->toTimeString(),
-                    'total_alumnos'  => $total,
-                    'presentes'      => $presentes,
-                    'faltas'         => $faltas,
-                    'justificadas'   => $justificadas,
-                ];
-            })
-            ->values()
-            ->all();
     }
 }
