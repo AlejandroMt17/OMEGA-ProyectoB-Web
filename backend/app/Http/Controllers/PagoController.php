@@ -62,12 +62,8 @@ class PagoController extends Controller
 
             return response()->json(['data' => $suscripcion]);
         } catch (\Throwable $e) {
-            $clase   = get_class($e);
-            $mensaje = $e->getMessage();
-            Log::error("[PayPal] confirmar falló: {$clase} — {$mensaje}");
-            return response()->json([
-                'message' => "[{$clase}] {$mensaje}",
-            ], 502);
+            Log::error('[PayPal] confirmar falló: ' . get_class($e) . ' — ' . $e->getMessage());
+            return response()->json(['message' => 'Error al procesar el pago. Intenta de nuevo.'], 502);
         }
     }
 
