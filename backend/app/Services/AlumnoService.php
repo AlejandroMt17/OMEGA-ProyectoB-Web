@@ -210,8 +210,16 @@ class AlumnoService
                 'porcentaje'      => $porcentajeReal,
                 // RF-33, RF-43, RF-45 — Rubros
                 'rubros'          => $estadoRubros,
+                'sesion_activa'   => $this->_getSesionActiva($grupo->id_grupo),
             ];
         })->filter()->values()->all();
+    }
+
+    private function _getSesionActiva(int $idGrupo): ?array
+    {
+        $sesion = $this->sesiones->buscarActivaPorGrupo($idGrupo);
+        if (!$sesion) return null;
+        return ["id_sesion" => $sesion->id_sesion, "clave" => $sesion->clave];
     }
 
     // ─────────────────────────────────────────────────────────────
