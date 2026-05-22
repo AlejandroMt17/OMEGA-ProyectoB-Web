@@ -35,4 +35,10 @@ class AuthController extends Controller
         $resultado = $this->auth->me($request->user());
         return response()->json(['data' => $resultado]);
     }
+
+    public function actualizarPerfil(Request $request): JsonResponse
+    {
+        $resultado = $this->auth->actualizarPerfil($request->user(), $request->all());
+        return response()->json(['data' => $resultado]);
+    }
 }

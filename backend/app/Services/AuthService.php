@@ -66,6 +66,24 @@ class AuthService
         return $this->serializar($usuario);
     }
 
+    public function actualizarPerfil(Usuario $usuario, array $entrada): array
+    {
+        $datos = $this->validarActualizacionPerfil($entrada, $usuario->id_usuario);
+
+        $usuario->nombre = $datos['nombre']  ?? $usuario->nombre;
+        $usuario->ap_pat = $datos['ap_pat']  ?? $usuario->ap_pat;
+        $usuario->ap_mat = array_key_exists('ap_mat', $datos) ? $datos['ap_mat'] : $usuario->ap_mat;
+        $usuario->email  = $datos['email']   ?? $usuario->email;
+
+        if (!empty($datos['password'])) {
+            $usuario->contrasenia = Hash::make($datos['password']);
+        }
+
+        $usuario->save();
+
+        return $this->serializar($usuario);
+    }
+
     private function serializar(Usuario $usuario): array
     {
         return [
@@ -101,6 +119,23 @@ class AuthService
             'email'    => ['required', 'email', 'max:200', 'unique:usuarios,email'],
             'password' => ['required', 'string', 'min:6'],
             'rol'      => ['required', 'integer', 'in:1,2'],
+        ]);
+
+        if ($validator->fails()) {
+            throw new ValidationException($validator);
+        }
+
+        return $validator->validated();
+    }
+
+    private function validarActualizacionPerfil(array $entrada, int $idUsuario): array
+    {
+        $validator = Validator::make($entrada, [
+            'nombre'   => ['sometimes', 'required', 'string', 'max:100'],
+            'ap_pat'   => ['sometimes', 'required', 'string', 'max:100'],
+            'ap_mat'   => ['nullable', 'string', 'max:100'],
+            'email'    => ['sometimes', 'required', 'email', 'max:200', 'unique:usuarios,email,'.$idUsuario.',id_usuario'],
+            'password' => ['nullable', 'string', 'min:6'],
         ]);
 
         if ($validator->fails()) {
