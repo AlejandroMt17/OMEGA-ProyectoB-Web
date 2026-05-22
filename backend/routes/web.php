@@ -5,6 +5,7 @@ use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\GrupoWebController;
 use App\Http\Controllers\Web\InstitucionWebController;
 use App\Http\Controllers\Web\JustificanteWebController;
+use App\Http\Controllers\Web\RubroWebController;
 use App\Http\Controllers\Web\PerfilWebController;
 use App\Http\Controllers\Web\ReporteWebController;
 use App\Http\Controllers\Web\SesionWebController;
@@ -50,6 +51,11 @@ Route::prefix('p/ca')->group(function () {
         Route::put('instituciones/{institucion}',          [InstitucionWebController::class, 'update'])->name('ca.instituciones.update');
         Route::delete('instituciones/{institucion}',       [InstitucionWebController::class, 'destroy'])->name('ca.instituciones.destroy');
         Route::post('instituciones/{id}/seleccionar',      [InstitucionWebController::class, 'seleccionar'])->name('ca.instituciones.seleccionar');
+        // Rubros de evaluacion por institucion (RF-04, RF-05)
+        Route::get('instituciones/{id}/rubros',            [RubroWebController::class, 'index'])->name('ca.rubros.index');
+        Route::post('instituciones/{id}/rubros',           [RubroWebController::class, 'store'])->name('ca.rubros.store');
+        Route::put('instituciones/{id}/rubros/{rubro}',   [RubroWebController::class, 'update'])->name('ca.rubros.update');
+        Route::delete('instituciones/{id}/rubros/{rubro}',[RubroWebController::class, 'destroy'])->name('ca.rubros.destroy');
 
         // Grupos
         Route::get('grupos',                           [GrupoWebController::class, 'index'])->name('ca.grupos.index');

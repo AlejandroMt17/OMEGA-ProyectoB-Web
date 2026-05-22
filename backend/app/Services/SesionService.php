@@ -142,6 +142,24 @@ class SesionService
             'hora_cierre' => now(),
         ]);
 
+        // RF-64, RF-22 — Registrar ausentes automáticamente al cerrar sesión
+        // Todos los alumnos del grupo que NO registraron asistencia quedan como Ausente (2)
+        $alumnosGrupo = $this->grupoAlumnos->alumnosPorGrupo($sesion->id_grupo);
+        foreach ($alumnosGrupo as $vinculacion) {
+            $asistenciaExistente = $this->asistencias->buscarPorSesionYAlumno(
+                $sesion->id_sesion,
+                $vinculacion->id_alumno
+            );
+            if (!$asistenciaExistente) {
+                $this->asistencias->crear([
+                    'id_sesion'      => $sesion->id_sesion,
+                    'id_alumno'      => $vinculacion->id_alumno,
+                    'est_asistencia' => 2, // Ausente
+                    'hora_registro'  => null,
+                ]);
+            }
+        }
+
         return $this->serializar($sesion->fresh());
     }
 

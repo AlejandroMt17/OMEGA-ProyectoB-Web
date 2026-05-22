@@ -1,0 +1,132 @@
+@extends('layouts.app')
+@section('title', 'Rubros de Evaluación')
+@section('content')
+
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <div class="flex items-center gap-2 text-sm font-body text-omg-kashmir mb-1">
+            <a href="{{ route('ca.instituciones.index') }}" class="hover:text-omg-nile">Mis Instituciones</a>
+            <i class="fa-solid fa-chevron-right text-xs"></i>
+            <span>{{ $institucion->nombre }}</span>
+        </div>
+        <h1 class="text-2xl font-heading font-semibold text-omg-nile">Rubros de Evaluación</h1>
+        <p class="text-sm font-body text-omg-kashmir mt-1">
+            Configura los porcentajes mínimos de asistencia para {{ $institucion->nombre }}
+        </p>
+    </div>
+</div>
+
+{{-- Formulario nuevo rubro --}}
+<div class="bg-white rounded-xl border border-omg-kashmir-dark p-5 mb-6 max-w-lg">
+    <h2 class="text-sm font-heading font-semibold text-omg-nile mb-4">Agregar rubro</h2>
+
+    @if ($errors->any())
+        <div class="flex items-start gap-3 bg-white border border-red-200 rounded-lg px-4 py-3 mb-4">
+            <i class="fa-solid fa-circle-xmark text-red-500 mt-0.5"></i>
+            <ul class="text-sm text-omg-dark space-y-1">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <form method="POST" action="{{ route('ca.rubros.store', $institucion->id_institucion) }}"
+          class="flex items-end gap-3">
+        @csrf
+        <div class="flex-1">
+            <label class="block text-xs font-body text-omg-kashmir mb-1">Nombre del rubro</label>
+            <input type="text" name="nombre" value="{{ old('nombre') }}"
+                   placeholder="Ej: Ordinario, Extraordinario"
+                   class="w-full px-3 py-2 bg-white border border-omg-kashmir rounded-lg text-sm font-body text-omg-dark focus:outline-none focus:ring-2 focus:ring-omg-kashmir"/>
+        </div>
+        <div class="w-32">
+            <label class="block text-xs font-body text-omg-kashmir mb-1">% mínimo</label>
+            <input type="number" name="porcentaje_minimo" value="{{ old('porcentaje_minimo') }}"
+                   min="0" max="100" step="0.5" placeholder="80"
+                   class="w-full px-3 py-2 bg-white border border-omg-kashmir rounded-lg text-sm font-body text-omg-dark focus:outline-none focus:ring-2 focus:ring-omg-kashmir"/>
+        </div>
+        <button type="submit"
+            class="flex items-center gap-2 px-4 py-2 bg-omg-coral hover:bg-omg-coral-dark text-white font-heading font-semibold rounded-lg text-sm transition-colors">
+            <i class="fa-solid fa-plus"></i>
+            Agregar
+        </button>
+    </form>
+</div>
+
+{{-- Lista de rubros --}}
+<div class="bg-white rounded-xl border border-omg-kashmir-dark overflow-hidden max-w-lg">
+    <table class="w-full">
+        <thead>
+            <tr class="border-b border-omg-kashmir-dark bg-omg-chardon">
+                <th class="text-left px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Rubro</th>
+                <th class="text-center px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">% Mínimo</th>
+                <th class="text-right px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Acciones</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-omg-kashmir-dark">
+            @forelse ($rubros as $rubro)
+                <tr class="hover:bg-omg-chardon transition-colors" x-data="{ editando: false }">
+                    <td class="px-5 py-4">
+                        <form id="form-{{ $rubro->id_rubro }}" method="POST"
+                              action="{{ route('ca.rubros.update', [$institucion->id_institucion, $rubro->id_rubro]) }}">
+                            @csrf @method('PUT')
+                            <div x-show="!editando">
+                                <p class="text-sm font-body font-semibold text-omg-dark">{{ $rubro->nombre }}</p>
+                            </div>
+                            <div x-show="editando" class="flex gap-2">
+                                <input type="text" name="nombre" value="{{ $rubro->nombre }}"
+                                       class="px-2 py-1 border border-omg-kashmir rounded text-sm font-body w-32"/>
+                                <input type="number" name="porcentaje_minimo" value="{{ $rubro->porcentaje_minimo }}"
+                                       min="0" max="100" step="0.5"
+                                       class="px-2 py-1 border border-omg-kashmir rounded text-sm font-body w-20"/>
+                            </div>
+                        </form>
+                    </td>
+                    <td class="px-5 py-4 text-center">
+                        <span x-show="!editando"
+                              class="bg-omg-pastel text-omg-nile text-xs font-body px-2 py-1 rounded-full font-semibold">
+                            {{ number_format($rubro->porcentaje_minimo, 0) }}%
+                        </span>
+                    </td>
+                    <td class="px-5 py-4">
+                        <div class="flex items-center justify-end gap-2">
+                            <button x-show="!editando" @click="editando = true"
+                                class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-pastel hover:bg-omg-nile hover:text-white text-omg-nile rounded-lg text-xs font-body transition-colors">
+                                <i class="fa-regular fa-pen-to-square"></i> Editar
+                            </button>
+                            <button x-show="editando"
+                                @click="document.getElementById('form-{{ $rubro->id_rubro }}').submit()"
+                                class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-coral text-white rounded-lg text-xs font-body transition-colors">
+                                <i class="fa-solid fa-check"></i> Guardar
+                            </button>
+                            <button x-show="editando" @click="editando = false"
+                                class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-pastel text-omg-nile rounded-lg text-xs font-body transition-colors">
+                                <i class="fa-solid fa-ban"></i>
+                            </button>
+                            <form method="POST"
+                                  action="{{ route('ca.rubros.destroy', [$institucion->id_institucion, $rubro->id_rubro]) }}"
+                                  onsubmit="return confirm('¿Eliminar este rubro?')">
+                                @csrf @method('DELETE')
+                                <button type="submit"
+                                    class="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-500 hover:text-white text-red-500 rounded-lg text-xs font-body transition-colors">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="3" class="px-5 py-10 text-center">
+                        <i class="fa-solid fa-chart-pie text-omg-kashmir fa-2x mb-3"></i>
+                        <p class="text-sm font-body text-omg-kashmir">No hay rubros configurados</p>
+                        <p class="text-xs font-body text-omg-kashmir mt-1">Agrega el primero con el formulario de arriba</p>
+                    </td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+
+@endsection
