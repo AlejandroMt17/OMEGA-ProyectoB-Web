@@ -2,112 +2,114 @@
 
 namespace App\Services;
 
-use App\Models\Pago;
 use App\Models\Suscripcion;
 use App\Models\Usuario;
-use Carbon\Carbon;
+use App\Repositories\Contracts\SuscripcionRepositoryInterface;
+use Illuminate\Validation\ValidationException;
 
+/**
+ * Service — Gestión del plan activo del Docente.
+ * plan: 1 = Básico (gratuito), 2 = Mensual ($149 MXN)
+ * est_suscripcion: 1 = Activa, 2 = Vencida, 3 = En gracia (72h)
+ */
 class SuscripcionService
 {
-    // ── CONSULTA ─────────────────────────────────────────────
+    public function __construct(
+        private readonly SuscripcionRepositoryInterface $suscripciones,
+    ) {}
 
-    /**
-     * Devuelve (o crea) la suscripcion del usuario.
-     *
-     * @return array<string, mixed>
-     */
-    public function obtener(Usuario $usuario): array
+    public function obtener(Usuario $docente): array
     {
-        $suscripcion = Suscripcion::firstOrCreate(
-            ['id_usuario' => $usuario->id_usuario],
-            [
-                'plan'             => 0,
-                'est_suscripcion'  => 1,
-                'fec_inicio'       => now()->toDateString(),
-            ]
-        );
+        $suscripcion = $this->suscripciones->buscarPorUsuario($docente->id_usuario);
+
+        if (!$suscripcion) {
+            // Si no tiene suscripción, se crea una en plan básico automáticamente
+            $suscripcion = $this->crearPlanBasico($docente);
+        }
 
         return $this->serializar($suscripcion);
     }
 
-    // ── CREAR ORDEN ──────────────────────────────────────────
-
-    /**
-     * Crea un registro de pago pendiente y retorna el order_id para confirmar despues.
-     *
-     * @return array<string, mixed>
-     */
-    public function registrarOrdenPendiente(Usuario $usuario, string $paypalOrderId, float $monto): array
+    public function crearPlanBasico(Usuario $docente): Suscripcion
     {
-        $suscripcion = Suscripcion::firstOrCreate(
-            ['id_usuario' => $usuario->id_usuario],
-            ['plan' => 0, 'est_suscripcion' => 1, 'fec_inicio' => now()->toDateString()]
-        );
+        // Verificar que no tenga ya una suscripción
+        $existe = $this->suscripciones->buscarPorUsuario($docente->id_usuario);
+        if ($existe) {
+            return $existe;
+        }
 
-        $pago = Pago::create([
-            'id_suscripcion'  => $suscripcion->id_suscripcion,
-            'paypal_order_id' => $paypalOrderId,
-            'mon_monto'       => $monto,
-            'est_pago'        => 0, // pendiente
-            'tipo_pago'       => 'paypal',
+        return $this->suscripciones->crear([
+            'id_usuario'      => $docente->id_usuario,
+            'plan'            => 1, // Básico
+            'est_suscripcion' => 1, // Activa
+            'fec_inicio'      => now()->toDateString(),
+            'fec_fin'         => now()->addYears(100)->toDateString(), // Plan básico no vence
+            'fec_ultimo_pago' => null,
         ]);
-
-        return ['pago_id' => $pago->id_pago];
     }
 
-    // ── CONFIRMAR PAGO ────────────────────────────────────────
-
-    /**
-     * Marca el pago como completado y activa el plan mensual por 30 dias.
-     *
-     * @param  array<string, mixed>  $capturaPaypal
-     * @return array<string, mixed>
-     */
-    public function confirmarPago(string $paypalOrderId, array $capturaPaypal): array
+    public function activarPlanMensual(Usuario $docente, array $datosPago): array
     {
-        $pago = Pago::where('paypal_order_id', $paypalOrderId)->firstOrFail();
+        $suscripcion = $this->suscripciones->buscarPorUsuario($docente->id_usuario);
 
-        $pago->update([
-            'paypal_transaction_id' => $capturaPaypal['transaction_id'],
-            'est_pago'              => 1, // completado
-            'fec_pago'              => now()->toDateString(),
-        ]);
+        if (!$suscripcion) {
+            $suscripcion = $this->crearPlanBasico($docente);
+        }
 
-        $suscripcion = $pago->suscripcion;
-        $suscripcion->update([
-            'plan'            => 1, // mensual
-            'est_suscripcion' => 1, // activo
+        $this->suscripciones->guardar($suscripcion, [
+            'plan'            => 2, // Mensual
+            'est_suscripcion' => 1, // Activa
             'fec_inicio'      => now()->toDateString(),
-            'fec_fin'         => now()->addDays(30)->toDateString(),
+            'fec_fin'         => now()->addMonth()->toDateString(),
             'fec_ultimo_pago' => now()->toDateString(),
         ]);
 
         return $this->serializar($suscripcion->fresh());
     }
 
-    // ── CANCELAR ORDEN ────────────────────────────────────────
-
-    public function cancelarOrden(string $paypalOrderId): void
+    public function verificarAccesoPremium(Usuario $docente): bool
     {
-        $pago = Pago::where('paypal_order_id', $paypalOrderId)->first();
-        $pago?->update(['est_pago' => 2]); // cancelado
+        $suscripcion = $this->suscripciones->buscarPorUsuario($docente->id_usuario);
+
+        if (!$suscripcion) return false;
+
+        // Plan mensual activo o en gracia
+        return $suscripcion->plan === 2 &&
+               in_array($suscripcion->est_suscripcion, [1, 3]);
     }
 
-    // ── SERIALIZAR ────────────────────────────────────────────
+    public function verificarGracia(Suscripcion $suscripcion): void
+    {
+        if ($suscripcion->plan !== 2) return;
+        if ($suscripcion->est_suscripcion !== 1) return;
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function serializar(Suscripcion $s): array
+        $fecFin = $suscripcion->fec_fin;
+        if (now()->greaterThan($fecFin)) {
+            $horasVencida = now()->diffInHours($fecFin);
+            $nuevoEstado = $horasVencida <= 72 ? 3 : 2; // 3=En gracia, 2=Vencida
+            $this->suscripciones->guardar($suscripcion, [
+                'est_suscripcion' => $nuevoEstado,
+            ]);
+        }
+    }
+
+    private function serializar(Suscripcion $suscripcion): array
     {
         return [
-            'id_suscripcion'  => $s->id_suscripcion,
-            'id_usuario'      => $s->id_usuario,
-            'plan'            => $s->plan,
-            'est_suscripcion' => $s->est_suscripcion,
-            'fec_inicio'      => $s->fec_inicio?->toDateString(),
-            'fec_fin'         => $s->fec_fin?->toDateString(),
-            'fec_ultimo_pago' => $s->fec_ultimo_pago?->toDateString(),
+            'id_suscripcion'  => $suscripcion->id_suscripcion,
+            'id_usuario'      => $suscripcion->id_usuario,
+            'plan'            => $suscripcion->plan,
+            'plan_nombre'     => $suscripcion->plan === 1 ? 'Básico' : 'Mensual',
+            'est_suscripcion' => $suscripcion->est_suscripcion,
+            'est_nombre'      => match($suscripcion->est_suscripcion) {
+                1 => 'Activa',
+                2 => 'Vencida',
+                3 => 'En gracia',
+                default => 'Desconocido',
+            },
+            'fec_inicio'      => $suscripcion->fec_inicio?->toDateString(),
+            'fec_fin'         => $suscripcion->fec_fin?->toDateString(),
+            'fec_ultimo_pago' => $suscripcion->fec_ultimo_pago?->toDateString(),
         ];
     }
 }

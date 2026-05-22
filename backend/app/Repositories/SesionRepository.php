@@ -8,11 +8,11 @@ use Illuminate\Database\Eloquent\Collection;
 
 class SesionRepository implements SesionRepositoryInterface
 {
-    public function porGrupo(int $grupoId): Collection
+    public function todasPorGrupo(int $idGrupo): Collection
     {
         return Sesion::query()
-            ->where('id_grupo', $grupoId)
-            ->orderByDesc('fec_sesion')
+            ->where('id_grupo', $idGrupo)
+            ->orderByDesc('id_sesion')
             ->get();
     }
 
@@ -21,10 +21,10 @@ class SesionRepository implements SesionRepositoryInterface
         return Sesion::query()->find($id);
     }
 
-    public function sesionActiva(int $grupoId): ?Sesion
+    public function buscarActivaPorGrupo(int $idGrupo): ?Sesion
     {
         return Sesion::query()
-            ->where('id_grupo', $grupoId)
+            ->where('id_grupo', $idGrupo)
             ->where('est_sesion', 1)
             ->first();
     }
@@ -34,7 +34,7 @@ class SesionRepository implements SesionRepositoryInterface
         return Sesion::query()->create($datos);
     }
 
-    public function actualizar(Sesion $sesion, array $datos): bool
+    public function guardar(Sesion $sesion, array $datos): bool
     {
         return $sesion->update($datos);
     }

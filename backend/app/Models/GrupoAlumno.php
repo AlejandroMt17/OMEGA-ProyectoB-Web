@@ -2,14 +2,19 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
-class GrupoAlumno extends Pivot
+/**
+ * Modelo Eloquent — tabla: grupo_alumnos
+ * Tabla intermedia N:M que registra la vinculación de un Alumno a un Grupo.
+ */
+class GrupoAlumno extends Model
 {
-    protected $table      = 'grupo_alumno';
+    use HasFactory;
+
+    protected $table = 'grupo_alumnos';
     protected $primaryKey = 'id_grupo_alumno';
-    public    $timestamps = false;
 
     protected $fillable = [
         'id_grupo',
@@ -17,8 +22,21 @@ class GrupoAlumno extends Pivot
         'fec_inscripcion',
     ];
 
-    public function grupo(): BelongsTo
+    protected function casts(): array
+    {
+        return [
+            'fec_inscripcion' => 'date',
+        ];
+    }
+
+    // Relaciones
+    public function grupo()
     {
         return $this->belongsTo(Grupo::class, 'id_grupo', 'id_grupo');
+    }
+
+    public function alumno()
+    {
+        return $this->belongsTo(Usuario::class, 'id_alumno', 'id_usuario');
     }
 }

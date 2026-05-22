@@ -5,39 +5,44 @@ namespace App\Repositories;
 use App\Models\Asistencia;
 use App\Repositories\Contracts\AsistenciaRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Carbon;
 
 class AsistenciaRepository implements AsistenciaRepositoryInterface
 {
-    public function porSesion(int $sesionId): Collection
+    public function todasPorSesion(int $idSesion): Collection
     {
         return Asistencia::query()
-            ->with('alumno')
-            ->where('id_sesion', $sesionId)
+            ->where('id_sesion', $idSesion)
+            ->orderBy('hora_registro')
             ->get();
     }
 
-    public function buscarPorSesionYAlumno(int $sesionId, int $alumnoId): ?Asistencia
+    public function todasPorAlumno(int $idAlumno): Collection
     {
         return Asistencia::query()
-            ->where('id_sesion', $sesionId)
-            ->where('id_alumno', $alumnoId)
+            ->where('id_alumno', $idAlumno)
+            ->orderByDesc('id_asistencia')
+            ->get();
+    }
+
+    public function buscarPorId(int $id): ?Asistencia
+    {
+        return Asistencia::query()->find($id);
+    }
+
+    public function buscarPorSesionYAlumno(int $idSesion, int $idAlumno): ?Asistencia
+    {
+        return Asistencia::query()
+            ->where('id_sesion', $idSesion)
+            ->where('id_alumno', $idAlumno)
             ->first();
     }
 
-    public function crearParaAlumnos(int $sesionId, array $alumnoIds): void
+    public function crear(array $datos): Asistencia
     {
-        $registros = array_map(fn($id) => [
-            'id_sesion'      => $sesionId,
-            'id_alumno'      => $id,
-            'est_asistencia' => 2,
-            'hora_registro'  => null,
-        ], $alumnoIds);
-
-        Asistencia::insert($registros);
+        return Asistencia::query()->create($datos);
     }
 
-    public function actualizar(Asistencia $asistencia, array $datos): bool
+    public function guardar(Asistencia $asistencia, array $datos): bool
     {
         return $asistencia->update($datos);
     }

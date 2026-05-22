@@ -6,51 +6,52 @@ use App\Models\Grupo;
 use App\Services\GrupoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
+/**
+ * Controlador HTTP — Gestión de grupos del Docente.
+ * Sin lógica de negocio, solo delega al GrupoService.
+ */
 class GrupoController extends Controller
 {
     public function __construct(
         private readonly GrupoService $grupos
     ) {}
 
-    public function index(Request $request, int $institucion): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $data = $this->grupos->listarPorId($institucion);
-        return response()->json(['data' => $data]);
+        return response()->json([
+            'data' => $this->grupos->listar($request->user()),
+        ]);
     }
 
-    public function store(Request $request, int $institucion): JsonResponse
+    public function store(Request $request): JsonResponse
     {
-        $data = $this->grupos->crearEnInstitucion($institucion, $request->all());
-        return response()->json(['data' => $data], 201);
+        $creado = $this->grupos->crear($request->all(), $request->user());
+        return response()->json(['data' => $creado], 201);
     }
 
-    public function show(int $grupo): JsonResponse
+    public function show(Request $request, Grupo $grupo): JsonResponse
     {
-        $data = $this->grupos->obtenerPorId($grupo);
-        return response()->json(['data' => $data]);
+        return response()->json([
+            'data' => $this->grupos->obtener($grupo, $request->user()),
+        ]);
     }
 
-    public function update(Request $request, int $grupo): JsonResponse
+    public function update(Request $request, Grupo $grupo): JsonResponse
     {
-        $data = $this->grupos->actualizarPorId($grupo, $request->all());
-        return response()->json(['data' => $data]);
+        $actualizado = $this->grupos->actualizar($grupo, $request->all(), $request->user());
+        return response()->json(['data' => $actualizado]);
     }
 
-    public function destroy(int $grupo): Response
+    public function destroy(Request $request, Grupo $grupo): JsonResponse
     {
-        $this->grupos->eliminarPorId($grupo);
+        $this->grupos->eliminar($grupo, $request->user());
         return response()->noContent();
     }
-    public function alumnos(int $grupo): JsonResponse
+
+    public function generarCodigo(Request $request, Grupo $grupo): JsonResponse
     {
-        $data = $this->grupos->alumnos($grupo);
-        return response()->json(['data' => $data]);
-    }
-    public function eliminarAlumno(int $grupo, int $alumno): Response
-    {
-        $this->grupos->eliminarAlumno($grupo, $alumno);
-        return response()->noContent();
+        $actualizado = $this->grupos->generarCodigoInv($grupo, $request->user());
+        return response()->json(['data' => $actualizado]);
     }
 }

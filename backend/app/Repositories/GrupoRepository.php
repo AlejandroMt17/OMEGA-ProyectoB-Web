@@ -8,10 +8,18 @@ use Illuminate\Database\Eloquent\Collection;
 
 class GrupoRepository implements GrupoRepositoryInterface
 {
-    public function porInstitucion(int $institucionId): Collection
+    public function todosPorDocente(int $idDocente): Collection
     {
         return Grupo::query()
-            ->where('id_institucion', $institucionId)
+            ->where('id_docente', $idDocente)
+            ->orderBy('id_grupo')
+            ->get();
+    }
+
+    public function todosPorInstitucion(int $idInstitucion): Collection
+    {
+        return Grupo::query()
+            ->where('id_institucion', $idInstitucion)
             ->orderBy('id_grupo')
             ->get();
     }
@@ -21,7 +29,7 @@ class GrupoRepository implements GrupoRepositoryInterface
         return Grupo::query()->find($id);
     }
 
-    public function buscarPorCodigo(string $codigo): ?Grupo
+    public function buscarPorCodigoInv(string $codigo): ?Grupo
     {
         return Grupo::query()->where('codigo_inv', $codigo)->first();
     }
@@ -31,7 +39,7 @@ class GrupoRepository implements GrupoRepositoryInterface
         return Grupo::query()->create($datos);
     }
 
-    public function actualizar(Grupo $grupo, array $datos): bool
+    public function guardar(Grupo $grupo, array $datos): bool
     {
         return $grupo->update($datos);
     }

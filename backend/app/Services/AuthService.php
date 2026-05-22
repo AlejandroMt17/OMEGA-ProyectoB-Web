@@ -3,30 +3,38 @@
 namespace App\Services;
 
 use App\Models\Usuario;
-use App\Repositories\Contracts\AuthRepositoryInterface;
+use App\Repositories\Contracts\UsuarioRepositoryInterface;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Service — Lógica de negocio de autenticación.
+ * Registro, login y logout de Docentes y Alumnos.
+ */
 class AuthService
 {
     public function __construct(
-        private readonly AuthRepositoryInterface $auth
+        private readonly UsuarioRepositoryInterface $usuarios
     ) {}
 
-    public function login(array $entrada): array
+    public function registro(array $entrada): array
     {
-        $datos = $this->validarLogin($entrada);
+        $validator = Validator::make($entrada, [
+            'nombre'      => ['required', 'string', 'max:100'],
+            'ap_pat'      => ['required', 'string', 'max:100'],
+            'ap_mat'      => ['required', 'string', 'max:100'],
+            'email'       => ['required', 'email', 'max:200', 'unique:usuarios,email'],
+            'contrasenia' => ['required', 'string', 'min:8', 'confirmed'],
+            'rol'         => ['required', 'integer', 'in:1,2'],
+        ]);
 
-        $usuario = $this->auth->buscarPorEmail($datos['email']);
-
-        if (!$usuario || !Hash::check($datos['password'], $usuario->contrasenia)) {
-            throw ValidationException::withMessages([
-                'email' => ['Correo o contraseña incorrectos.'],
-            ]);
+        if ($validator->fails()) {
+            throw new ValidationException($validator);
         }
 
-        $usuario->tokens()->delete();
+        $datos = $validator->validated();
+        $usuario = $this->usuarios->crear($datos);
         $token = $usuario->createToken('auth_token')->plainTextToken;
 
         return [
@@ -35,18 +43,24 @@ class AuthService
         ];
     }
 
-    public function register(array $entrada): array
+    public function login(array $entrada): array
     {
-        $datos = $this->validarRegistro($entrada);
-
-        $usuario = $this->auth->crear([
-            'nombre'     => $datos['nombre'],
-            'ap_pat'     => $datos['ap_pat'],
-            'ap_mat'     => $datos['ap_mat'] ?? null,
-            'email'      => $datos['email'],
-            'contrasenia' => $datos['password'],
-            'rol'        => $datos['rol'],
+        $validator = Validator::make($entrada, [
+            'email'       => ['required', 'email'],
+            'contrasenia' => ['required', 'string'],
         ]);
+
+        if ($validator->fails()) {
+            throw new ValidationException($validator);
+        }
+
+        $usuario = $this->usuarios->buscarPorEmail($entrada['email']);
+
+        if (!$usuario || !Hash::check($entrada['contrasenia'], $usuario->contrasenia)) {
+            throw ValidationException::withMessages([
+                'email' => ['Las credenciales no son correctas.'],
+            ]);
+        }
 
         $token = $usuario->createToken('auth_token')->plainTextToken;
 
@@ -58,29 +72,11 @@ class AuthService
 
     public function logout(Usuario $usuario): void
     {
-        $usuario->tokens()->delete();
+        $usuario->currentAccessToken()->delete();
     }
 
     public function me(Usuario $usuario): array
     {
-        return $this->serializar($usuario);
-    }
-
-    public function actualizarPerfil(Usuario $usuario, array $entrada): array
-    {
-        $datos = $this->validarActualizacionPerfil($entrada, $usuario->id_usuario);
-
-        $usuario->nombre = $datos['nombre']  ?? $usuario->nombre;
-        $usuario->ap_pat = $datos['ap_pat']  ?? $usuario->ap_pat;
-        $usuario->ap_mat = array_key_exists('ap_mat', $datos) ? $datos['ap_mat'] : $usuario->ap_mat;
-        $usuario->email  = $datos['email']   ?? $usuario->email;
-
-        if (!empty($datos['password'])) {
-            $usuario->contrasenia = Hash::make($datos['password']);
-        }
-
-        $usuario->save();
-
         return $this->serializar($usuario);
     }
 
@@ -94,54 +90,5 @@ class AuthService
             'email'      => $usuario->email,
             'rol'        => $usuario->rol,
         ];
-    }
-
-    private function validarLogin(array $entrada): array
-    {
-        $validator = Validator::make($entrada, [
-            'email'    => ['required', 'email'],
-            'password' => ['required', 'string'],
-        ]);
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        return $validator->validated();
-    }
-
-    private function validarRegistro(array $entrada): array
-    {
-        $validator = Validator::make($entrada, [
-            'nombre'   => ['required', 'string', 'max:100'],
-            'ap_pat'   => ['required', 'string', 'max:100'],
-            'ap_mat'   => ['nullable', 'string', 'max:100'],
-            'email'    => ['required', 'email', 'max:200', 'unique:usuarios,email'],
-            'password' => ['required', 'string', 'min:6'],
-            'rol'      => ['required', 'integer', 'in:1,2'],
-        ]);
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        return $validator->validated();
-    }
-
-    private function validarActualizacionPerfil(array $entrada, int $idUsuario): array
-    {
-        $validator = Validator::make($entrada, [
-            'nombre'   => ['sometimes', 'required', 'string', 'max:100'],
-            'ap_pat'   => ['sometimes', 'required', 'string', 'max:100'],
-            'ap_mat'   => ['nullable', 'string', 'max:100'],
-            'email'    => ['sometimes', 'required', 'email', 'max:200', 'unique:usuarios,email,'.$idUsuario.',id_usuario'],
-            'password' => ['nullable', 'string', 'min:6'],
-        ]);
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        return $validator->validated();
     }
 }

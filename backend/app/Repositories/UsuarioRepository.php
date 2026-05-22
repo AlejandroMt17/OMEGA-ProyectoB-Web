@@ -6,20 +6,21 @@ use App\Models\Usuario;
 use App\Repositories\Contracts\UsuarioRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 
-/**
- * Repositorios: consultas y persistencia (sin reglas de negocio complejas).
- * Un repositorio por agregado / entidad facilita tests y sustitución de fuente de datos.
- */
 class UsuarioRepository implements UsuarioRepositoryInterface
 {
     public function todos(): Collection
     {
-        return Usuario::query()->orderBy('id')->get();
+        return Usuario::query()->orderBy('id_usuario')->get();
     }
 
     public function buscarPorId(int $id): ?Usuario
     {
         return Usuario::query()->find($id);
+    }
+
+    public function buscarPorEmail(string $email): ?Usuario
+    {
+        return Usuario::query()->where('email', $email)->first();
     }
 
     public function crear(array $datos): Usuario

@@ -8,7 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Controladores HTTP (MVC): entrada/salida; sin lógica de negocio — solo delegación al Service.
+ * Controlador HTTP — sin lógica de negocio, solo delega al Service.
  */
 class UsuarioController extends Controller
 {
@@ -26,7 +26,6 @@ class UsuarioController extends Controller
     public function store(Request $request): JsonResponse
     {
         $creado = $this->usuarios->crear($request->all());
-
         return response()->json(['data' => $creado], 201);
     }
 
@@ -40,14 +39,12 @@ class UsuarioController extends Controller
     public function update(Request $request, Usuario $usuario): JsonResponse
     {
         $actualizado = $this->usuarios->actualizar($usuario, $request->all());
-
         return response()->json(['data' => $actualizado]);
     }
 
     public function destroy(Usuario $usuario): JsonResponse
     {
         $this->usuarios->eliminar($usuario);
-
         return response()->noContent();
     }
 }

@@ -2,13 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Modelo Eloquent — tabla: instituciones
+ * Representa cada institución/espacio registrado por un Docente.
+ */
 class Institucion extends Model
 {
-    protected $table      = 'instituciones';
+    use HasFactory;
+
+    protected $table = 'instituciones';
     protected $primaryKey = 'id_institucion';
-    public    $timestamps = false;
 
     protected $fillable = [
         'id_docente',
@@ -16,23 +22,19 @@ class Institucion extends Model
         'logo',
     ];
 
-    public function getRouteKeyName(): string
-    {
-        return 'id_institucion';
-    }
-
+    // Relaciones
     public function docente()
     {
         return $this->belongsTo(Usuario::class, 'id_docente', 'id_usuario');
     }
 
+    public function rubrosEvaluacion()
+    {
+        return $this->hasMany(RubroEvaluacion::class, 'id_institucion', 'id_institucion');
+    }
+
     public function grupos()
     {
         return $this->hasMany(Grupo::class, 'id_institucion', 'id_institucion');
-    }
-
-    public function rubros()
-    {
-        return $this->hasMany(RubroEvaluacion::class, 'id_institucion', 'id_institucion');
     }
 }

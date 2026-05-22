@@ -6,39 +6,38 @@ use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * Controlador HTTP — Autenticación de Docentes y Alumnos.
+ * Sin lógica de negocio, solo delega al AuthService.
+ */
 class AuthController extends Controller
 {
     public function __construct(
         private readonly AuthService $auth
     ) {}
 
+    public function registro(Request $request): JsonResponse
+    {
+        $resultado = $this->auth->registro($request->all());
+        return response()->json(['data' => $resultado], 201);
+    }
+
     public function login(Request $request): JsonResponse
     {
         $resultado = $this->auth->login($request->all());
-        return response()->json(['data' => $resultado], 200);
-    }
-
-    public function register(Request $request): JsonResponse
-    {
-        $resultado = $this->auth->register($request->all());
-        return response()->json(['data' => $resultado], 201);
+        return response()->json(['data' => $resultado]);
     }
 
     public function logout(Request $request): JsonResponse
     {
         $this->auth->logout($request->user());
-        return response()->json(['message' => 'Sesion cerrada correctamente.']);
+        return response()->noContent();
     }
 
     public function me(Request $request): JsonResponse
     {
-        $resultado = $this->auth->me($request->user());
-        return response()->json(['data' => $resultado]);
-    }
-
-    public function actualizarPerfil(Request $request): JsonResponse
-    {
-        $resultado = $this->auth->actualizarPerfil($request->user(), $request->all());
-        return response()->json(['data' => $resultado]);
+        return response()->json([
+            'data' => $this->auth->me($request->user()),
+        ]);
     }
 }

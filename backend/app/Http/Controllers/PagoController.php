@@ -2,80 +2,40 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\PayPalService;
-use App\Services\SuscripcionService;
+use App\Services\PagoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use RuntimeException;
 
+/**
+ * Controlador HTTP — Integración con PayPal Sandbox.
+ * Sin lógica de negocio, solo delega al PagoService.
+ */
 class PagoController extends Controller
 {
     public function __construct(
-        private readonly PayPalService      $paypal,
-        private readonly SuscripcionService $suscripciones,
+        private readonly PagoService $pagos
     ) {}
 
-    // POST /pagos/paypal/crear-orden
     public function crearOrden(Request $request): JsonResponse
     {
-        Log::info('[PayPal] crearOrden alcanzado — usuario: ' . $request->user()?->id_usuario);
-        try {
-            $monto  = 149.00; // Plan Mensual fijo por ahora
-            $result = $this->paypal->crearOrden($monto);
-
-            // Registrar pago pendiente en BD
-            $this->suscripciones->registrarOrdenPendiente(
-                $request->user(),
-                $result['order_id'],
-                $monto,
-            );
-
-            return response()->json([
-                'data' => [
-                    'order_id'     => $result['order_id'],
-                    'approval_url' => $result['approval_url'],
-                ],
-            ]);
-        } catch (\Throwable $e) {
-            Log::error('[PayPal] crearOrden falló: ' . get_class($e) . ' — ' . $e->getMessage());
-            return response()->json(['message' => $e->getMessage()], 502);
-        }
+        $orden = $this->pagos->crearOrden($request->user());
+        return response()->json(['data' => $orden], 201);
     }
 
-    // POST /pagos/paypal/confirmar
-    public function confirmar(Request $request): JsonResponse
+    public function capturarPago(Request $request): JsonResponse
     {
         $request->validate([
             'order_id' => ['required', 'string'],
         ]);
 
-        Log::info('[PayPal] confirmar order_id: ' . $request->input('order_id'));
-
-        try {
-            $captura     = $this->paypal->capturarOrden($request->input('order_id'));
-            Log::info('[PayPal] captura OK: ' . json_encode($captura));
-            $suscripcion = $this->suscripciones->confirmarPago(
-                $request->input('order_id'),
-                $captura,
-            );
-
-            return response()->json(['data' => $suscripcion]);
-        } catch (\Throwable $e) {
-            Log::error('[PayPal] confirmar falló: ' . get_class($e) . ' — ' . $e->getMessage());
-            return response()->json(['message' => 'Error al procesar el pago. Intenta de nuevo.'], 502);
-        }
+        $pago = $this->pagos->capturarPago($request->order_id, $request->user());
+        return response()->json(['data' => $pago]);
     }
 
-    // POST /pagos/paypal/cancelar
-    public function cancelar(Request $request): JsonResponse
+    public function historial(Request $request): JsonResponse
     {
-        $request->validate([
-            'order_id' => ['required', 'string'],
+        return response()->json([
+            'data' => $this->pagos->historial($request->user()),
         ]);
-
-        $this->suscripciones->cancelarOrden($request->input('order_id'));
-
-        return response()->json(['message' => 'Orden cancelada.']);
     }
 }

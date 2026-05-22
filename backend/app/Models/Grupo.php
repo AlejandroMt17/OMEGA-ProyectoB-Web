@@ -2,16 +2,23 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Modelo Eloquent — tabla: grupos
+ * Representa el aula virtual que agrupa alumnos en torno a una materia.
+ */
 class Grupo extends Model
 {
-    protected $table      = 'grupos';
+    use HasFactory;
+
+    protected $table = 'grupos';
     protected $primaryKey = 'id_grupo';
-    public    $timestamps = false;
 
     protected $fillable = [
         'id_institucion',
+        'id_docente',
         'nombre',
         'materia',
         'periodo',
@@ -19,19 +26,27 @@ class Grupo extends Model
         'codigo_inv',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'no_alumnos' => 'integer',
+        ];
+    }
+
+    // Relaciones
     public function institucion()
     {
         return $this->belongsTo(Institucion::class, 'id_institucion', 'id_institucion');
     }
 
-    public function alumnos()
+    public function docente()
     {
-        return $this->belongsToMany(
-            Usuario::class,
-            'grupo_alumno',
-            'id_grupo',
-            'id_alumno'
-        )->withPivot('fec_inscripcion');
+        return $this->belongsTo(Usuario::class, 'id_docente', 'id_usuario');
+    }
+
+    public function grupoAlumnos()
+    {
+        return $this->hasMany(GrupoAlumno::class, 'id_grupo', 'id_grupo');
     }
 
     public function sesiones()
@@ -39,14 +54,15 @@ class Grupo extends Model
         return $this->hasMany(Sesion::class, 'id_grupo', 'id_grupo');
     }
 
-    public function sesionActiva()
+    public function alumnos()
     {
-        return $this->hasOne(Sesion::class, 'id_grupo', 'id_grupo')
-            ->where('est_sesion', 1);
-    }
-
-    public function getRouteKeyName(): string
-    {
-        return 'id_grupo';
+        return $this->belongsToMany(
+            Usuario::class,
+            'grupo_alumnos',
+            'id_grupo',
+            'id_alumno',
+            'id_grupo',
+            'id_usuario'
+        );
     }
 }

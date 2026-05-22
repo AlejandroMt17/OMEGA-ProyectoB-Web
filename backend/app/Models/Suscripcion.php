@@ -2,13 +2,21 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Modelo Eloquent — tabla: suscripciones
+ * Gestiona el plan activo de cada Docente.
+ * plan: 1 = Básico, 2 = Mensual
+ * est_suscripcion: 1 = Activa, 2 = Vencida, 3 = En gracia
+ */
 class Suscripcion extends Model
 {
-    protected $table      = 'suscripciones';
+    use HasFactory;
+
+    protected $table = 'suscripciones';
     protected $primaryKey = 'id_suscripcion';
-    public    $timestamps = false;
 
     protected $fillable = [
         'id_usuario',
@@ -22,12 +30,15 @@ class Suscripcion extends Model
     protected function casts(): array
     {
         return [
+            'plan'            => 'integer',
+            'est_suscripcion' => 'integer',
             'fec_inicio'      => 'date',
             'fec_fin'         => 'date',
             'fec_ultimo_pago' => 'date',
         ];
     }
 
+    // Relaciones
     public function usuario()
     {
         return $this->belongsTo(Usuario::class, 'id_usuario', 'id_usuario');

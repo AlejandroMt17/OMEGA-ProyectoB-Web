@@ -2,13 +2,20 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Modelo Eloquent — tabla: pagos
+ * Registro histórico de transacciones procesadas por PayPal.
+ * est_pago: COMPLETED, PENDING, FAILED, REFUNDED
+ */
 class Pago extends Model
 {
-    protected $table      = 'pagos';
+    use HasFactory;
+
+    protected $table = 'pagos';
     protected $primaryKey = 'id_pago';
-    public    $timestamps = false;
 
     protected $fillable = [
         'id_suscripcion',
@@ -23,11 +30,12 @@ class Pago extends Model
     protected function casts(): array
     {
         return [
+            'mon_monto' => 'double',
             'fec_pago'  => 'date',
-            'mon_monto' => 'decimal:2',
         ];
     }
 
+    // Relaciones
     public function suscripcion()
     {
         return $this->belongsTo(Suscripcion::class, 'id_suscripcion', 'id_suscripcion');

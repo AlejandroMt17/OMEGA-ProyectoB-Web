@@ -2,57 +2,44 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Sesion;
 use App\Services\SesionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * Controlador HTTP — Gestión de sesiones de asistencia.
+ * Sin lógica de negocio, solo delega al SesionService.
+ */
 class SesionController extends Controller
 {
     public function __construct(
         private readonly SesionService $sesiones
     ) {}
 
-    public function index(int $grupo): JsonResponse
+    public function index(Request $request, int $idGrupo): JsonResponse
     {
-        $data = $this->sesiones->listar($grupo);
-        return response()->json(['data' => $data]);
+        return response()->json([
+            'data' => $this->sesiones->listar($idGrupo, $request->user()),
+        ]);
     }
 
-    public function show(int $sesion): JsonResponse
+    public function abrir(Request $request, int $idGrupo): JsonResponse
     {
-        $data = $this->sesiones->obtener($sesion);
-        return response()->json(['data' => $data]);
+        $sesion = $this->sesiones->abrir($idGrupo, $request->all(), $request->user());
+        return response()->json(['data' => $sesion], 201);
     }
 
-    public function abrir(int $grupo): JsonResponse
+    public function cerrar(Request $request, Sesion $sesion): JsonResponse
     {
-        $data = $this->sesiones->abrir($grupo);
-        return response()->json(['data' => $data], 201);
+        $actualizada = $this->sesiones->cerrar($sesion, $request->user());
+        return response()->json(['data' => $actualizada]);
     }
 
-    public function cerrar(int $sesion): JsonResponse
+    public function show(Request $request, Sesion $sesion): JsonResponse
     {
-        $data = $this->sesiones->cerrar($sesion);
-        return response()->json(['data' => $data]);
-    }
-
-    public function actualizarAsistencia(Request $request, int $sesion, int $alumno): JsonResponse
-    {
-        $data = $this->sesiones->actualizarAsistencia($sesion, $alumno, $request->all());
-        return response()->json(['data' => $data]);
-    }
-    public function historial(int $grupo): JsonResponse
-    {
-        $data = $this->sesiones->historial($grupo);
-        return response()->json(['data' => $data]);
-    }
-    public function registrarAsistenciaAlumno(Request $request, int $sesion): JsonResponse
-    {
-        $alumnoId = $request->user()->id_usuario;
-        $clave    = $request->input('clave', '');
-
-        $data = $this->sesiones->registrarAsistenciaAlumno($sesion, $alumnoId, $clave);
-
-        return response()->json(['data' => $data]);
+        return response()->json([
+            'data' => $this->sesiones->obtener($sesion, $request->user()),
+        ]);
     }
 }

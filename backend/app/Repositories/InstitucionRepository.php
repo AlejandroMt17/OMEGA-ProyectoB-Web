@@ -8,10 +8,10 @@ use Illuminate\Database\Eloquent\Collection;
 
 class InstitucionRepository implements InstitucionRepositoryInterface
 {
-    public function porDocente(int $docenteId): Collection
+    public function todasPorDocente(int $idDocente): Collection
     {
         return Institucion::query()
-            ->where('id_docente', $docenteId)
+            ->where('id_docente', $idDocente)
             ->orderBy('id_institucion')
             ->get();
     }
@@ -26,7 +26,7 @@ class InstitucionRepository implements InstitucionRepositoryInterface
         return Institucion::query()->create($datos);
     }
 
-    public function actualizar(Institucion $institucion, array $datos): bool
+    public function guardar(Institucion $institucion, array $datos): bool
     {
         return $institucion->update($datos);
     }

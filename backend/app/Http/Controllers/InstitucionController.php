@@ -7,6 +7,10 @@ use App\Services\InstitucionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * Controlador HTTP — Gestión de instituciones del Docente.
+ * Sin lógica de negocio, solo delega al InstitucionService.
+ */
 class InstitucionController extends Controller
 {
     public function __construct(
@@ -15,31 +19,33 @@ class InstitucionController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $data = $this->instituciones->listar($request->user());
-        return response()->json(['data' => $data]);
+        return response()->json([
+            'data' => $this->instituciones->listar($request->user()),
+        ]);
     }
 
     public function store(Request $request): JsonResponse
     {
-        $data = $this->instituciones->crear($request->user(), $request->all());
-        return response()->json(['data' => $data], 201);
+        $creada = $this->instituciones->crear($request->all(), $request->user());
+        return response()->json(['data' => $creada], 201);
     }
 
-    public function show(Institucion $institucion): JsonResponse
+    public function show(Request $request, Institucion $institucion): JsonResponse
     {
-        $data = $this->instituciones->obtener($institucion);
-        return response()->json(['data' => $data]);
+        return response()->json([
+            'data' => $this->instituciones->obtener($institucion, $request->user()),
+        ]);
     }
 
     public function update(Request $request, Institucion $institucion): JsonResponse
     {
-        $data = $this->instituciones->actualizar($institucion, $request->all());
-        return response()->json(['data' => $data]);
+        $actualizada = $this->instituciones->actualizar($institucion, $request->all(), $request->user());
+        return response()->json(['data' => $actualizada]);
     }
 
-    public function destroy(Institucion $institucion): JsonResponse
+    public function destroy(Request $request, Institucion $institucion): JsonResponse
     {
-        $this->instituciones->eliminar($institucion);
+        $this->instituciones->eliminar($institucion, $request->user());
         return response()->noContent();
     }
 }

@@ -2,13 +2,20 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Modelo Eloquent — tabla: asistencias
+ * Registro unitario de la asistencia de un Alumno en una Sesión.
+ * est_asistencia: 1 = Presente, 2 = Ausente, 3 = Justificada
+ */
 class Asistencia extends Model
 {
-    protected $table      = 'asistencias';
+    use HasFactory;
+
+    protected $table = 'asistencias';
     protected $primaryKey = 'id_asistencia';
-    public    $timestamps = false;
 
     protected $fillable = [
         'id_sesion',
@@ -20,10 +27,12 @@ class Asistencia extends Model
     protected function casts(): array
     {
         return [
-            'hora_registro' => 'datetime',
+            'est_asistencia' => 'integer',
+            'hora_registro'  => 'datetime',
         ];
     }
 
+    // Relaciones
     public function sesion()
     {
         return $this->belongsTo(Sesion::class, 'id_sesion', 'id_sesion');

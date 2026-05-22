@@ -3,9 +3,11 @@
 namespace App\Services;
 
 use App\Models\Grupo;
+use App\Models\Usuario;
 use App\Repositories\Contracts\GrupoRepositoryInterface;
-use Illuminate\Support\Str;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class GrupoService
@@ -14,58 +16,72 @@ class GrupoService
         private readonly GrupoRepositoryInterface $grupos
     ) {}
 
-    public function listarPorId(int $institucionId): array
+    public function listar(Usuario $docente): array
     {
-        return $this->grupos->porInstitucion($institucionId)
+        return $this->grupos->todosPorDocente($docente->id_usuario)
             ->map(fn(Grupo $g) => $this->serializar($g))
             ->values()
             ->all();
     }
 
-    public function obtenerPorId(int $id): array
+    public function obtener(Grupo $grupo, Usuario $docente): array
     {
-        $grupo = $this->grupos->buscarPorId($id);
-        abort_if(!$grupo, 404, 'Grupo no encontrado.');
+        $this->verificarPropietario($grupo, $docente);
         return $this->serializar($grupo);
     }
 
-    public function crearEnInstitucion(int $institucionId, array $entrada): array
+    public function crear(array $entrada, Usuario $docente): array
     {
-        $datos = $this->validarCreacion($entrada);
-        $grupo = $this->grupos->crear([
-            'id_institucion' => $institucionId,
-            'nombre'         => $datos['nombre'],
-            'materia'        => $datos['materia'],
-            'periodo'        => $datos['periodo'] ?? null,
-            'no_alumnos'     => 0,
-            'codigo_inv'     => $this->generarCodigo($datos['materia']),
-        ]);
+        $datos = $this->validar($entrada);
+        $datos['id_docente'] = $docente->id_usuario;
+        $grupo = $this->grupos->crear($datos);
         return $this->serializar($grupo);
     }
 
-    public function actualizarPorId(int $id, array $entrada): array
+    public function actualizar(Grupo $grupo, array $entrada, Usuario $docente): array
     {
-        $grupo = $this->grupos->buscarPorId($id);
-        abort_if(!$grupo, 404, 'Grupo no encontrado.');
-        $datos = $this->validarActualizacion($entrada);
-        $this->grupos->actualizar($grupo, $datos);
+        $this->verificarPropietario($grupo, $docente);
+        $datos = $this->validar($entrada);
+        $this->grupos->guardar($grupo, $datos);
         return $this->serializar($grupo->fresh());
     }
 
-    public function eliminarPorId(int $id): void
+    public function eliminar(Grupo $grupo, Usuario $docente): void
     {
-        $grupo = $this->grupos->buscarPorId($id);
-        abort_if(!$grupo, 404, 'Grupo no encontrado.');
+        $this->verificarPropietario($grupo, $docente);
         $this->grupos->eliminar($grupo);
     }
 
-    private function generarCodigo(string $materia): string
+    public function generarCodigoInv(Grupo $grupo, Usuario $docente): array
     {
-        $prefijo = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $materia), 0, 3));
-        do {
-            $codigo = $prefijo . '-' . strtoupper(Str::random(5));
-        } while ($this->grupos->buscarPorCodigo($codigo));
-        return $codigo;
+        $this->verificarPropietario($grupo, $docente);
+        $codigo = strtoupper(Str::random(8));
+        $this->grupos->guardar($grupo, ['codigo_inv' => $codigo]);
+        return $this->serializar($grupo->fresh());
+    }
+
+    private function verificarPropietario(Grupo $grupo, Usuario $docente): void
+    {
+        if ($grupo->id_docente !== $docente->id_usuario) {
+            throw new AuthorizationException('No tienes permiso para acceder a este grupo.');
+        }
+    }
+
+    private function validar(array $entrada): array
+    {
+        $validator = Validator::make($entrada, [
+            'id_institucion' => ['required', 'integer', 'exists:instituciones,id_institucion'],
+            'nombre'         => ['required', 'string', 'max:100'],
+            'materia'        => ['required', 'string', 'max:150'],
+            'periodo'        => ['required', 'string', 'max:50'],
+            'no_alumnos'     => ['required', 'integer', 'min:1'],
+        ]);
+
+        if ($validator->fails()) {
+            throw new ValidationException($validator);
+        }
+
+        return $validator->validated();
     }
 
     private function serializar(Grupo $grupo): array
@@ -73,73 +89,13 @@ class GrupoService
         return [
             'id_grupo'       => $grupo->id_grupo,
             'id_institucion' => $grupo->id_institucion,
+            'id_docente'     => $grupo->id_docente,
             'nombre'         => $grupo->nombre,
             'materia'        => $grupo->materia,
             'periodo'        => $grupo->periodo,
             'no_alumnos'     => $grupo->no_alumnos,
             'codigo_inv'     => $grupo->codigo_inv,
+            'created_at'     => $grupo->created_at?->toIso8601String(),
         ];
-    }
-
-    private function validarCreacion(array $entrada): array
-    {
-        $validator = Validator::make($entrada, [
-            'nombre'  => ['required', 'string', 'max:100'],
-            'materia' => ['required', 'string', 'max:150'],
-            'periodo' => ['nullable', 'string', 'max:50'],
-        ]);
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-        return $validator->validated();
-    }
-
-    private function validarActualizacion(array $entrada): array
-    {
-        $validator = Validator::make($entrada, [
-            'nombre'  => ['sometimes', 'required', 'string', 'max:100'],
-            'materia' => ['sometimes', 'required', 'string', 'max:150'],
-            'periodo' => ['nullable', 'string', 'max:50'],
-        ]);
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-        return $validator->validated();
-    }
-    public function alumnos(int $grupoId): array
-    {
-        $grupo = $this->grupos->buscarPorId($grupoId);
-        abort_if(!$grupo, 404, 'Grupo no encontrado.');
-
-        return $grupo->alumnos->map(function ($alumno) use ($grupoId) {
-            $asistencias = \App\Models\Asistencia::query()
-                ->whereHas('sesion', fn($q) => $q
-                    ->where('id_grupo', $grupoId)
-                    ->where('est_sesion', 2))
-                ->where('id_alumno', $alumno->id_usuario)
-                ->get();
-
-            $total     = $asistencias->count();
-            $asistidas = $asistencias->where('est_asistencia', 1)->count()
-                    + $asistencias->where('est_asistencia', 3)->count();
-
-            return [
-                'alumno_id'          => $alumno->id_usuario,
-                'nombre'             => $alumno->nombre,
-                'ap_pat'             => $alumno->ap_pat,
-                'ap_mat'             => $alumno->ap_mat ?? '',
-                'email'              => $alumno->email,
-                'total_sesiones'     => $total,
-                'sesiones_asistidas' => $asistidas,
-                'fecha_inscripcion'  => $alumno->pivot->fec_inscripcion ?? '',
-            ];
-        })->values()->all();
-    }
-    public function eliminarAlumno(int $grupoId, int $alumnoId): void
-    {
-        $grupo = $this->grupos->buscarPorId($grupoId);
-        abort_if(!$grupo, 404, 'Grupo no encontrado.');
-
-        $grupo->alumnos()->detach($alumnoId);
     }
 }

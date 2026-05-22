@@ -1,63 +1,81 @@
 <?php
 
+use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GrupoAlumnoController;
 use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\InstitucionController;
 use App\Http\Controllers\PagoController;
-use App\Http\Controllers\RubroController;
+use App\Http\Controllers\RubroEvaluacionController;
 use App\Http\Controllers\SesionController;
 use App\Http\Controllers\SuscripcionController;
+use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AlumnoController;
 
-Route::prefix('auth')->group(function () {
-    Route::post('login',    [AuthController::class, 'login']);
-    Route::post('register', [AuthController::class, 'register']);
+/*
+ * Rutas API REST — Sistema de Control de Asistencias
+ * Prefijo automático: /api
+ */
 
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::post('logout', [AuthController::class, 'logout']);
-        Route::get('me',      [AuthController::class, 'me']);
-    });
-});
+// Rutas públicas
+Route::post('auth/registro', [AuthController::class, 'registro']);
+Route::post('auth/login',    [AuthController::class, 'login']);
 
+// Rutas protegidas con Sanctum
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('auth/logout', [AuthController::class, 'logout']);
+    Route::get('auth/me',      [AuthController::class, 'me']);
 
-    // Perfil del usuario autenticado
-    Route::patch('usuarios/perfil', [AuthController::class, 'actualizarPerfil']);
+    // Usuarios
+    Route::get('usuarios',              [UsuarioController::class, 'index']);
+    Route::post('usuarios',             [UsuarioController::class, 'store']);
+    Route::get('usuarios/{usuario}',    [UsuarioController::class, 'show']);
+    Route::put('usuarios/{usuario}',    [UsuarioController::class, 'update']);
+    Route::delete('usuarios/{usuario}', [UsuarioController::class, 'destroy']);
 
-    // Rutas fijas ANTES que los recursos con parámetros
-    Route::post('grupos/unirse',        [AlumnoController::class, 'unirseGrupo']);
-    Route::get('alumno/grupos',         [AlumnoController::class, 'grupos']);
+    // Instituciones
+    Route::get('instituciones',                  [InstitucionController::class, 'index']);
+    Route::post('instituciones',                 [InstitucionController::class, 'store']);
+    Route::get('instituciones/{institucion}',    [InstitucionController::class, 'show']);
+    Route::put('instituciones/{institucion}',    [InstitucionController::class, 'update']);
+    Route::delete('instituciones/{institucion}', [InstitucionController::class, 'destroy']);
 
-    // Recursos
-    Route::apiResource('instituciones', InstitucionController::class);
-    Route::apiResource('instituciones.grupos', GrupoController::class)->shallow();
+    // Rubros de Evaluación
+    Route::get('instituciones/{idInstitucion}/rubros',  [RubroEvaluacionController::class, 'index']);
+    Route::post('instituciones/{idInstitucion}/rubros', [RubroEvaluacionController::class, 'store']);
+    Route::put('rubros/{rubroEvaluacion}',              [RubroEvaluacionController::class, 'update']);
+    Route::delete('rubros/{rubroEvaluacion}',           [RubroEvaluacionController::class, 'destroy']);
+
+    // Grupos
+    Route::get('grupos',                     [GrupoController::class, 'index']);
+    Route::post('grupos',                    [GrupoController::class, 'store']);
+    Route::get('grupos/{grupo}',             [GrupoController::class, 'show']);
+    Route::put('grupos/{grupo}',             [GrupoController::class, 'update']);
+    Route::delete('grupos/{grupo}',          [GrupoController::class, 'destroy']);
+    Route::post('grupos/{grupo}/codigo-inv', [GrupoController::class, 'generarCodigo']);
+
+    // Alumnos en grupos
+    Route::get('grupos/{idGrupo}/alumnos',       [GrupoAlumnoController::class, 'index']);
+    Route::post('grupos/matricular',             [GrupoAlumnoController::class, 'matricular']);
+    Route::delete('grupo-alumnos/{grupoAlumno}', [GrupoAlumnoController::class, 'destroy']);
 
     // Sesiones
-    Route::get('grupos/{grupo}/sesiones',                                   [SesionController::class, 'index']);
-    Route::post('grupos/{grupo}/sesiones/abrir',                            [SesionController::class, 'abrir']);
-    Route::get('grupos/{grupo}/sesiones/historial',                         [SesionController::class, 'historial']);
-    Route::get('sesiones/{sesion}',                                         [SesionController::class, 'show']);
-    Route::post('sesiones/{sesion}/cerrar',                                 [SesionController::class, 'cerrar']);
-    Route::patch('sesiones/{sesion}/alumnos/{alumno}/asistencia',           [SesionController::class, 'actualizarAsistencia']);
+    Route::get('grupos/{idGrupo}/sesiones',        [SesionController::class, 'index']);
+    Route::post('grupos/{idGrupo}/sesiones/abrir', [SesionController::class, 'abrir']);
+    Route::get('sesiones/{sesion}',                [SesionController::class, 'show']);
+    Route::post('sesiones/{sesion}/cerrar',        [SesionController::class, 'cerrar']);
 
-    // Rubros
-    Route::get('instituciones/{institucion}/rubros',    [RubroController::class, 'index']);
-    Route::post('instituciones/{institucion}/rubros',   [RubroController::class, 'store']);
-    Route::get('rubros/{rubro}',                        [RubroController::class, 'show']);
-    Route::put('rubros/{rubro}',                        [RubroController::class, 'update']);
-    Route::delete('rubros/{rubro}',                     [RubroController::class, 'destroy']);
+    // Asistencias
+    Route::post('asistencias/registrar',          [AsistenciaController::class, 'registrar']);
+    Route::get('sesiones/{idSesion}/asistencias', [AsistenciaController::class, 'porSesion']);
+    Route::put('asistencias/{asistencia}/estado', [AsistenciaController::class, 'editarEstado']);
 
-    // Alumnos de grupo
-    Route::get('grupos/{grupo}/alumnos',                [GrupoController::class, 'alumnos']);
-    Route::delete('grupos/{grupo}/alumnos/{alumno}',    [GrupoController::class, 'eliminarAlumno']);
-    Route::post('sesiones/{sesion}/registrar-asistencia', [SesionController::class, 'registrarAsistenciaAlumno']);
-
-    // Suscripcion
-    Route::get('suscripcion', [SuscripcionController::class, 'show']);
+    // Suscripciones
+    Route::get('suscripcion',         [SuscripcionController::class, 'show']);
+    Route::post('suscripcion/basico', [SuscripcionController::class, 'activarBasico']);
 
     // Pagos PayPal
-    Route::post('pagos/paypal/crear-orden', [PagoController::class, 'crearOrden']);
-    Route::post('pagos/paypal/confirmar',   [PagoController::class, 'confirmar']);
-    Route::post('pagos/paypal/cancelar',    [PagoController::class, 'cancelar']);
+    Route::post('pagos/crear-orden',   [PagoController::class, 'crearOrden']);
+    Route::post('pagos/capturar',      [PagoController::class, 'capturarPago']);
+    Route::get('pagos/historial',      [PagoController::class, 'historial']);
 });

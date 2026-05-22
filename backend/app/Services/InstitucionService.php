@@ -7,6 +7,7 @@ use App\Models\Usuario;
 use App\Repositories\Contracts\InstitucionRepositoryInterface;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Auth\Access\AuthorizationException;
 
 class InstitucionService
 {
@@ -16,70 +17,69 @@ class InstitucionService
 
     public function listar(Usuario $docente): array
     {
-        return $this->instituciones->porDocente($docente->id_usuario)
+        return $this->instituciones->todasPorDocente($docente->id_usuario)
             ->map(fn(Institucion $i) => $this->serializar($i))
             ->values()
             ->all();
     }
 
-    public function obtener(Institucion $institucion): array
+    public function obtener(Institucion $institucion, Usuario $docente): array
     {
+        $this->verificarPropietario($institucion, $docente);
         return $this->serializar($institucion);
     }
 
-    public function crear(Usuario $docente, array $entrada): array
+    public function crear(array $entrada, Usuario $docente): array
     {
-        $datos = $this->validarCreacion($entrada);
-        $institucion = $this->instituciones->crear([
-            'id_docente' => $docente->id_usuario,
-            'nombre'     => $datos['nombre'],
-            'logo'       => $datos['logo'] ?? null,
-        ]);
+        $datos = $this->validar($entrada);
+        $datos['id_docente'] = $docente->id_usuario;
+        $institucion = $this->instituciones->crear($datos);
         return $this->serializar($institucion);
     }
 
-    public function actualizar(Institucion $institucion, array $entrada): array
+    public function actualizar(Institucion $institucion, array $entrada, Usuario $docente): array
     {
-        $datos = $this->validarActualizacion($entrada);
-        $this->instituciones->actualizar($institucion, $datos);
+        $this->verificarPropietario($institucion, $docente);
+        $datos = $this->validar($entrada);
+        $this->instituciones->guardar($institucion, $datos);
         return $this->serializar($institucion->fresh());
     }
 
-    public function eliminar(Institucion $institucion): void
+    public function eliminar(Institucion $institucion, Usuario $docente): void
     {
+        $this->verificarPropietario($institucion, $docente);
         $this->instituciones->eliminar($institucion);
+    }
+
+    private function verificarPropietario(Institucion $institucion, Usuario $docente): void
+    {
+        if ($institucion->id_docente !== $docente->id_usuario) {
+            throw new AuthorizationException('No tienes permiso para acceder a esta institución.');
+        }
+    }
+
+    private function validar(array $entrada): array
+    {
+        $validator = Validator::make($entrada, [
+            'nombre' => ['required', 'string', 'max:150'],
+            'logo'   => ['required', 'string', 'max:500'],
+        ]);
+
+        if ($validator->fails()) {
+            throw new ValidationException($validator);
+        }
+
+        return $validator->validated();
     }
 
     private function serializar(Institucion $institucion): array
     {
         return [
             'id_institucion' => $institucion->id_institucion,
+            'id_docente'     => $institucion->id_docente,
             'nombre'         => $institucion->nombre,
             'logo'           => $institucion->logo,
+            'created_at'     => $institucion->created_at?->toIso8601String(),
         ];
-    }
-
-    private function validarCreacion(array $entrada): array
-    {
-        $validator = Validator::make($entrada, [
-            'nombre' => ['required', 'string', 'max:150'],
-            'logo'   => ['nullable', 'string', 'max:500'],
-        ]);
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-        return $validator->validated();
-    }
-
-    private function validarActualizacion(array $entrada): array
-    {
-        $validator = Validator::make($entrada, [
-            'nombre' => ['sometimes', 'required', 'string', 'max:150'],
-            'logo'   => ['nullable', 'string', 'max:500'],
-        ]);
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-        return $validator->validated();
     }
 }
