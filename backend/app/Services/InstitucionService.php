@@ -62,7 +62,7 @@ class InstitucionService
     {
         $validator = Validator::make($entrada, [
             'nombre' => ['required', 'string', 'max:150'],
-            'logo'   => ['required', 'string', 'max:500'],
+            'logo'   => ['nullable', 'string', 'max:500'],
         ]);
 
         if ($validator->fails()) {

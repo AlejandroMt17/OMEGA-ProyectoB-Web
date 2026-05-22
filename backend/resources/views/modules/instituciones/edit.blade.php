@@ -1,7 +1,7 @@
 {{--
     @file edit.blade.php
     @description Formulario para editar una institución
-    @version 1.0.0
+    @version 1.1.0
 --}}
 @extends('layouts.app')
 @section('title', 'Editar Institución')
@@ -53,19 +53,46 @@
             @enderror
         </div>
 
-        {{-- Logo (deshabilitado) --}}
+        {{-- Logo URL con preview --}}
         <div>
             <label class="block text-sm font-body text-omg-dark mb-1">
                 URL del logotipo
             </label>
+
+            {{-- Preview del logo actual --}}
+            <div class="mb-3 flex items-center gap-3">
+                <div class="w-16 h-16 rounded-lg border border-omg-kashmir-dark bg-omg-chardon flex items-center justify-center overflow-hidden">
+                    @if ($institucion->logo)
+                        <img
+                            id="logo-preview"
+                            src="{{ $institucion->logo }}"
+                            alt="Logo actual"
+                            class="h-12 w-auto object-contain"
+                            onerror="this.style.display='none';document.getElementById('logo-placeholder').style.display='flex'"
+                        />
+                        <div id="logo-placeholder" class="hidden items-center justify-center w-full h-full">
+                            <i class="fa-solid fa-image text-omg-kashmir text-xl"></i>
+                        </div>
+                    @else
+                        <i class="fa-solid fa-image text-omg-kashmir text-xl"></i>
+                    @endif
+                </div>
+                <p class="text-xs font-body text-omg-kashmir">Vista previa del logo actual</p>
+            </div>
+
             <input
                 type="text"
-                value="{{ $institucion->logo }}"
-                disabled
-                class="w-full px-4 py-2.5 bg-omg-pastel border border-omg-kashmir rounded-lg text-sm font-body text-omg-kashmir cursor-not-allowed"
+                name="logo"
+                id="logo-input"
+                value="{{ old('logo', $institucion->logo) }}"
+                placeholder="https://ejemplo.com/logo.png"
+                class="w-full px-4 py-2.5 bg-white border border-omg-kashmir rounded-lg text-sm font-body text-omg-dark focus:outline-none focus:ring-2 focus:ring-omg-kashmir focus:border-transparent @error('logo') border-red-400 @enderror"
             />
+            @error('logo')
+                <p class="text-xs text-red-500 mt-1 italic font-body">{{ $message }}</p>
+            @enderror
             <p class="text-xs font-body text-omg-kashmir mt-1 italic">
-                El logo no es editable
+                Ingresa la URL de la imagen del logo
             </p>
         </div>
 
@@ -86,5 +113,19 @@
 
     </form>
 </div>
+
+{{-- Script para preview en tiempo real --}}
+<script>
+    document.getElementById('logo-input').addEventListener('input', function () {
+        const url = this.value.trim();
+        const preview = document.getElementById('logo-preview');
+        const placeholder = document.getElementById('logo-placeholder');
+        if (url && preview) {
+            preview.src = url;
+            preview.style.display = 'block';
+            if (placeholder) placeholder.style.display = 'none';
+        }
+    });
+</script>
 
 @endsection
