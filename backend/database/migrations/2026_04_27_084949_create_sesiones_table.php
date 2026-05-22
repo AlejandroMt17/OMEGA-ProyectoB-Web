@@ -15,7 +15,8 @@ return new class extends Migration
                   ->constrained('grupos', 'id_grupo')
                   ->onDelete('restrict')
                   ->onUpdate('cascade');
-            $table->string('clave', 20);
+            // nullable: la clave se invalida (null) al cerrar la sesión (RF-64, RNF-W-44)
+            $table->string('clave', 20)->nullable()->default(null);
             $table->unsignedTinyInteger('est_sesion')->default(1)->comment('1=Activa, 0=Cerrada');
             $table->date('fec_sesion');
             $table->dateTime('hora_apertura')->useCurrent();
