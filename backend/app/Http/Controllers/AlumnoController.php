@@ -1,97 +1,71 @@
 <?php
 
+/*
+ * ============================================================
+ * AlumnoController
+ * MPL-OMEGA-05 | Código: CA-CTRL-ALUMNO-01
+ * ============================================================
+ * Controlador HTTP para las operaciones del rol Alumno
+ * consumidas desde la aplicación móvil Flutter.
+ *
+ * Sin lógica de negocio: delega 100 % al AlumnoService.
+ * Requerimientos: RF-14, RF-15, RF-19, RF-21, RF-31..RF-45
+ * ============================================================
+ */
+
 namespace App\Http\Controllers;
 
-use App\Models\GrupoAlumno;
-use App\Models\Asistencia;
+use App\Services\AlumnoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AlumnoController extends Controller
 {
-    public function grupos(Request $request): JsonResponse
+    public function __construct(
+        private readonly AlumnoService $alumnos
+    ) {}
+
+    /**
+     * RF-19 — Matriculación por código de invitación.
+     * POST /api/alumno/grupos/unirse
+     * Body: { "codigo_inv": "XXXXXXXX" }
+     */
+    public function unirse(Request $request): JsonResponse
     {
-        $alumnoId = $request->user()->id_usuario;
+        $vinculacion = $this->alumnos->unirse($request->all(), $request->user());
+        return response()->json(['data' => $vinculacion], 201);
+    }
 
-        $grupos = GrupoAlumno::query()
-            ->with(['grupo.institucion.rubros', 'grupo.sesionActiva'])
-            ->where('id_alumno', $alumnoId)
-            ->get()
-            ->map(function ($ga) use ($alumnoId) {
-                $grupo = $ga->grupo;
-
-                $asistencias = Asistencia::query()
-                    ->whereHas('sesion', fn($q) => $q->where('id_grupo', $grupo->id_grupo))
-                    ->where('id_alumno', $alumnoId)
-                    ->get();
-
-                $total        = $asistencias->count();
-                $presentes    = $asistencias->where('est_asistencia', 1)->count();
-                $faltas       = $asistencias->where('est_asistencia', 2)->count();
-                $justificadas = $asistencias->where('est_asistencia', 3)->count();
-
-                $sesionActiva = $grupo->sesionActiva;
-
-                $rubros = $grupo->institucion?->rubros
-                    ->sortByDesc('porcentaje_minimo')
-                    ->values()
-                    ->map(fn($r) => [
-                        'nombre'            => $r->nombre,
-                        'porcentaje_minimo' => (float) $r->porcentaje_minimo,
-                    ])->all() ?? [];
-
-                return [
-                    'id_grupo'           => $grupo->id_grupo,
-                    'nombre'             => $grupo->nombre,
-                    'materia'            => $grupo->materia,
-                    'periodo'            => $grupo->periodo,
-                    'codigo_inv'         => $grupo->codigo_inv,
-                    'id_institucion'     => $grupo->id_institucion,
-                    'nombre_institucion' => $grupo->institucion?->nombre,
-                    'total_sesiones'     => $total,
-                    'presentes'          => $presentes,
-                    'faltas'             => $faltas,
-                    'justificadas'       => $justificadas,
-                    'rubros'             => $rubros,
-                    'sesion_activa'      => $sesionActiva ? [
-                        'id_sesion'     => $sesionActiva->id_sesion,
-                        'hora_apertura' => $sesionActiva->hora_apertura?->toDateTimeString(),
-                        'clave'         => $sesionActiva->clave,
-                    ] : null,
-                ];
-            });
-
+    /**
+     * RF-15, RF-32, RF-33, RF-41, RF-43 — Panel de progreso del alumno.
+     * GET /api/alumno/grupos
+     * Retorna lista de grupos con % asistencia, rubros y contadores.
+     */
+    public function misGrupos(Request $request): JsonResponse
+    {
+        $grupos = $this->alumnos->misGrupos($request->user());
         return response()->json(['data' => $grupos]);
     }
 
-    public function unirseGrupo(Request $request): JsonResponse
+    /**
+     * RF-14, RF-21, RF-38 — Registro de asistencia con clave temporal.
+     * POST /api/alumno/asistencia
+     * Body: { "id_grupo": 1, "clave": "ABC123" }
+     */
+    public function registrarAsistencia(Request $request): JsonResponse
     {
-        $codigo   = $request->input('codigo');
-        $alumnoId = $request->user()->id_usuario;
+        $asistencia = $this->alumnos->registrarAsistencia($request->all(), $request->user());
+        return response()->json(['data' => $asistencia], 201);
+    }
 
-        $grupo = \App\Models\Grupo::query()
-            ->where('codigo_inv', strtoupper($codigo))
-            ->first();
-
-        if (!$grupo) {
-            return response()->json(['message' => 'Codigo invalido o grupo no encontrado.'], 404);
-        }
-
-        $yaInscrito = $grupo->alumnos()->where('id_alumno', $alumnoId)->exists();
-
-        if ($yaInscrito) {
-            return response()->json(['message' => 'Ya estas inscrito en este grupo.'], 422);
-        }
-
-        $grupo->alumnos()->attach($alumnoId, [
-            'fec_inscripcion' => now()->toDateString(),
-        ]);
-
-        return response()->json(['data' => [
-            'id_grupo'   => $grupo->id_grupo,
-            'nombre'     => $grupo->nombre,
-            'materia'    => $grupo->materia,
-            'codigo_inv' => $grupo->codigo_inv,
-        ]], 201);
+    /**
+     * RF-31, RF-32, RF-33 — Historial de asistencia por materia con estados.
+     * GET /api/alumno/grupos/{idGrupo}/historial
+     * Retorna sesiones con est_asistencia: 1=Presente, 2=Ausente, 3=Justificada
+     */
+    public function historialGrupo(Request $request, int $idGrupo): JsonResponse
+    {
+        $historial = $this->alumnos->historialGrupo($idGrupo, $request->user());
+        return response()->json(['data' => $historial]);
     }
 }
