@@ -108,6 +108,39 @@
             @enderror
         </div>
 
+
+        {{-- Horario --}}
+        <div>
+            <label class="block text-sm font-body text-omg-dark mb-2">
+                Horario <span class="text-omg-kashmir font-normal">(opcional)</span>
+            </label>
+            <p class="text-xs font-body text-omg-kashmir mb-2">Días de clase</p>
+            <div class="flex flex-wrap gap-2 mb-4">
+                @foreach (['L'=>'Lun','M'=>'Mar','X'=>'Mié','J'=>'Jue','V'=>'Vie','S'=>'Sáb','D'=>'Dom'] as $val => $label)
+                    <label class="cursor-pointer">
+                        <input type="checkbox" name="dias[]" value="{{ $val }}"
+                               class="peer hidden"
+                               {{ in_array($val, old('dias', [])) ? 'checked' : '' }}>
+                        <span class="peer-checked:bg-omg-nile peer-checked:text-white px-3 py-1.5 rounded-lg border border-omg-kashmir text-xs font-body text-omg-kashmir hover:border-omg-nile transition-colors select-none">
+                            {{ $label }}
+                        </span>
+                    </label>
+                @endforeach
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-body text-omg-kashmir mb-1">Hora inicio</label>
+                    <input type="time" name="hora_inicio" value="{{ old('hora_inicio') }}"
+                           class="w-full px-3 py-2 bg-white border border-omg-kashmir rounded-lg text-sm font-body text-omg-dark focus:outline-none focus:ring-2 focus:ring-omg-kashmir"/>
+                </div>
+                <div>
+                    <label class="block text-xs font-body text-omg-kashmir mb-1">Hora fin</label>
+                    <input type="time" name="hora_fin" value="{{ old('hora_fin') }}"
+                           class="w-full px-3 py-2 bg-white border border-omg-kashmir rounded-lg text-sm font-body text-omg-dark focus:outline-none focus:ring-2 focus:ring-omg-kashmir"/>
+                </div>
+            </div>
+        </div>
+
         {{-- No. Alumnos --}}
         <div>
             <label class="block text-sm font-body text-omg-dark mb-1">

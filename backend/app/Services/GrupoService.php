@@ -69,12 +69,20 @@ class GrupoService
 
     private function validar(array $entrada): array
     {
+        // Convertir array de dias a string: ['L','M','V'] => 'LMV'
+        if (isset($entrada['dias']) && is_array($entrada['dias'])) {
+            $entrada['dias'] = implode('', $entrada['dias']);
+        }
+
         $validator = Validator::make($entrada, [
             'id_institucion' => ['required', 'integer', 'exists:instituciones,id_institucion'],
             'nombre'         => ['required', 'string', 'max:100'],
             'materia'        => ['required', 'string', 'max:150'],
             'periodo'        => ['required', 'string', 'max:50'],
             'no_alumnos'     => ['required', 'integer', 'min:1'],
+            'hora_inicio'    => ['nullable', 'date_format:H:i'],
+            'hora_fin'       => ['nullable', 'date_format:H:i', 'after:hora_inicio'],
+            'dias'           => ['nullable', 'string', 'max:20'],
         ]);
 
         if ($validator->fails()) {

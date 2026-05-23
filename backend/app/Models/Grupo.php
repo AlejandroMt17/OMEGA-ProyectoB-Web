@@ -24,6 +24,9 @@ class Grupo extends Model
         'periodo',
         'no_alumnos',
         'codigo_inv',
+        'hora_inicio',
+        'hora_fin',
+        'dias',
     ];
 
     protected function casts(): array

@@ -46,6 +46,12 @@
                     </td>
                     <td class="px-5 py-4">
                         <p class="text-sm font-body text-omg-kashmir">{{ $grupo->periodo }}</p>
+                        @if ($grupo->hora_inicio)
+                            <p class="text-xs font-body text-omg-kashmir mt-0.5">
+                                <i class="fa-regular fa-clock mr-1"></i>
+                                {{ $grupo->dias }} · {{ \Carbon\Carbon::parse($grupo->hora_inicio)->format('H:i') }} – {{ \Carbon\Carbon::parse($grupo->hora_fin)->format('H:i') }}
+                            </p>
+                        @endif
                     </td>
                     <td class="px-5 py-4">
                         <p class="text-sm font-body text-omg-dark">{{ $grupo->no_alumnos }}</p>
