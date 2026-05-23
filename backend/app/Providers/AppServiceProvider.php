@@ -17,6 +17,8 @@ use App\Repositories\GrupoRepository;
 use App\Repositories\InstitucionRepository;
 use App\Repositories\PagoRepository;
 use App\Repositories\RubroEvaluacionRepository;
+use App\Repositories\RubroRepository;
+use App\Repositories\Contracts\RubroRepositoryInterface;
 use App\Repositories\SesionRepository;
 use App\Repositories\SuscripcionRepository;
 use App\Repositories\UsuarioRepository;
@@ -32,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(SesionRepositoryInterface::class, SesionRepository::class);
         $this->app->bind(AsistenciaRepositoryInterface::class, AsistenciaRepository::class);
         $this->app->bind(RubroEvaluacionRepositoryInterface::class, RubroEvaluacionRepository::class);
+        $this->app->bind(RubroRepositoryInterface::class, RubroRepository::class);
         $this->app->bind(GrupoAlumnoRepositoryInterface::class, GrupoAlumnoRepository::class);
         $this->app->bind(SuscripcionRepositoryInterface::class, SuscripcionRepository::class);
         $this->app->bind(PagoRepositoryInterface::class, PagoRepository::class);
