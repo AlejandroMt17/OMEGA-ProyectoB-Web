@@ -23,6 +23,20 @@
     </p>
 </div>
 
+{{-- Botones exportar --}}
+<div class="flex items-center gap-3 mb-6">
+    <a href="{{ route('ca.reportes.excel', $grupo->id_grupo) }}"
+       class="flex items-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white font-heading font-semibold rounded-lg transition-colors text-sm">
+        <i class="fa-solid fa-file-excel"></i>
+        Exportar Excel
+    </a>
+    <a href="{{ route('ca.reportes.pdf', $grupo->id_grupo) }}"
+       class="flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-heading font-semibold rounded-lg transition-colors text-sm">
+        <i class="fa-solid fa-file-pdf"></i>
+        Exportar PDF
+    </a>
+</div>
+
 {{-- Tabla de sesiones --}}
 <div class="bg-white rounded-xl border border-omg-kashmir-dark overflow-hidden">
     <table class="w-full">

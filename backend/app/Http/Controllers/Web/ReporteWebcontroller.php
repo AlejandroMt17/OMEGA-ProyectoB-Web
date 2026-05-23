@@ -2,15 +2,20 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Exports\ReporteGrupoExport;
 use App\Http\Controllers\Controller;
 use App\Models\Asistencia;
+use App\Models\GrupoAlumno;
 use App\Models\Sesion;
 use App\Repositories\Contracts\GrupoRepositoryInterface;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 
 /**
  * Controlador Web — Reportes de asistencia por grupo.
- * @version 1.0.0
+ * RF-06 — Exportar Excel y PDF (plan mensual).
+ * @version 1.1.0
  */
 class ReporteWebController extends Controller
 {
@@ -20,24 +25,17 @@ class ReporteWebController extends Controller
 
     public function index()
     {
-        $docente = Auth::user();
-        $grupos  = $this->grupos->todosPorDocente($docente->id_usuario);
+        $grupos  = $this->grupos->todosPorDocente(Auth::user()->id_usuario);
 
-        // Calcular estadísticas por grupo
         $reportes = $grupos->map(function ($grupo) {
-            $grupoIds   = [$grupo->id_grupo];
-            $sesiones   = Sesion::whereIn('id_grupo', $grupoIds)->get();
-            $sesionIds  = $sesiones->pluck('id_sesion');
+            $sesiones  = Sesion::where('id_grupo', $grupo->id_grupo)->get();
+            $sesionIds = $sesiones->pluck('id_sesion');
 
-            $totalSesiones   = $sesiones->count();
-            $totalPresentes  = Asistencia::whereIn('id_sesion', $sesionIds)->where('est_asistencia', 1)->count();
-            $totalAusentes   = Asistencia::whereIn('id_sesion', $sesionIds)->where('est_asistencia', 2)->count();
-            $totalJustif     = Asistencia::whereIn('id_sesion', $sesionIds)->where('est_asistencia', 3)->count();
-            $totalAsistencias = $totalPresentes + $totalAusentes + $totalJustif;
-
-            $porcentaje = $totalAsistencias > 0
-                ? round(($totalPresentes / $totalAsistencias) * 100, 1)
-                : 0;
+            $totalSesiones  = $sesiones->count();
+            $totalPresentes = Asistencia::whereIn('id_sesion', $sesionIds)->where('est_asistencia', 1)->count();
+            $totalAusentes  = Asistencia::whereIn('id_sesion', $sesionIds)->where('est_asistencia', 2)->count();
+            $totalJustif    = Asistencia::whereIn('id_sesion', $sesionIds)->where('est_asistencia', 3)->count();
+            $totalAsist     = $totalPresentes + $totalAusentes + $totalJustif;
 
             return [
                 'grupo'           => $grupo,
@@ -45,7 +43,9 @@ class ReporteWebController extends Controller
                 'total_presentes' => $totalPresentes,
                 'total_ausentes'  => $totalAusentes,
                 'total_justif'    => $totalJustif,
-                'porcentaje'      => $porcentaje,
+                'porcentaje'      => $totalAsist > 0
+                    ? round(($totalPresentes / $totalAsist) * 100, 1)
+                    : 0,
             ];
         });
 
@@ -54,24 +54,88 @@ class ReporteWebController extends Controller
 
     public function detalle(int $idGrupo)
     {
-        $docente = Auth::user();
-        $grupo   = $this->grupos->buscarPorId($idGrupo);
+        $grupo = $this->grupos->buscarPorId($idGrupo);
+        abort_if(!$grupo || $grupo->id_docente !== Auth::user()->id_usuario, 403);
 
         $sesiones = Sesion::where('id_grupo', $idGrupo)
             ->orderByDesc('fec_sesion')
             ->get()
             ->map(function ($sesion) {
-                $presentes = Asistencia::where('id_sesion', $sesion->id_sesion)->where('est_asistencia', 1)->count();
-                $ausentes  = Asistencia::where('id_sesion', $sesion->id_sesion)->where('est_asistencia', 2)->count();
-                $justif    = Asistencia::where('id_sesion', $sesion->id_sesion)->where('est_asistencia', 3)->count();
                 return [
                     'sesion'    => $sesion,
-                    'presentes' => $presentes,
-                    'ausentes'  => $ausentes,
-                    'justif'    => $justif,
+                    'presentes' => Asistencia::where('id_sesion', $sesion->id_sesion)->where('est_asistencia', 1)->count(),
+                    'ausentes'  => Asistencia::where('id_sesion', $sesion->id_sesion)->where('est_asistencia', 2)->count(),
+                    'justif'    => Asistencia::where('id_sesion', $sesion->id_sesion)->where('est_asistencia', 3)->count(),
                 ];
             });
 
         return view('modules.reportes.detalle', compact('grupo', 'sesiones'));
+    }
+
+    /**
+     * RF-06 — Exportar reporte de asistencia por alumno en Excel.
+     */
+    public function exportarExcel(int $idGrupo)
+    {
+        $grupo = $this->grupos->buscarPorId($idGrupo);
+        abort_if(!$grupo || $grupo->id_docente !== Auth::user()->id_usuario, 403);
+
+        $nombre = 'reporte-' . $grupo->nombre . '-' . $grupo->materia . '.xlsx';
+        return Excel::download(new ReporteGrupoExport($grupo), $nombre);
+    }
+
+    /**
+     * RF-06 — Exportar reporte de asistencia por alumno en PDF.
+     */
+    public function exportarPdf(int $idGrupo)
+    {
+        $grupo = $this->grupos->buscarPorId($idGrupo);
+        abort_if(!$grupo || $grupo->id_docente !== Auth::user()->id_usuario, 403);
+
+        $sesiones = Sesion::where('id_grupo', $idGrupo)
+            ->where('est_sesion', 0)
+            ->orderBy('fec_sesion')
+            ->get();
+
+        $alumnos = GrupoAlumno::where('id_grupo', $idGrupo)
+            ->with('alumno')
+            ->get()
+            ->map(function ($ga) use ($sesiones) {
+                $alumno    = $ga->alumno;
+                $presentes = 0;
+                $ausentes  = 0;
+                $justif    = 0;
+
+                foreach ($sesiones as $sesion) {
+                    $asistencia = Asistencia::where('id_sesion', $sesion->id_sesion)
+                        ->where('id_alumno', $alumno->id_usuario)
+                        ->first();
+                    if ($asistencia) {
+                        match ($asistencia->est_asistencia) {
+                            1 => $presentes++,
+                            2 => $ausentes++,
+                            3 => $justif++,
+                            default => null,
+                        };
+                    }
+                }
+
+                $total = $sesiones->count();
+                return [
+                    'alumno'     => $alumno,
+                    'presentes'  => $presentes,
+                    'ausentes'   => $ausentes,
+                    'justif'     => $justif,
+                    'total'      => $total,
+                    'porcentaje' => $total > 0 ? round((($presentes + $justif) / $total) * 100, 1) : 0,
+                ];
+            })
+            ->sortBy('alumno.ap_pat')
+            ->values();
+
+        $pdf = Pdf::loadView('modules.reportes.pdf', compact('grupo', 'sesiones', 'alumnos'))
+                  ->setPaper('letter', 'landscape');
+
+        return $pdf->download('reporte-' . $grupo->nombre . '-' . $grupo->materia . '.pdf');
     }
 }

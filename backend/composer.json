@@ -1,8 +1,11 @@
 {
     "name": "omega/proyecto-b-backend",
     "type": "project",
-    "description": "API REST Laravel — Proyecto B (OMEGA)",
-    "keywords": ["laravel", "api"],
+    "description": "API REST Laravel \u2014 Proyecto B (OMEGA)",
+    "keywords": [
+        "laravel",
+        "api"
+    ],
     "license": "MIT",
     "require": {
         "php": "^8.2",
@@ -10,7 +13,9 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "livewire/livewire": "^4.2",
-        "paypal/paypal-server-sdk": "^2.2"
+        "paypal/paypal-server-sdk": "^2.2",
+        "maatwebsite/excel": "^3.1",
+        "barryvdh/laravel-dompdf": "^3.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
