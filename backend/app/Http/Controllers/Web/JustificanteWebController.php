@@ -11,10 +11,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
-/**
- * Controlador Web — Gestión de Justificantes.
- * @version 1.0.0
- */
 class JustificanteWebController extends Controller
 {
     public function __construct(
@@ -25,30 +21,23 @@ class JustificanteWebController extends Controller
 
     public function index()
     {
-        // Obtener todas las ausencias de los grupos del docente
-        $gruposIds = $this->grupos
+        $grupos = $this->grupos
             ->todosPorDocente(Auth::user()->id_usuario)
-            ->pluck('id_grupo');
+            ->load([
+                'sesiones' => fn($q) => $q->where('est_sesion', 0)->orderByDesc('fec_sesion'),
+                'sesiones.asistencias' => fn($q) => $q->whereIn('est_asistencia', [2, 3]),
+                'sesiones.asistencias.alumno',
+            ]);
 
-        $ausencias = Asistencia::query()
-            ->whereIn('est_asistencia', [2, 3])
-            ->whereHas('sesion', function ($q) use ($gruposIds) {
-                $q->whereIn('id_grupo', $gruposIds);
-            })
-            ->with(['alumno', 'sesion.grupo'])
-            ->orderByDesc('id_asistencia')
-            ->get();
-
-        return view('modules.justificantes.index', compact('ausencias'));
+        return view('modules.justificantes.index', compact('grupos'));
     }
 
     public function justificar(Asistencia $asistencia)
     {
         try {
             $this->asistenciaService->editarEstado($asistencia, [
-                'est_asistencia' => 3, // Justificada
+                'est_asistencia' => 3,
             ]);
-
             return redirect()->route('ca.justificantes.index')
                 ->with('success', 'La información se actualizó correctamente');
         } catch (ValidationException $e) {
@@ -60,9 +49,8 @@ class JustificanteWebController extends Controller
     {
         try {
             $this->asistenciaService->editarEstado($asistencia, [
-                'est_asistencia' => 2, // Ausente
+                'est_asistencia' => 2,
             ]);
-
             return redirect()->route('ca.justificantes.index')
                 ->with('success', 'La información se actualizó correctamente');
         } catch (ValidationException $e) {
