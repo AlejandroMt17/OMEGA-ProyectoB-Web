@@ -3,6 +3,7 @@
 use App\Http\Controllers\Web\AuthWebController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\GrupoWebController;
+use App\Http\Controllers\Web\GrupoAlumnoWebController;
 use App\Http\Controllers\Web\InstitucionWebController;
 use App\Http\Controllers\Web\JustificanteWebController;
 use App\Http\Controllers\Web\RubroWebController;
@@ -65,6 +66,8 @@ Route::prefix('p/ca')->group(function () {
         Route::put('grupos/{grupo}',                   [GrupoWebController::class, 'update'])->name('ca.grupos.update');
         Route::delete('grupos/{grupo}',                [GrupoWebController::class, 'destroy'])->name('ca.grupos.destroy');
         Route::post('grupos/{grupo}/codigo-inv',       [GrupoWebController::class, 'generarCodigo'])->name('ca.grupos.codigo-inv');
+        Route::get('grupos/{grupo}/alumnos',           [GrupoAlumnoWebController::class, 'index'])->name('ca.grupos.alumnos');
+        Route::delete('grupos/{grupo}/alumnos/{grupoAlumno}', [GrupoAlumnoWebController::class, 'destroy'])->name('ca.grupos.alumnos.destroy');
 
         // Sesiones
         Route::get('grupos/{grupo}/sesiones',          [SesionWebController::class, 'index'])->name('ca.grupos.sesiones');

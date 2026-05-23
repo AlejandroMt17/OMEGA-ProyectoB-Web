@@ -31,7 +31,7 @@
                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors
                    {{ request()->routeIs('ca.dashboard.*') ? 'bg-omg-coral text-white' : 'text-omg-kashmir hover:bg-omg-nile-dark hover:text-omg-white' }}">
                     <i class="fa-solid fa-house-chimney w-4"></i>
-                    <span>Dashboard</span>
+                    <span>Inicio</span>
                 </a>
             </li>
 
