@@ -69,9 +69,21 @@ class GrupoService
 
     private function validar(array $entrada): array
     {
-        // Convertir array de dias a string: ['L','M','V'] => 'LMV'
-        if (isset($entrada['dias']) && is_array($entrada['dias'])) {
-            $entrada['dias'] = implode('', $entrada['dias']);
+        // Construir el array de horario desde los campos del formulario
+        if (isset($entrada['horario_dias'])) {
+            $horario = [];
+            foreach ($entrada['horario_dias'] as $i => $dia) {
+                $hi = $entrada['horario_inicio'][$i] ?? null;
+                $hf = $entrada['horario_fin'][$i] ?? null;
+                if ($dia && $hi && $hf) {
+                    $horario[] = [
+                        'dia'         => $dia,
+                        'hora_inicio' => $hi,
+                        'hora_fin'    => $hf,
+                    ];
+                }
+            }
+            $entrada['horario'] = !empty($horario) ? $horario : null;
         }
 
         $validator = Validator::make($entrada, [
@@ -80,9 +92,7 @@ class GrupoService
             'materia'        => ['required', 'string', 'max:150'],
             'periodo'        => ['required', 'string', 'max:50'],
             'no_alumnos'     => ['required', 'integer', 'min:1'],
-            'hora_inicio'    => ['nullable', 'date_format:H:i'],
-            'hora_fin'       => ['nullable', 'date_format:H:i', 'after:hora_inicio'],
-            'dias'           => ['nullable', 'string', 'max:20'],
+            'horario'        => ['nullable', 'array'],
         ]);
 
         if ($validator->fails()) {

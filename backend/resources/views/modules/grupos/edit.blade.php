@@ -105,37 +105,74 @@
         </div>
 
 
-        {{-- Horario --}}
-        <div>
-            <label class="block text-sm font-body text-omg-dark mb-2">
-                Horario <span class="text-omg-kashmir font-normal">(opcional)</span>
-            </label>
-            <p class="text-xs font-body text-omg-kashmir mb-2">Días de clase</p>
-            <div class="flex flex-wrap gap-2 mb-4">
-                @foreach (['L'=>'Lun','M'=>'Mar','X'=>'Mié','J'=>'Jue','V'=>'Vie','S'=>'Sáb','D'=>'Dom'] as $val => $label)
-                    <label class="cursor-pointer">
-                        <input type="checkbox" name="dias[]" value="{{ $val }}"
-                               class="peer hidden"
-                               {{ in_array($val, old('dias', $grupo->dias ? str_split($grupo->dias) : [])) ? 'checked' : '' }}>
-                        <span class="peer-checked:bg-omg-nile peer-checked:text-white px-3 py-1.5 rounded-lg border border-omg-kashmir text-xs font-body text-omg-kashmir hover:border-omg-nile transition-colors select-none">
-                            {{ $label }}
-                        </span>
-                    </label>
-                @endforeach
+        {{-- Horario por día --}}
+        <div x-data="horarioManager()" x-init="init()">
+            <div class="flex items-center justify-between mb-2">
+                <label class="text-sm font-body text-omg-dark">
+                    Horario <span class="text-omg-kashmir font-normal">(opcional)</span>
+                </label>
+                <button type="button" @click="agregar()"
+                    class="flex items-center gap-1.5 px-3 py-1 bg-omg-chardon hover:bg-omg-nile hover:text-white text-omg-nile rounded-lg text-xs font-body transition-colors">
+                    <i class="fa-solid fa-plus"></i> Agregar día
+                </button>
             </div>
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-body text-omg-kashmir mb-1">Hora inicio</label>
-                    <input type="time" name="hora_inicio" value="{{ old('hora_inicio', $grupo->hora_inicio) }}"
-                           class="w-full px-3 py-2 bg-white border border-omg-kashmir rounded-lg text-sm font-body text-omg-dark focus:outline-none focus:ring-2 focus:ring-omg-kashmir"/>
-                </div>
-                <div>
-                    <label class="block text-xs font-body text-omg-kashmir mb-1">Hora fin</label>
-                    <input type="time" name="hora_fin" value="{{ old('hora_fin', $grupo->hora_fin) }}"
-                           class="w-full px-3 py-2 bg-white border border-omg-kashmir rounded-lg text-sm font-body text-omg-dark focus:outline-none focus:ring-2 focus:ring-omg-kashmir"/>
-                </div>
+
+            <div class="space-y-2">
+                <template x-for="(fila, i) in filas" :key="i">
+                    <div class="flex items-center gap-2 bg-omg-chardon rounded-lg px-3 py-2">
+                        <select :name="'horario_dias[' + i + ']'" x-model="fila.dia"
+                                class="px-2 py-1.5 bg-white border border-omg-kashmir rounded-lg text-xs font-body text-omg-dark focus:outline-none w-24">
+                            <option value="">Día</option>
+                            <option value="L">Lunes</option>
+                            <option value="M">Martes</option>
+                            <option value="X">Miércoles</option>
+                            <option value="J">Jueves</option>
+                            <option value="V">Viernes</option>
+                            <option value="S">Sábado</option>
+                            <option value="D">Domingo</option>
+                        </select>
+                        <div class="flex items-center gap-1 flex-1">
+                            <input type="time" :name="'horario_inicio[' + i + ']'" x-model="fila.inicio"
+                                   class="flex-1 px-2 py-1.5 bg-white border border-omg-kashmir rounded-lg text-xs font-body text-omg-dark focus:outline-none"/>
+                            <span class="text-xs text-omg-kashmir">—</span>
+                            <input type="time" :name="'horario_fin[' + i + ']'" x-model="fila.fin"
+                                   class="flex-1 px-2 py-1.5 bg-white border border-omg-kashmir rounded-lg text-xs font-body text-omg-dark focus:outline-none"/>
+                        </div>
+                        <button type="button" @click="eliminar(i)"
+                                class="w-7 h-7 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0">
+                            <i class="fa-solid fa-xmark text-xs"></i>
+                        </button>
+                    </div>
+                </template>
             </div>
+
+            <p x-show="filas.length === 0" class="text-xs font-body text-omg-kashmir italic mt-1">
+                Sin horario definido — presiona "Agregar día" para comenzar
+            </p>
         </div>
+
+        @push('scripts')
+        <script>
+        function horarioManager() {
+            return {
+                filas: [],
+                existentes: @json($grupo->horario ?? []),
+                init() {
+                    const old = @json(old('horario_dias'));
+                    if (old && old.length) {
+                        const ini = @json(old('horario_inicio', []));
+                        const fin = @json(old('horario_fin', []));
+                        this.filas = old.map((d,i) => ({ dia: d, inicio: ini[i]||'', fin: fin[i]||'' }));
+                    } else if (this.existentes.length) {
+                        this.filas = this.existentes.map(e => ({ dia: e.dia, inicio: e.hora_inicio, fin: e.hora_fin }));
+                    }
+                },
+                agregar() { this.filas.push({ dia: '', inicio: '', fin: '' }); },
+                eliminar(i) { this.filas.splice(i, 1); },
+            };
+        }
+        </script>
+        @endpush
 
         {{-- No. Alumnos --}}
         <div>

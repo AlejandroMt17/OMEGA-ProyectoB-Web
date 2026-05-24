@@ -46,10 +46,13 @@
                     </td>
                     <td class="px-5 py-4">
                         <p class="text-sm font-body text-omg-kashmir">{{ $grupo->periodo }}</p>
-                        @if ($grupo->hora_inicio)
+                        @if ($grupo->horario && count($grupo->horario) > 0)
                             <p class="text-xs font-body text-omg-kashmir mt-0.5">
                                 <i class="fa-regular fa-clock mr-1"></i>
-                                {{ $grupo->dias }} · {{ \Carbon\Carbon::parse($grupo->hora_inicio)->format('H:i') }} – {{ \Carbon\Carbon::parse($grupo->hora_fin)->format('H:i') }}
+                                @foreach ($grupo->horario as $h)
+                                    <span>{{ ['L'=>'Lun','M'=>'Mar','X'=>'Mié','J'=>'Jue','V'=>'Vie','S'=>'Sáb','D'=>'Dom'][$h['dia']] ?? $h['dia'] }}
+                                    {{ $h['hora_inicio'] }}–{{ $h['hora_fin'] }}</span>@if (!$loop->last), @endif
+                                @endforeach
                             </p>
                         @endif
                     </td>
