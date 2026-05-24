@@ -71,17 +71,20 @@ class GrupoService
     {
         // Construir el array de horario desde los campos del formulario
         if (isset($entrada['horario_dias'])) {
-            $horario = [];
+            $horario  = [];
+            $diasUsados = [];
             foreach ($entrada['horario_dias'] as $i => $dia) {
                 $hi = $entrada['horario_inicio'][$i] ?? null;
                 $hf = $entrada['horario_fin'][$i] ?? null;
-                if ($dia && $hi && $hf) {
-                    $horario[] = [
-                        'dia'         => $dia,
-                        'hora_inicio' => $hi,
-                        'hora_fin'    => $hf,
-                    ];
-                }
+                if (!$dia || !$hi || !$hf) continue;
+                // Ignorar días duplicados — tomar solo el primero
+                if (in_array($dia, $diasUsados)) continue;
+                $diasUsados[] = $dia;
+                $horario[] = [
+                    'dia'         => $dia,
+                    'hora_inicio' => $hi,
+                    'hora_fin'    => $hf,
+                ];
             }
             $entrada['horario'] = !empty($horario) ? $horario : null;
         }

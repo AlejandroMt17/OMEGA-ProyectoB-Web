@@ -138,13 +138,9 @@
                         <select :name="'horario_dias[' + i + ']'" x-model="fila.dia"
                                 class="px-2 py-1.5 bg-white border border-omg-kashmir rounded-lg text-xs font-body text-omg-dark focus:outline-none w-24">
                             <option value="">Día</option>
-                            <option value="L">Lunes</option>
-                            <option value="M">Martes</option>
-                            <option value="X">Miércoles</option>
-                            <option value="J">Jueves</option>
-                            <option value="V">Viernes</option>
-                            <option value="S">Sábado</option>
-                            <option value="D">Domingo</option>
+                            <template x-for="op in [{v:'L',l:'Lunes'},{v:'M',l:'Martes'},{v:'X',l:'Miércoles'},{v:'J',l:'Jueves'},{v:'V',l:'Viernes'},{v:'S',l:'Sábado'},{v:'D',l:'Domingo'}]" :key="op.v">
+                                <option :value="op.v" :disabled="op.v !== fila.dia && filas.some((f,j) => j !== i && f.dia === op.v)" x-text="op.l"></option>
+                            </template>
                         </select>
                         <div class="flex items-center gap-1 flex-1">
                             <input type="time" :name="'horario_inicio[' + i + ']'" x-model="fila.inicio"
