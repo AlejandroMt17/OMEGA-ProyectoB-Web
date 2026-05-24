@@ -111,19 +111,26 @@
 
 
         {{-- Horario por día --}}
-        <div x-data="{
-            filas: [],
-            init() {
-                const dias = @json(old('horario_dias', []));
-                const ini  = @json(old('horario_inicio', []));
-                const fin  = @json(old('horario_fin', []));
-                if (dias.length) {
-                    this.filas = dias.map((d,i) => ({ dia: d, inicio: ini[i]||'', fin: fin[i]||'' }));
-                }
-            },
-            agregar() { this.filas.push({ dia: '', inicio: '', fin: '' }); },
-            eliminar(i) { this.filas.splice(i, 1); }
-        }" x-init="init()">
+        @push('scripts')
+        <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('horarioCreate', () => ({
+                filas: [],
+                init() {
+                    const dias = @json(old('horario_dias', []));
+                    const ini  = @json(old('horario_inicio', []));
+                    const fin  = @json(old('horario_fin', []));
+                    if (dias.length) {
+                        this.filas = dias.map((d,i) => ({ dia: d, inicio: ini[i]||'', fin: fin[i]||'' }));
+                    }
+                },
+                agregar() { this.filas.push({ dia: '', inicio: '', fin: '' }); },
+                eliminar(i) { this.filas.splice(i, 1); }
+            }));
+        });
+        </script>
+        @endpush
+        <div x-data="horarioCreate()">
             <div class="flex items-center justify-between mb-2">
                 <label class="text-sm font-body text-omg-dark">
                     Horario <span class="text-omg-kashmir font-normal">(opcional)</span>
