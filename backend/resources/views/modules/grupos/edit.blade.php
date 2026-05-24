@@ -106,7 +106,22 @@
 
 
         {{-- Horario por día --}}
-        <div x-data="horarioManager()" x-init="init()">
+        <div x-data="{
+            filas: [],
+            existentes: @json($grupo->horario ?? []),
+            init() {
+                const dias = @json(old('horario_dias'));
+                const ini  = @json(old('horario_inicio', []));
+                const fin  = @json(old('horario_fin', []));
+                if (dias && dias.length) {
+                    this.filas = dias.map((d,i) => ({ dia: d, inicio: ini[i]||'', fin: fin[i]||'' }));
+                } else if (this.existentes && this.existentes.length) {
+                    this.filas = this.existentes.map(e => ({ dia: e.dia, inicio: e.hora_inicio, fin: e.hora_fin }));
+                }
+            },
+            agregar() { this.filas.push({ dia: '', inicio: '', fin: '' }); },
+            eliminar(i) { this.filas.splice(i, 1); }
+        }" x-init="init()">
             <div class="flex items-center justify-between mb-2">
                 <label class="text-sm font-body text-omg-dark">
                     Horario <span class="text-omg-kashmir font-normal">(opcional)</span>
@@ -151,28 +166,6 @@
             </p>
         </div>
 
-        @push('scripts')
-        <script>
-        function horarioManager() {
-            return {
-                filas: [],
-                existentes: @json($grupo->horario ?? []),
-                init() {
-                    const old = @json(old('horario_dias'));
-                    if (old && old.length) {
-                        const ini = @json(old('horario_inicio', []));
-                        const fin = @json(old('horario_fin', []));
-                        this.filas = old.map((d,i) => ({ dia: d, inicio: ini[i]||'', fin: fin[i]||'' }));
-                    } else if (this.existentes.length) {
-                        this.filas = this.existentes.map(e => ({ dia: e.dia, inicio: e.hora_inicio, fin: e.hora_fin }));
-                    }
-                },
-                agregar() { this.filas.push({ dia: '', inicio: '', fin: '' }); },
-                eliminar(i) { this.filas.splice(i, 1); },
-            };
-        }
-        </script>
-        @endpush
 
         {{-- No. Alumnos --}}
         <div>
