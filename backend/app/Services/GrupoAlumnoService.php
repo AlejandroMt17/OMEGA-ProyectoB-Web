@@ -88,11 +88,28 @@ class GrupoAlumnoService
 
     private function serializar(GrupoAlumno $grupoAlumno): array
     {
+        $alumno        = $grupoAlumno->alumno;
+        $idGrupo       = $grupoAlumno->id_grupo;
+        $idAlumno      = $grupoAlumno->id_alumno;
+
+        // Calcular estadísticas de asistencia
+        $sesiones      = \App\Models\Sesion::where('id_grupo', $idGrupo)->where('est_sesion', 0)->count();
+        $asistidas     = \App\Models\Asistencia::whereHas('sesion', fn($q) => $q->where('id_grupo', $idGrupo))
+            ->where('id_alumno', $idAlumno)
+            ->where('est_asistencia', 1)
+            ->count();
+
         return [
-            'id_grupo_alumno' => $grupoAlumno->id_grupo_alumno,
-            'id_grupo'        => $grupoAlumno->id_grupo,
-            'id_alumno'       => $grupoAlumno->id_alumno,
-            'fec_inscripcion' => $grupoAlumno->fec_inscripcion?->toDateString(),
+            'id_grupo_alumno'   => $grupoAlumno->id_grupo_alumno,
+            'id_grupo'          => $idGrupo,
+            'alumno_id'         => $idAlumno,
+            'nombre'            => $alumno?->nombre            ?? '',
+            'ap_pat'            => $alumno?->ap_pat            ?? '',
+            'ap_mat'            => $alumno?->ap_mat            ?? '',
+            'email'             => $alumno?->email             ?? '',
+            'total_sesiones'    => $sesiones,
+            'sesiones_asistidas'=> $asistidas,
+            'fecha_inscripcion' => $grupoAlumno->fec_inscripcion?->toDateString() ?? '',
         ];
     }
 }
