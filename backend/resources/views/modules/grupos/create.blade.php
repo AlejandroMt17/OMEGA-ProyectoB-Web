@@ -164,9 +164,14 @@
         function horarioManager() {
             return {
                 filas: [],
-                existentes: @json(old('horario_dias') ? array_map(fn($d,$i,$f) => ['dia'=>$d,'inicio'=>$i,'fin'=>$f],
-                    old('horario_dias',[]), old('horario_inicio',[]), old('horario_fin',[])) : []),
-                init() { if (this.existentes.length) this.filas = this.existentes; },
+                init() {
+                    const dias = @json(old('horario_dias', []));
+                    const ini  = @json(old('horario_inicio', []));
+                    const fin  = @json(old('horario_fin', []));
+                    if (dias.length) {
+                        this.filas = dias.map((d,i) => ({ dia: d, inicio: ini[i]||'', fin: fin[i]||'' }));
+                    }
+                },
                 agregar() { this.filas.push({ dia: '', inicio: '', fin: '' }); },
                 eliminar(i) { this.filas.splice(i, 1); },
             };
