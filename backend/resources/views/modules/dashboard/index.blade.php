@@ -117,10 +117,13 @@
                 <p class="text-sm font-heading font-semibold text-omg-nile">{{ $inst->nombre }}</p>
                 <p class="text-xs font-body text-omg-kashmir">{{ $grupos->count() }} grupo(s)</p>
             </div>
-            <a href="{{ route('ca.instituciones.seleccionar', $inst->id_institucion) }}"
-               class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-coral hover:bg-omg-coral-dark text-white rounded-lg text-xs font-body transition-colors">
-                <i class="fa-solid fa-check"></i> Seleccionar
-            </a>
+            <form method="POST" action="{{ route('ca.instituciones.seleccionar', $inst->id_institucion) }}">
+                @csrf
+                <button type="submit"
+                    class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-coral hover:bg-omg-coral-dark text-white rounded-lg text-xs font-body transition-colors">
+                    <i class="fa-solid fa-check"></i> Seleccionar
+                </button>
+            </form>
         </div>
 
         {{-- Grupos --}}
