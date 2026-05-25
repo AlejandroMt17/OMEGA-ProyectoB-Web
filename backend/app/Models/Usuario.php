@@ -52,6 +52,15 @@ class Usuario extends Authenticatable
         return $this->contrasenia;
     }
 
+    /**
+     * Nombre del campo de contraseña para que Laravel no intente
+     * hacer rehash en la columna 'password' inexistente.
+     */
+    public function getAuthPasswordName(): string
+    {
+        return 'contrasenia';
+    }
+
     protected function casts(): array
     {
         return [
