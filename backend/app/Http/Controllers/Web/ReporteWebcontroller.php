@@ -138,4 +138,41 @@ class ReporteWebController extends Controller
 
         return $pdf->download('reporte-' . $grupo->nombre . '-' . $grupo->materia . '.pdf');
     }
+    /**
+     * Detalle de asistencia sesión a sesión de un alumno en un grupo.
+     */
+    public function detalleAlumno(int $idGrupo, int $idAlumno)
+    {
+        $grupo = $this->grupos->buscarPorId($idGrupo);
+        abort_if(!$grupo || $grupo->id_docente !== Auth::user()->id_usuario, 403);
+
+        $alumno = \App\Models\Usuario::findOrFail($idAlumno);
+
+        $sesiones = \App\Models\Sesion::where('id_grupo', $idGrupo)
+            ->orderBy('fec_sesion')
+            ->get()
+            ->map(function ($sesion) use ($idAlumno) {
+                $asistencia = \App\Models\Asistencia::where('id_sesion', $sesion->id_sesion)
+                    ->where('id_alumno', $idAlumno)
+                    ->first();
+
+                return [
+                    'sesion'      => $sesion,
+                    'asistencia'  => $asistencia,
+                    'estado'      => $asistencia?->est_asistencia ?? null,
+                    'hora'        => $asistencia?->hora_registro?->format('H:i:s') ?? '—',
+                ];
+            });
+
+        $presentes    = $sesiones->where('estado', 1)->count();
+        $ausentes     = $sesiones->where('estado', 2)->count();
+        $justificadas = $sesiones->where('estado', 3)->count();
+        $total        = $sesiones->count();
+        $porcentaje   = $total > 0 ? round((($presentes + $justificadas) / $total) * 100, 1) : 0;
+
+        return view('modules.reportes.detalle_alumno', compact(
+            'grupo', 'alumno', 'sesiones',
+            'presentes', 'ausentes', 'justificadas', 'total', 'porcentaje'
+        ));
+    }
 }

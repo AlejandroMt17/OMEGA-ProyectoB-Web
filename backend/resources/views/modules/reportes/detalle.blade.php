@@ -115,4 +115,72 @@
     </table>
 </div>
 
+{{-- Tabla de alumnos con enlace al detalle --}}
+<div class="bg-white rounded-xl border border-omg-kashmir-dark overflow-hidden mt-6">
+    <div class="px-5 py-4 border-b border-omg-kashmir-dark bg-omg-chardon">
+        <h2 class="text-sm font-heading font-semibold text-omg-nile">Detalle por alumno</h2>
+        <p class="text-xs font-body text-omg-kashmir mt-0.5">Haz clic en un alumno para ver su historial sesión a sesión</p>
+    </div>
+    <table class="w-full">
+        <thead>
+            <tr class="border-b border-omg-kashmir-dark">
+                <th class="text-left px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Alumno</th>
+                <th class="text-center px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Presentes</th>
+                <th class="text-center px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Ausentes</th>
+                <th class="text-center px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Justificadas</th>
+                <th class="text-center px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">% Asistencia</th>
+                <th class="text-right px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Acciones</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-omg-kashmir-dark">
+            @php
+                use App\Models\GrupoAlumno;
+                use App\Models\Asistencia;
+                use App\Models\Sesion;
+                $sesionesIds = Sesion::where('id_grupo', $grupo->id_grupo)->where('est_sesion', 0)->pluck('id_sesion');
+                $alumnosGrupo = GrupoAlumno::where('id_grupo', $grupo->id_grupo)->with('alumno')->get()
+                    ->sortBy('alumno.ap_pat');
+            @endphp
+            @forelse ($alumnosGrupo as $ga)
+                @php
+                    $al = $ga->alumno;
+                    $p  = Asistencia::whereIn('id_sesion', $sesionesIds)->where('id_alumno', $al->id_usuario)->where('est_asistencia', 1)->count();
+                    $a  = Asistencia::whereIn('id_sesion', $sesionesIds)->where('id_alumno', $al->id_usuario)->where('est_asistencia', 2)->count();
+                    $j  = Asistencia::whereIn('id_sesion', $sesionesIds)->where('id_alumno', $al->id_usuario)->where('est_asistencia', 3)->count();
+                    $t  = $sesionesIds->count();
+                    $pct = $t > 0 ? round((($p + $j) / $t) * 100, 1) : 0;
+                @endphp
+                <tr class="hover:bg-omg-chardon transition-colors">
+                    <td class="px-5 py-3">
+                        <p class="text-sm font-body font-semibold text-omg-dark">
+                            {{ $al->ap_pat }} {{ $al->ap_mat }}, {{ $al->nombre }}
+                        </p>
+                        <p class="text-xs font-body text-omg-kashmir">{{ $al->email }}</p>
+                    </td>
+                    <td class="px-5 py-3 text-center text-sm font-heading font-semibold text-green-600">{{ $p }}</td>
+                    <td class="px-5 py-3 text-center text-sm font-heading font-semibold text-red-500">{{ $a }}</td>
+                    <td class="px-5 py-3 text-center text-sm font-heading font-semibold text-omg-nile">{{ $j }}</td>
+                    <td class="px-5 py-3 text-center">
+                        <span class="text-sm font-heading font-bold {{ $pct >= 80 ? 'text-green-600' : ($pct >= 60 ? 'text-yellow-500' : 'text-red-500') }}">
+                            {{ $pct }}%
+                        </span>
+                    </td>
+                    <td class="px-5 py-3 text-right">
+                        <a href="{{ route('ca.reportes.alumno', [$grupo->id_grupo, $al->id_usuario]) }}"
+                           class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-pastel hover:bg-omg-nile hover:text-white text-omg-nile rounded-lg text-xs font-body transition-colors ml-auto w-fit">
+                            <i class="fa-solid fa-chart-line"></i> Ver historial
+                        </a>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="6" class="px-5 py-8 text-center text-sm font-body text-omg-kashmir">
+                        Sin alumnos inscritos
+                    </td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+
 @endsection
