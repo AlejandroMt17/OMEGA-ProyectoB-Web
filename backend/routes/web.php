@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Web\AuthWebController;
+use App\Http\Controllers\Web\PasswordResetController;
+use App\Http\Controllers\Web\PasswordResetController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\GrupoWebController;
 use App\Http\Controllers\Web\GrupoAlumnoWebController;
@@ -31,6 +33,12 @@ Route::prefix('p/ca')->group(function () {
     Route::post('login',   [AuthWebController::class, 'login'])->name('ca.login.post');
     Route::get('registro', [AuthWebController::class, 'showRegistro'])->name('ca.registro');
     Route::post('registro',[AuthWebController::class, 'registro'])->name('ca.registro.post');
+
+    // RF-55 — Recuperación de contraseña
+    Route::get('recuperar-contrasena',         [PasswordResetController::class, 'showForgotForm'])->name('ca.password.request');
+    Route::post('recuperar-contrasena',        [PasswordResetController::class, 'sendResetLink'])->name('ca.password.email');
+    Route::get('reset-contrasena/{token}',     [PasswordResetController::class, 'showResetForm'])->name('ca.password.reset');
+    Route::post('reset-contrasena',            [PasswordResetController::class, 'reset'])->name('ca.password.update');
 
     // Rutas protegidas
     Route::middleware('auth')->group(function () {
