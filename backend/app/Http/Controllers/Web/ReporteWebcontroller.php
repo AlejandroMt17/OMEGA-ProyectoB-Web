@@ -9,6 +9,7 @@ use App\Models\GrupoAlumno;
 use App\Models\Sesion;
 use App\Repositories\Contracts\GrupoRepositoryInterface;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -23,9 +24,18 @@ class ReporteWebController extends Controller
         private readonly GrupoRepositoryInterface $grupos,
     ) {}
 
-    public function index()
+    public function index(Request $request)
     {
         $grupos  = $this->grupos->todosPorDocente(Auth::user()->id_usuario);
+
+        // Filtros
+        $busqueda   = $request->query('busqueda', '');
+        $periodo    = $request->query('periodo', '');
+        $minPct     = $request->query('min_pct', '');
+        $maxPct     = $request->query('max_pct', '');
+
+        // Lista de periodos disponibles para el selector
+        $periodos = $grupos->pluck('periodo')->unique()->sort()->values();
 
         $reportes = $grupos->map(function ($grupo) {
             $sesiones  = Sesion::where('id_grupo', $grupo->id_grupo)->get();
@@ -49,7 +59,24 @@ class ReporteWebController extends Controller
             ];
         });
 
-        return view('modules.reportes.index', compact('reportes'));
+        // Aplicar filtros
+        if ($busqueda) {
+            $reportes = $reportes->filter(fn($r) =>
+                str_contains(strtolower($r['grupo']->nombre), strtolower($busqueda)) ||
+                str_contains(strtolower($r['grupo']->materia), strtolower($busqueda))
+            );
+        }
+        if ($periodo) {
+            $reportes = $reportes->filter(fn($r) => $r['grupo']->periodo === $periodo);
+        }
+        if ($minPct !== '') {
+            $reportes = $reportes->filter(fn($r) => $r['porcentaje'] >= (float) $minPct);
+        }
+        if ($maxPct !== '') {
+            $reportes = $reportes->filter(fn($r) => $r['porcentaje'] <= (float) $maxPct);
+        }
+
+        return view('modules.reportes.index', compact('reportes', 'periodos', 'busqueda', 'periodo', 'minPct', 'maxPct'));
     }
 
     public function detalle(int $idGrupo)

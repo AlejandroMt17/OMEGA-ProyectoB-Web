@@ -122,6 +122,20 @@
             </div>
         @endif
 
+        {{-- Mensajes de éxito / error --}}
+        @if (session('success'))
+            <div class="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3 mb-4">
+                <i class="fa-solid fa-circle-check text-green-500"></i>
+                <p class="text-sm font-body text-green-700">{{ session('success') }}</p>
+            </div>
+        @endif
+        @if (session('error'))
+            <div class="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4">
+                <i class="fa-solid fa-circle-xmark text-red-500"></i>
+                <p class="text-sm font-body text-red-700">{{ session('error') }}</p>
+            </div>
+        @endif
+
         @if ($suscripcion['plan'] === 1 || $suscripcion['est_suscripcion'] === 2)
             <div class="bg-omg-chardon rounded-xl p-5 mb-6">
                 <p class="text-sm font-body text-omg-dark mb-1">
@@ -132,25 +146,15 @@
                 </p>
             </div>
 
-            {{-- Botón PayPal --}}
-            <div id="paypal-container">
-                <button id="btn-paypal"
-                    onclick="iniciarPago()"
-                    class="w-full flex items-center justify-center gap-2 bg-omg-coral hover:bg-omg-coral-dark text-white font-heading font-semibold py-3 rounded-lg transition-colors text-sm">
-                    <i class="fa-brands fa-paypal"></i>
-                    Pagar con PayPal
+            {{-- Botón PayPal — form POST que redirige a PayPal --}}
+            <form method="POST" action="{{ route('ca.suscripcion.crear-orden') }}">
+                @csrf
+                <button type="submit"
+                    class="w-full flex items-center justify-center gap-2 bg-[#0070BA] hover:bg-[#005ea6] text-white font-heading font-semibold py-3 rounded-lg transition-colors text-sm">
+                    <i class="fa-brands fa-paypal fa-lg"></i>
+                    Pagar $149 MXN con PayPal
                 </button>
-            </div>
-
-            <div id="paypal-loading" class="hidden text-center py-4">
-                <i class="fa-solid fa-spinner fa-spin text-omg-nile fa-lg"></i>
-                <p class="text-sm font-body text-omg-kashmir mt-2">Conectando con PayPal...</p>
-            </div>
-
-            <div id="paypal-error" class="hidden flex items-center gap-3 bg-white border border-red-200 rounded-lg px-4 py-3 mt-4">
-                <i class="fa-solid fa-circle-xmark text-red-500"></i>
-                <p class="text-sm font-body text-omg-dark" id="paypal-error-msg"></p>
-            </div>
+            </form>
         @endif
 
         {{-- Información de pago seguro --}}
@@ -164,43 +168,5 @@
 
 </div>
 
-@push('scripts')
-<script>
-async function iniciarPago() {
-    const btn = document.getElementById('btn-paypal');
-    const loading = document.getElementById('paypal-loading');
-    const errorDiv = document.getElementById('paypal-error');
-    const errorMsg = document.getElementById('paypal-error-msg');
-
-    btn.classList.add('hidden');
-    loading.classList.remove('hidden');
-    errorDiv.classList.add('hidden');
-
-    try {
-        const response = await fetch('/api/pagos/crear-orden', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            },
-        });
-
-        const data = await response.json();
-
-        if (data.data?.approve_url) {
-            window.location.href = data.data.approve_url;
-        } else {
-            throw new Error('No se pudo obtener el enlace de pago');
-        }
-    } catch (error) {
-        loading.classList.add('hidden');
-        btn.classList.remove('hidden');
-        errorDiv.classList.remove('hidden');
-        errorMsg.textContent = 'No fue posible completar la operación';
-    }
-}
-</script>
-@endpush
 
 @endsection

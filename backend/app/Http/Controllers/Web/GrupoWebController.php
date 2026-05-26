@@ -94,15 +94,16 @@ class GrupoWebController extends Controller
     {
         abort_if($grupo->id_docente !== Auth::user()->id_usuario, 403);
 
-        // Generar reporte antes de eliminar (descarga automática)
-        // Eliminar asistencias de todas las sesiones del grupo
+        // Eliminar asistencias
         \App\Models\Asistencia::whereHas('sesion', fn($q) => $q->where('id_grupo', $grupo->id_grupo))->delete();
         // Eliminar sesiones
         \App\Models\Sesion::where('id_grupo', $grupo->id_grupo)->delete();
-        // Eliminar inscripciones de alumnos
+        // Eliminar inscripciones
         \App\Models\GrupoAlumno::where('id_grupo', $grupo->id_grupo)->delete();
+        // Eliminar el grupo completo
+        $grupo->delete();
 
         return redirect()->route('ca.grupos.index')
-            ->with('success', 'Periodo académico cerrado correctamente. Los datos del grupo se han limpiado.');
+            ->with('success', 'Grupo eliminado correctamente. Todos los datos han sido borrados.');
     }
 }

@@ -66,20 +66,33 @@ class DashboardController extends Controller
 
             $alumnos = GrupoAlumno::where('id_grupo', $idGrupo)->with(['alumno', 'grupo'])->get();
             foreach ($alumnos as $ga) {
-                $presentes = Asistencia::whereIn('id_sesion', $sesiones->pluck('id_sesion'))
+                $sesIds   = $sesiones->pluck('id_sesion');
+                $presentes = Asistencia::whereIn('id_sesion', $sesIds)
                     ->where('id_alumno', $ga->id_alumno)
-                    ->whereIn('est_asistencia', [1, 3])->count();
-                $pct = round(($presentes / $totalSes) * 100, 1);
-                $faltasRestantes = (int) floor(($totalSes * $minPct / 100) - ($totalSes - $presentes));
+                    ->where('est_asistencia', 1)->count();
+                $justificadas = Asistencia::whereIn('id_sesion', $sesIds)
+                    ->where('id_alumno', $ga->id_alumno)
+                    ->where('est_asistencia', 3)->count();
+                $ausentes  = Asistencia::whereIn('id_sesion', $sesIds)
+                    ->where('id_alumno', $ga->id_alumno)
+                    ->where('est_asistencia', 2)->count();
 
-                // En riesgo: cumple mínimo pero le quedan <= 2 faltas, O ya lo perdió
-                if ($pct < $minPct || $faltasRestantes <= 2) {
+                $asistidas = $presentes + $justificadas;
+                $pct       = round(($asistidas / $totalSes) * 100, 1);
+
+                // Faltas permitidas = cuántas puede tener antes de perder el ordinario
+                $faltasPermitidas = (int) floor($totalSes * (1 - $minPct / 100));
+                $faltasRestantes  = max(0, $faltasPermitidas - $ausentes);
+                $perdio           = $pct < $minPct;
+
+                // En riesgo: ya perdió O le quedan <= 2 faltas
+                if ($perdio || $faltasRestantes <= 2) {
                     $alumnosEnRiesgo->push([
                         'alumno'          => $ga->alumno,
                         'grupo'           => $ga->grupo,
                         'porcentaje'      => $pct,
-                        'faltas_restantes'=> max(0, $faltasRestantes),
-                        'perdio'          => $pct < $minPct,
+                        'faltas_restantes'=> $faltasRestantes,
+                        'perdio'          => $perdio,
                     ]);
                 }
             }

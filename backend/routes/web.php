@@ -101,8 +101,9 @@ Route::prefix('p/ca')->group(function () {
 
 
         // Suscripción
-        Route::get('suscripcion', [SuscripcionWebController::class, 'index'])->name('ca.suscripcion.index');
-        Route::post('suscripcion/crear-orden', [SuscripcionWebController::class, 'crearOrden'])
-        ->name('ca.suscripcion.crear-orden');
+        Route::get('suscripcion',              [SuscripcionWebController::class, 'index'])->name('ca.suscripcion.index');
+        Route::post('suscripcion/crear-orden', [SuscripcionWebController::class, 'crearOrden'])->name('ca.suscripcion.crear-orden');
+        Route::get('suscripcion/capturar',     [SuscripcionWebController::class, 'capturarPago'])->name('ca.suscripcion.capturar');
+        Route::get('suscripcion/cancelar',     [SuscripcionWebController::class, 'cancelarPago'])->name('ca.suscripcion.cancelar');
     });
 });

@@ -47,8 +47,10 @@ class PagoService
                     'description' => 'Plan Mensual - Control de Asistencias',
                 ]],
                 'application_context' => [
-                    'return_url' => url('/p/ca/suscripcion?status=success'),
-                    'cancel_url' => url('/p/ca/suscripcion?status=cancel'),
+                    'return_url' => route('ca.suscripcion.capturar'),
+                    'cancel_url' => route('ca.suscripcion.cancelar'),
+                    'brand_name' => 'OMEGA Control de Asistencias',
+                    'user_action' => 'PAY_NOW',
                 ],
             ]);
 
