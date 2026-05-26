@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 use App\Repositories\Contracts\GrupoRepositoryInterface;
 use App\Repositories\Contracts\InstitucionRepositoryInterface;
 use App\Services\GrupoService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
