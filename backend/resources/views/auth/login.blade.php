@@ -68,7 +68,7 @@
         </div>
 
         <div class="text-right">
-            <a href="#" class="text-xs text-omg-nile-light hover:underline font-body">
+            <a href="{{ route('ca.password.request') }}" class="text-xs text-omg-nile-light hover:underline font-body">
                 ¿Olvidaste tu contraseña?
             </a>
         </div>
@@ -81,12 +81,6 @@
         </button>
 
     </form>
-
-    <div class="text-center mt-2">
-        <a href="{{ route('ca.password.request') }}" class="text-xs font-body text-omg-kashmir hover:text-omg-nile hover:underline">
-            ¿Olvidaste tu contraseña?
-        </a>
-    </div>
 
     <p class="text-center text-sm font-body text-omg-dark mt-6">
         ¿No estás registrado?
