@@ -122,6 +122,12 @@
         <p class="text-xs font-body text-omg-kashmir mt-0.5">Haz clic en un alumno para ver su historial sesión a sesión</p>
     </div>
     <table class="w-full">
+        @php
+            use App\Models\RubroEvaluacion;
+            $rubros = RubroEvaluacion::where('id_institucion', $grupo->id_institucion)
+                ->orderBy('porcentaje_minimo', 'desc')
+                ->get();
+        @endphp
         <thead>
             <tr class="border-b border-omg-kashmir-dark">
                 <th class="text-left px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Alumno</th>
@@ -129,6 +135,12 @@
                 <th class="text-center px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Ausentes</th>
                 <th class="text-center px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Justificadas</th>
                 <th class="text-center px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">% Asistencia</th>
+                @foreach ($rubros as $rubro)
+                    <th class="text-center px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">
+                        {{ $rubro->nombre }}
+                        <span class="block text-omg-kashmir font-normal normal-case">{{ $rubro->porcentaje_minimo }}%</span>
+                    </th>
+                @endforeach
                 <th class="text-right px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Acciones</th>
             </tr>
         </thead>
@@ -143,12 +155,13 @@
             @endphp
             @forelse ($alumnosGrupo as $ga)
                 @php
-                    $al = $ga->alumno;
-                    $p  = Asistencia::whereIn('id_sesion', $sesionesIds)->where('id_alumno', $al->id_usuario)->where('est_asistencia', 1)->count();
-                    $a  = Asistencia::whereIn('id_sesion', $sesionesIds)->where('id_alumno', $al->id_usuario)->where('est_asistencia', 2)->count();
-                    $j  = Asistencia::whereIn('id_sesion', $sesionesIds)->where('id_alumno', $al->id_usuario)->where('est_asistencia', 3)->count();
-                    $t  = $sesionesIds->count();
+                    $al  = $ga->alumno;
+                    $p   = Asistencia::whereIn('id_sesion', $sesionesIds)->where('id_alumno', $al->id_usuario)->where('est_asistencia', 1)->count();
+                    $a   = Asistencia::whereIn('id_sesion', $sesionesIds)->where('id_alumno', $al->id_usuario)->where('est_asistencia', 2)->count();
+                    $j   = Asistencia::whereIn('id_sesion', $sesionesIds)->where('id_alumno', $al->id_usuario)->where('est_asistencia', 3)->count();
+                    $t   = $sesionesIds->count();
                     $pct = $t > 0 ? round((($p + $j) / $t) * 100, 1) : 0;
+                    $minRubro = $rubros->min('porcentaje_minimo') ?? 100;
                 @endphp
                 <tr class="hover:bg-omg-chardon transition-colors">
                     <td class="px-5 py-3">
@@ -161,26 +174,22 @@
                     <td class="px-5 py-3 text-center text-sm font-heading font-semibold text-red-500">{{ $a }}</td>
                     <td class="px-5 py-3 text-center text-sm font-heading font-semibold text-omg-nile">{{ $j }}</td>
                     <td class="px-5 py-3 text-center">
-                        <span class="text-sm font-heading font-bold {{ $pct >= 80 ? 'text-green-600' : ($pct >= 60 ? 'text-yellow-500' : 'text-red-500') }}">
+                        <span class="text-sm font-heading font-bold {{ $pct >= $minRubro ? 'text-green-600' : ($pct >= ($rubros->min('porcentaje_minimo') ?? 60) ? 'text-yellow-500' : 'text-red-500') }}">
                             {{ $pct }}%
                         </span>
                     </td>
-                    {{-- Rubro Ordinario (80%) --}}
-                    <td class="px-5 py-3 text-center">
-                        @if ($pct >= 80)
-                            <i class="fa-solid fa-circle-check text-green-500 fa-lg" title="Cumple ordinario"></i>
-                        @else
-                            <i class="fa-solid fa-circle-xmark text-red-500 fa-lg" title="No cumple ordinario"></i>
-                        @endif
-                    </td>
-                    {{-- Rubro Extraordinario (60%) --}}
-                    <td class="px-5 py-3 text-center">
-                        @if ($pct >= 60)
-                            <i class="fa-solid fa-circle-check text-green-500 fa-lg" title="Cumple extraordinario"></i>
-                        @else
-                            <i class="fa-solid fa-circle-xmark text-red-500 fa-lg" title="No cumple extraordinario"></i>
-                        @endif
-                    </td>
+                    {{-- Paloma/equis dinámica por cada rubro --}}
+                    @foreach ($rubros as $rubro)
+                        <td class="px-5 py-3 text-center">
+                            @if ($pct >= $rubro->porcentaje_minimo)
+                                <i class="fa-solid fa-circle-check text-green-500 fa-lg"
+                                   title="Cumple {{ $rubro->nombre }} ({{ $rubro->porcentaje_minimo }}%)"></i>
+                            @else
+                                <i class="fa-solid fa-circle-xmark text-red-500 fa-lg"
+                                   title="No cumple {{ $rubro->nombre }} ({{ $rubro->porcentaje_minimo }}%)"></i>
+                            @endif
+                        </td>
+                    @endforeach
                     <td class="px-5 py-3 text-right">
                         <a href="{{ route('ca.reportes.alumno', [$grupo->id_grupo, $al->id_usuario]) }}"
                            class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-pastel hover:bg-omg-nile hover:text-white text-omg-nile rounded-lg text-xs font-body transition-colors ml-auto w-fit">
@@ -190,7 +199,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" class="px-5 py-8 text-center text-sm font-body text-omg-kashmir">
+                    <td colspan="{{ 6 + $rubros->count() }}" class="px-5 py-8 text-center text-sm font-body text-omg-kashmir">
                         Sin alumnos inscritos
                     </td>
                 </tr>
