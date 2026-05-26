@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Web\AuthWebController;
 use App\Http\Controllers\Web\PasswordResetController;
-use App\Http\Controllers\Web\PasswordResetController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\GrupoWebController;
 use App\Http\Controllers\Web\GrupoAlumnoWebController;
