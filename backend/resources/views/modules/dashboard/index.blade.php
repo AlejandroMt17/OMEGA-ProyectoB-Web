@@ -32,16 +32,20 @@
             <p class="text-xs font-body text-omg-kashmir">Sesiones hoy</p>
         </div>
     </div>
-    <div class="bg-white rounded-xl border border-omg-kashmir-dark p-5 flex items-center gap-4">
-        <div class="w-12 h-12 bg-omg-chardon rounded-xl flex items-center justify-center flex-shrink-0">
-            <i class="fa-solid fa-triangle-exclamation text-omg-coral fa-lg"></i>
+    <a href="#alumnos-riesgo"
+       class="bg-white rounded-xl border {{ $alumnosEnRiesgo->count() > 0 ? 'border-orange-300' : 'border-omg-kashmir-dark' }} p-5 flex items-center gap-4 hover:shadow-sm transition-shadow">
+        <div class="w-12 h-12 {{ $alumnosEnRiesgo->count() > 0 ? 'bg-orange-50' : 'bg-omg-chardon' }} rounded-xl flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-triangle-exclamation {{ $alumnosEnRiesgo->count() > 0 ? 'text-orange-500' : 'text-omg-coral' }} fa-lg"></i>
         </div>
         <div>
-            <p class="text-2xl font-heading font-semibold text-omg-nile">0</p>
+            <p class="text-2xl font-heading font-semibold {{ $alumnosEnRiesgo->count() > 0 ? 'text-orange-500' : 'text-omg-nile' }}">
+                {{ $alumnosEnRiesgo->count() }}
+            </p>
             <p class="text-xs font-body text-omg-kashmir">En riesgo</p>
         </div>
-    </div>
-    <div class="bg-white rounded-xl border border-omg-kashmir-dark p-5 flex items-center gap-4">
+    </a>
+    <a href="{{ route('ca.justificantes.index') }}"
+       class="bg-white rounded-xl border border-omg-kashmir-dark p-5 flex items-center gap-4 hover:shadow-sm transition-shadow">
         <div class="w-12 h-12 bg-omg-chardon rounded-xl flex items-center justify-center flex-shrink-0">
             <i class="fa-solid fa-file-circle-check text-omg-nile fa-lg"></i>
         </div>
@@ -49,14 +53,14 @@
             <p class="text-2xl font-heading font-semibold text-omg-nile">{{ $justificantesPend }}</p>
             <p class="text-xs font-body text-omg-kashmir">Justificantes</p>
         </div>
-    </div>
+    </a>
 </div>
 
 {{-- Sesiones de hoy --}}
 @if ($sesionesHoy->count() > 0)
 <div class="bg-white rounded-xl border border-omg-kashmir-dark p-5 mb-6">
     <h2 class="text-base font-heading font-semibold text-omg-nile mb-4">
-        <i class="fa-solid fa-circle text-green-400 text-xs mr-1"></i>
+        <i class="fa-solid fa-circle text-green-400 text-xs mr-1 animate-pulse"></i>
         Sesiones de Hoy
     </h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -75,7 +79,7 @@
                 </div>
                 <div class="flex items-center gap-4 text-xs font-body text-omg-kashmir">
                     <span><i class="fa-regular fa-clock mr-1"></i>{{ $s->hora_apertura->format('H:i') }}</span>
-                    <span><i class="fa-solid fa-users mr-1"></i>{{ $item['presentes'] }}/{{ $item['total'] }} presentes</span>
+                    <span><i class="fa-solid fa-users mr-1"></i>{{ $item['presentes'] }}/{{ $item['total'] }}</span>
                 </div>
                 @if ($s->est_sesion === 1)
                     <div class="mt-2 bg-omg-chardon rounded px-3 py-1.5 text-center">
@@ -93,18 +97,70 @@
 </div>
 @endif
 
-{{-- Mis Instituciones y Aulas --}}
+{{-- RF-76: Alumnos en riesgo --}}
+@if ($alumnosEnRiesgo->count() > 0)
+<div id="alumnos-riesgo" class="bg-white rounded-xl border border-orange-200 overflow-hidden mb-6">
+    <div class="flex items-center gap-3 px-5 py-4 bg-orange-50 border-b border-orange-200">
+        <i class="fa-solid fa-triangle-exclamation text-orange-500"></i>
+        <h2 class="text-base font-heading font-semibold text-orange-700">
+            Alumnos en Riesgo ({{ $alumnosEnRiesgo->count() }})
+        </h2>
+    </div>
+    <table class="w-full">
+        <thead>
+            <tr class="border-b border-omg-kashmir-dark bg-omg-chardon">
+                <th class="text-left px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Alumno</th>
+                <th class="text-left px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Grupo</th>
+                <th class="text-center px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">% Asistencia</th>
+                <th class="text-center px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Faltas restantes</th>
+                <th class="text-center px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Estado</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-omg-kashmir-dark">
+            @foreach ($alumnosEnRiesgo->sortBy('porcentaje') as $item)
+                <tr class="hover:bg-omg-chardon transition-colors">
+                    <td class="px-5 py-3">
+                        <p class="text-sm font-body font-semibold text-omg-dark">
+                            {{ $item['alumno']->ap_pat }} {{ $item['alumno']->nombre }}
+                        </p>
+                        <p class="text-xs font-body text-omg-kashmir">{{ $item['alumno']->email }}</p>
+                    </td>
+                    <td class="px-5 py-3">
+                        <p class="text-sm font-body text-omg-dark">{{ $item['grupo']->nombre }}</p>
+                        <p class="text-xs font-body text-omg-kashmir">{{ $item['grupo']->materia }}</p>
+                    </td>
+                    <td class="px-5 py-3 text-center">
+                        <span class="text-sm font-heading font-bold {{ $item['perdio'] ? 'text-red-500' : 'text-orange-500' }}">
+                            {{ $item['porcentaje'] }}%
+                        </span>
+                    </td>
+                    <td class="px-5 py-3 text-center">
+                        <span class="text-sm font-heading font-semibold {{ $item['faltas_restantes'] == 0 ? 'text-red-500' : 'text-orange-500' }}">
+                            {{ $item['faltas_restantes'] }}
+                        </span>
+                    </td>
+                    <td class="px-5 py-3 text-center">
+                        @if ($item['perdio'])
+                            <span class="bg-red-100 text-red-600 text-xs font-body px-2 py-1 rounded-full">Límite excedido</span>
+                        @else
+                            <span class="bg-orange-100 text-orange-600 text-xs font-body px-2 py-1 rounded-full">En riesgo</span>
+                        @endif
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+</div>
+@endif
+
+{{-- Instituciones y Aulas --}}
 @forelse ($instituciones as $item)
     @php $inst = $item['institucion']; $grupos = $item['grupos']; @endphp
     <div class="bg-white rounded-xl border border-omg-kashmir-dark mb-5 overflow-hidden">
-
-        {{-- Header institución --}}
         <div class="flex items-center gap-4 px-5 py-4 border-b border-omg-kashmir-dark bg-omg-chardon">
-            {{-- Logo --}}
             <div class="w-10 h-10 rounded-lg border border-omg-kashmir-dark bg-white flex items-center justify-center overflow-hidden flex-shrink-0">
                 @if ($inst->logo)
-                    <img src="{{ $inst->logo }}" alt="{{ $inst->nombre }}"
-                         class="h-8 w-auto object-contain"
+                    <img src="{{ $inst->logo }}" alt="{{ $inst->nombre }}" class="h-8 w-auto object-contain"
                          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                     <div style="display:none" class="items-center justify-center w-full h-full">
                         <i class="fa-solid fa-building-columns text-omg-kashmir text-sm"></i>
@@ -125,8 +181,6 @@
                 </button>
             </form>
         </div>
-
-        {{-- Grupos --}}
         @if ($grupos->count() > 0)
             <div class="divide-y divide-omg-kashmir-dark">
                 @foreach ($grupos as $g)
@@ -141,8 +195,8 @@
                             </p>
                         </div>
                         @if ($g['sesionActiva'])
-                            <span class="bg-green-100 text-green-600 text-xs font-body px-2 py-0.5 rounded-full mr-3">
-                                Sesión activa
+                            <span class="bg-green-100 text-green-600 text-xs font-body px-2 py-0.5 rounded-full mr-3 animate-pulse">
+                                EN VIVO
                             </span>
                         @endif
                         <div class="flex items-center gap-2">
@@ -161,10 +215,6 @@
         @else
             <div class="px-5 py-6 text-center">
                 <p class="text-sm font-body text-omg-kashmir">Sin grupos en esta institución</p>
-                <a href="{{ route('ca.grupos.create') }}"
-                   class="inline-flex items-center gap-1.5 mt-2 text-xs font-body text-omg-nile hover:underline">
-                    <i class="fa-solid fa-plus"></i> Crear grupo
-                </a>
             </div>
         @endif
     </div>

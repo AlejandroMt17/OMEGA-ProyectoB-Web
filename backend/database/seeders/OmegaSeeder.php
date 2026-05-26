@@ -5,23 +5,26 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 /**
- * OmegaSeeder — Datos de prueba para el Sistema de Control de Asistencias
+ * OmegaSeeder — Datos de prueba completos para OMEGA Control de Asistencias
  *
- * Crea:
- *  - 2 Docentes
- *  - 2 Instituciones (una por docente)
- *  - 2 Rubros por institución (Ordinario 80%, Extraordinario 60%)
- *  - 3 Grupos por institución (6 en total)
- *  - 10 Alumnos
- *  - Cada alumno inscrito en 2-3 grupos
- *  - 5 Sesiones cerradas por grupo con asistencias variadas
- *  - 1 Suscripción por docente (plan básico)
+ * Usuarios:
+ *   Docente 1: cmendoza@omega.com   / Omega2026  → TecToluca (3 grupos, 5 alumnos c/u)
+ *   Docente 2: lgutierrez@omega.com / Omega2026  → UAEM (3 grupos, 5 alumnos c/u)
  *
- * Contraseña para todos: Omega2026
+ * Alumnos (10 en total, contraseña: Omega2026):
+ *   sramirez, dtorres, vcastro, aflores, cherrera (TecToluca)
+ *   lvargas, imorales, sruiz, fsalinas, mromero  (UAEM)
+ *
+ * Datos generados:
+ *   - 6 grupos con horario
+ *   - 8 sesiones cerradas por grupo con asistencias variadas
+ *   - Alumnos con distintos niveles de asistencia (100%, 80%, 60%, en riesgo)
+ *   - Justificantes pendientes y aceptados
+ *   - 1 sesión activa en el grupo 216000 para pruebas en vivo
+ *   - Suscripciones activas para ambos docentes
  */
 class OmegaSeeder extends Seeder
 {
@@ -35,148 +38,129 @@ class OmegaSeeder extends Seeder
         DB::table('rubros_evaluacion')->truncate();
         DB::table('instituciones')->truncate();
         DB::table('suscripciones')->truncate();
-        DB::table('pagos')->truncate();
         DB::table('personal_access_tokens')->truncate();
-        // Conservar usuarios existentes y agregar los nuevos
+        DB::table('usuarios')->truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
-        $password = Hash::make('Omega2026');
-        $now = Carbon::now();
+        $pass = Hash::make('Omega2026');
+        $now  = Carbon::now();
 
         // ─── DOCENTES ────────────────────────────────────────────────────────
-        $docente1Id = DB::table('usuarios')->insertGetId([
-            'nombre'     => 'Carlos',
-            'ap_pat'     => 'Mendoza',
-            'ap_mat'     => 'Rios',
+        $d1 = DB::table('usuarios')->insertGetId([
+            'nombre'     => 'Carlos',    'ap_pat' => 'Mendoza',   'ap_mat' => 'Rios',
             'email'      => 'cmendoza@omega.com',
-            'contrasenia'=> $password,
-            'rol'        => 1,
-            'created_at' => $now,
-            'updated_at' => $now,
+            'contrasenia'=> $pass, 'rol' => 1,
+            'created_at' => $now, 'updated_at' => $now,
         ]);
-
-        $docente2Id = DB::table('usuarios')->insertGetId([
-            'nombre'     => 'Laura',
-            'ap_pat'     => 'Gutierrez',
-            'ap_mat'     => 'Vega',
+        $d2 = DB::table('usuarios')->insertGetId([
+            'nombre'     => 'Laura',     'ap_pat' => 'Gutierrez', 'ap_mat' => 'Vega',
             'email'      => 'lgutierrez@omega.com',
-            'contrasenia'=> $password,
-            'rol'        => 1,
-            'created_at' => $now,
-            'updated_at' => $now,
+            'contrasenia'=> $pass, 'rol' => 1,
+            'created_at' => $now, 'updated_at' => $now,
         ]);
 
         // ─── ALUMNOS ─────────────────────────────────────────────────────────
-        $alumnos = [
-            ['nombre'=>'Sofia',    'ap_pat'=>'Ramirez',   'ap_mat'=>'Luna',     'email'=>'sramirez@omega.com'],
-            ['nombre'=>'Diego',    'ap_pat'=>'Torres',    'ap_mat'=>'Mora',     'email'=>'dtorres@omega.com'],
-            ['nombre'=>'Valeria',  'ap_pat'=>'Castro',    'ap_mat'=>'Perez',    'email'=>'vcastro@omega.com'],
-            ['nombre'=>'Andres',   'ap_pat'=>'Flores',    'ap_mat'=>'Reyes',    'email'=>'aflores@omega.com'],
-            ['nombre'=>'Camila',   'ap_pat'=>'Herrera',   'ap_mat'=>'Diaz',     'email'=>'cherrera@omega.com'],
-            ['nombre'=>'Luis',     'ap_pat'=>'Vargas',    'ap_mat'=>'Ortiz',    'email'=>'lvargas@omega.com'],
-            ['nombre'=>'Isabella', 'ap_pat'=>'Morales',   'ap_mat'=>'Jimenez',  'email'=>'imorales@omega.com'],
-            ['nombre'=>'Sebastian','ap_pat'=>'Ruiz',      'ap_mat'=>'Mendez',   'email'=>'sruiz@omega.com'],
-            ['nombre'=>'Fernanda', 'ap_pat'=>'Salinas',   'ap_mat'=>'Cruz',     'email'=>'fsalinas@omega.com'],
-            ['nombre'=>'Miguel',   'ap_pat'=>'Romero',    'ap_mat'=>'Aguilar',  'email'=>'mromero@omega.com'],
+        $alumnosData = [
+            ['Sofia',    'Ramirez',   'Luna',    'sramirez@omega.com'],
+            ['Diego',    'Torres',    'Mora',    'dtorres@omega.com'],
+            ['Valeria',  'Castro',    'Perez',   'vcastro@omega.com'],
+            ['Andres',   'Flores',    'Reyes',   'aflores@omega.com'],
+            ['Camila',   'Herrera',   'Diaz',    'cherrera@omega.com'],
+            ['Luis',     'Vargas',    'Ortiz',   'lvargas@omega.com'],
+            ['Isabella', 'Morales',   'Jimenez', 'imorales@omega.com'],
+            ['Sebastian','Ruiz',      'Mendez',  'sruiz@omega.com'],
+            ['Fernanda', 'Salinas',   'Cruz',    'fsalinas@omega.com'],
+            ['Miguel',   'Romero',    'Aguilar', 'mromero@omega.com'],
         ];
 
-        $alumnoIds = [];
-        foreach ($alumnos as $alumno) {
-            $alumnoIds[] = DB::table('usuarios')->insertGetId([
-                'nombre'     => $alumno['nombre'],
-                'ap_pat'     => $alumno['ap_pat'],
-                'ap_mat'     => $alumno['ap_mat'],
-                'email'      => $alumno['email'],
-                'contrasenia'=> $password,
-                'rol'        => 2,
-                'created_at' => $now,
-                'updated_at' => $now,
+        $als = [];
+        foreach ($alumnosData as $a) {
+            $als[] = DB::table('usuarios')->insertGetId([
+                'nombre' => $a[0], 'ap_pat' => $a[1], 'ap_mat' => $a[2],
+                'email'  => $a[3], 'contrasenia' => $pass, 'rol' => 2,
+                'created_at' => $now, 'updated_at' => $now,
             ]);
         }
 
         // ─── INSTITUCIONES ───────────────────────────────────────────────────
-        $inst1Id = DB::table('instituciones')->insertGetId([
-            'id_docente' => $docente1Id,
-            'nombre'     => 'Tecnologico de Toluca',
-            'logo'       => 'https://toluca.tecnm.mx/assets/logos/logo-institucional.png',
-            'created_at' => $now,
-            'updated_at' => $now,
+        $i1 = DB::table('instituciones')->insertGetId([
+            'id_docente' => $d1, 'nombre' => 'Tecnologico de Toluca',
+            'logo' => 'https://toluca.tecnm.mx/assets/logos/logo-institucional.png',
+            'created_at' => $now, 'updated_at' => $now,
         ]);
-
-        $inst2Id = DB::table('instituciones')->insertGetId([
-            'id_docente' => $docente2Id,
-            'nombre'     => 'Universidad Autonoma del Estado de Mexico',
-            'logo'       => 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/UAEM.svg/200px-UAEM.svg.png',
-            'created_at' => $now,
-            'updated_at' => $now,
+        $i2 = DB::table('instituciones')->insertGetId([
+            'id_docente' => $d2, 'nombre' => 'Universidad Autonoma del Estado de Mexico',
+            'logo' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/UAEM.svg/200px-UAEM.svg.png',
+            'created_at' => $now, 'updated_at' => $now,
         ]);
 
         // ─── RUBROS ──────────────────────────────────────────────────────────
-        foreach ([$inst1Id, $inst2Id] as $instId) {
+        foreach ([$i1, $i2] as $inst) {
             DB::table('rubros_evaluacion')->insert([
-                ['id_institucion'=>$instId,'nombre'=>'Ordinario',     'porcentaje_minimo'=>80.00,'created_at'=>$now,'updated_at'=>$now],
-                ['id_institucion'=>$instId,'nombre'=>'Extraordinario','porcentaje_minimo'=>60.00,'created_at'=>$now,'updated_at'=>$now],
+                ['id_institucion'=>$inst,'nombre'=>'Ordinario',     'porcentaje_minimo'=>80.00,'created_at'=>$now,'updated_at'=>$now],
+                ['id_institucion'=>$inst,'nombre'=>'Extraordinario','porcentaje_minimo'=>60.00,'created_at'=>$now,'updated_at'=>$now],
             ]);
         }
 
         // ─── GRUPOS ──────────────────────────────────────────────────────────
+        $horarioLMV = json_encode([
+            ['dia'=>'L','hora_inicio'=>'08:00','hora_fin'=>'10:00'],
+            ['dia'=>'M','hora_inicio'=>'08:00','hora_fin'=>'10:00'],
+            ['dia'=>'V','hora_inicio'=>'08:00','hora_fin'=>'10:00'],
+        ]);
+        $horarioMAJ = json_encode([
+            ['dia'=>'M','hora_inicio'=>'10:00','hora_fin'=>'12:00'],
+            ['dia'=>'J','hora_inicio'=>'10:00','hora_fin'=>'12:00'],
+        ]);
+
         $grupos = [
-            // Docente 1 - TecToluca
-            ['id_inst'=>$inst1Id,'id_doc'=>$docente1Id,'nombre'=>'216000','materia'=>'Auditoria',                'periodo'=>'Enero Junio 2026','no_alumnos'=>30,'codigo'=>'AUDIT01'],
-            ['id_inst'=>$inst1Id,'id_doc'=>$docente1Id,'nombre'=>'216001','materia'=>'Sistemas de Informacion',  'periodo'=>'Enero Junio 2026','no_alumnos'=>25,'codigo'=>'SISINF1'],
-            ['id_inst'=>$inst1Id,'id_doc'=>$docente1Id,'nombre'=>'216002','materia'=>'Base de Datos',            'periodo'=>'Enero Junio 2026','no_alumnos'=>28,'codigo'=>'BDATOS1'],
-            // Docente 2 - UAEM
-            ['id_inst'=>$inst2Id,'id_doc'=>$docente2Id,'nombre'=>'301A',  'materia'=>'Calculo Diferencial',      'periodo'=>'Enero Junio 2026','no_alumnos'=>35,'codigo'=>'CALCUL1'],
-            ['id_inst'=>$inst2Id,'id_doc'=>$docente2Id,'nombre'=>'302B',  'materia'=>'Algebra Lineal',           'periodo'=>'Enero Junio 2026','no_alumnos'=>30,'codigo'=>'ALGEBR1'],
-            ['id_inst'=>$inst2Id,'id_doc'=>$docente2Id,'nombre'=>'303C',  'materia'=>'Fisica Clasica',           'periodo'=>'Enero Junio 2026','no_alumnos'=>32,'codigo'=>'FISIC01'],
+            [$i1,$d1,'216000','Auditoria',                'Enero Junio 2026',30,'AUDIT01',$horarioLMV],
+            [$i1,$d1,'216001','Sistemas de Informacion',  'Enero Junio 2026',25,'SISINF1',$horarioMAJ],
+            [$i1,$d1,'216002','Base de Datos',            'Enero Junio 2026',28,'BDATOS1',$horarioLMV],
+            [$i2,$d2,'301A',  'Calculo Diferencial',      'Enero Junio 2026',35,'CALCUL1',$horarioLMV],
+            [$i2,$d2,'302B',  'Algebra Lineal',           'Enero Junio 2026',30,'ALGEBR1',$horarioMAJ],
+            [$i2,$d2,'303C',  'Fisica Clasica',           'Enero Junio 2026',32,'FISIC01',$horarioLMV],
         ];
 
-        $grupoIds = [];
+        $gids = [];
         foreach ($grupos as $g) {
-            $grupoIds[] = DB::table('grupos')->insertGetId([
-                'id_institucion' => $g['id_inst'],
-                'id_docente'     => $g['id_doc'],
-                'nombre'         => $g['nombre'],
-                'materia'        => $g['materia'],
-                'periodo'        => $g['periodo'],
-                'no_alumnos'     => $g['no_alumnos'],
-                'codigo_inv'     => $g['codigo'],
-                'created_at'     => $now,
-                'updated_at'     => $now,
+            $gids[] = DB::table('grupos')->insertGetId([
+                'id_institucion'=>$g[0],'id_docente'=>$g[1],'nombre'=>$g[2],
+                'materia'=>$g[3],'periodo'=>$g[4],'no_alumnos'=>$g[5],
+                'codigo_inv'=>$g[6],'horario'=>$g[7],
+                'created_at'=>$now,'updated_at'=>$now,
             ]);
         }
 
         // ─── INSCRIPCIONES ───────────────────────────────────────────────────
-        // Alumnos 0-4 → grupos 0,1,2 (TecToluca)
-        // Alumnos 5-9 → grupos 3,4,5 (UAEM)
-        // Algunos alumnos en ambos grupos de su institución
-        $inscripciones = [
-            [$alumnoIds[0], $grupoIds[0]], [$alumnoIds[0], $grupoIds[1]],
-            [$alumnoIds[1], $grupoIds[0]], [$alumnoIds[1], $grupoIds[2]],
-            [$alumnoIds[2], $grupoIds[0]], [$alumnoIds[2], $grupoIds[1]], [$alumnoIds[2], $grupoIds[2]],
-            [$alumnoIds[3], $grupoIds[1]], [$alumnoIds[3], $grupoIds[2]],
-            [$alumnoIds[4], $grupoIds[0]], [$alumnoIds[4], $grupoIds[2]],
-            [$alumnoIds[5], $grupoIds[3]], [$alumnoIds[5], $grupoIds[4]],
-            [$alumnoIds[6], $grupoIds[3]], [$alumnoIds[6], $grupoIds[5]],
-            [$alumnoIds[7], $grupoIds[3]], [$alumnoIds[7], $grupoIds[4]], [$alumnoIds[7], $grupoIds[5]],
-            [$alumnoIds[8], $grupoIds[4]], [$alumnoIds[8], $grupoIds[5]],
-            [$alumnoIds[9], $grupoIds[3]], [$alumnoIds[9], $grupoIds[5]],
+        $inscs = [
+            [$als[0],$gids[0]],[$als[0],$gids[1]],[$als[0],$gids[2]],
+            [$als[1],$gids[0]],[$als[1],$gids[1]],
+            [$als[2],$gids[0]],[$als[2],$gids[2]],
+            [$als[3],$gids[1]],[$als[3],$gids[2]],
+            [$als[4],$gids[0]],[$als[4],$gids[1]],[$als[4],$gids[2]],
+            [$als[5],$gids[3]],[$als[5],$gids[4]],
+            [$als[6],$gids[3]],[$als[6],$gids[5]],
+            [$als[7],$gids[3]],[$als[7],$gids[4]],[$als[7],$gids[5]],
+            [$als[8],$gids[4]],[$als[8],$gids[5]],
+            [$als[9],$gids[3]],[$als[9],$gids[4]],[$als[9],$gids[5]],
         ];
-
-        foreach ($inscripciones as $insc) {
+        foreach ($inscs as $insc) {
             DB::table('grupo_alumnos')->insert([
-                'id_grupo'       => $insc[1],
-                'id_alumno'      => $insc[0],
-                'fec_inscripcion'=> $now->toDateString(),
-                'created_at'     => $now,
-                'updated_at'     => $now,
+                'id_grupo'=>$insc[1],'id_alumno'=>$insc[0],
+                'fec_inscripcion'=>$now->toDateString(),
+                'created_at'=>$now,'updated_at'=>$now,
             ]);
         }
 
         // ─── SESIONES Y ASISTENCIAS ──────────────────────────────────────────
-        // Crear 5 sesiones cerradas para los primeros 3 grupos (TecToluca)
-        // con variedad de asistencias para tener datos ricos
+        // Patrones de asistencia: 1=Presente, 2=Ausente, 3=Justificada
+        // Usamos 8 sesiones por grupo para tener más datos
+
         $fechas = [
+            Carbon::now()->subDays(35),
+            Carbon::now()->subDays(30),
+            Carbon::now()->subDays(25),
             Carbon::now()->subDays(20),
             Carbon::now()->subDays(15),
             Carbon::now()->subDays(10),
@@ -184,43 +168,56 @@ class OmegaSeeder extends Seeder
             Carbon::now()->subDays(2),
         ];
 
-        // Patrones de asistencia: 1=Presente, 2=Ausente, 3=Justificada
-        // Por alumno por sesión para los grupos 0,1,2
-        $patronesGrupo0 = [
-            // Sofia, Diego, Valeria, Andres, Camila
-            $alumnoIds[0] => [1,1,1,1,1],  // 100% - perfecta
-            $alumnoIds[1] => [1,1,2,1,1],  // 80%
-            $alumnoIds[2] => [1,2,1,2,1],  // 60% - en riesgo
-            $alumnoIds[4] => [2,2,3,1,1],  // 60% - en riesgo
-        ];
-        $patronesGrupo1 = [
-            $alumnoIds[0] => [1,1,1,2,1],  // 80%
-            $alumnoIds[2] => [1,1,1,1,2],  // 80%
-            $alumnoIds[3] => [2,1,1,1,1],  // 80%
-        ];
-        $patronesGrupo2 = [
-            $alumnoIds[1] => [1,1,1,1,1],  // 100%
-            $alumnoIds[2] => [2,2,2,1,1],  // 40% - limite excedido
-            $alumnoIds[3] => [1,1,2,1,3],  // 80%
-            $alumnoIds[4] => [1,3,1,1,1],  // 100%
+        // Patrones por grupo (8 sesiones)
+        // Grupo 0 (Auditoria): als[0,1,2,4]
+        $pat = [
+            $gids[0] => [
+                $als[0] => [1,1,1,1,1,1,1,1],  // Sofia 100%  ✅✅
+                $als[1] => [1,1,2,1,1,2,1,1],  // Diego 75%   riesgo próximo
+                $als[2] => [1,2,1,2,2,1,2,1],  // Valeria 50% ❌ limite excedido
+                $als[4] => [2,2,3,1,1,1,2,1],  // Camila 62.5% riesgo
+            ],
+            $gids[1] => [
+                $als[0] => [1,1,1,2,1,1,1,1],  // Sofia 87.5% ✅
+                $als[1] => [1,1,1,1,1,2,1,1],  // Diego 87.5% ✅
+                $als[3] => [1,2,2,1,2,1,1,1],  // Andres 62.5% riesgo
+                $als[4] => [1,1,1,1,1,1,1,2],  // Camila 87.5% ✅
+            ],
+            $gids[2] => [
+                $als[2] => [1,1,1,1,2,1,1,1],  // Valeria 87.5% ✅
+                $als[3] => [2,2,2,1,1,1,2,1],  // Andres 50% ❌
+                $als[4] => [1,3,1,1,1,1,1,1],  // Camila 100% ✅
+                $als[0] => [1,1,1,1,1,1,1,1],  // Sofia 100% ✅
+            ],
+            $gids[3] => [
+                $als[5] => [1,1,1,1,1,1,1,1],  // Luis 100% ✅
+                $als[6] => [1,2,1,1,2,1,1,1],  // Isabella 75%
+                $als[7] => [2,2,2,1,1,1,2,1],  // Sebastian 50% ❌
+                $als[9] => [1,1,1,1,1,2,1,1],  // Miguel 87.5% ✅
+            ],
+            $gids[4] => [
+                $als[5] => [1,1,2,1,1,1,1,2],  // Luis 75%
+                $als[7] => [1,1,1,1,1,1,1,1],  // Sebastian 100% ✅
+                $als[8] => [2,1,2,1,1,1,1,1],  // Fernanda 75%
+                $als[9] => [1,1,1,1,3,1,1,1],  // Miguel 100% ✅
+            ],
+            $gids[5] => [
+                $als[6] => [1,1,1,1,1,1,2,1],  // Isabella 87.5% ✅
+                $als[7] => [1,1,1,1,1,1,1,1],  // Sebastian 100% ✅
+                $als[8] => [1,2,1,1,2,2,1,1],  // Fernanda 62.5%
+                $als[9] => [1,1,1,2,1,1,1,1],  // Miguel 87.5% ✅
+            ],
         ];
 
-        $patronesPorGrupo = [
-            $grupoIds[0] => $patronesGrupo0,
-            $grupoIds[1] => $patronesGrupo1,
-            $grupoIds[2] => $patronesGrupo2,
-        ];
-
-        foreach ([$grupoIds[0], $grupoIds[1], $grupoIds[2]] as $grupoId) {
-            $patrones = $patronesPorGrupo[$grupoId];
+        foreach ($pat as $grupoId => $alumnos) {
             foreach ($fechas as $i => $fecha) {
                 $apertura = $fecha->copy()->setHour(8)->setMinute(0);
                 $cierre   = $fecha->copy()->setHour(10)->setMinute(0);
 
-                $sesionId = DB::table('sesiones')->insertGetId([
+                $sesId = DB::table('sesiones')->insertGetId([
                     'id_grupo'     => $grupoId,
                     'clave'        => null,
-                    'est_sesion'   => 0, // Cerrada
+                    'est_sesion'   => 0,
                     'fec_sesion'   => $fecha->toDateString(),
                     'hora_apertura'=> $apertura,
                     'hora_cierre'  => $cierre,
@@ -228,10 +225,10 @@ class OmegaSeeder extends Seeder
                     'updated_at'   => $cierre,
                 ]);
 
-                foreach ($patrones as $alumnoId => $patron) {
+                foreach ($alumnos as $alumnoId => $patron) {
                     $est = $patron[$i];
                     DB::table('asistencias')->insert([
-                        'id_sesion'     => $sesionId,
+                        'id_sesion'     => $sesId,
                         'id_alumno'     => $alumnoId,
                         'est_asistencia'=> $est,
                         'hora_registro' => $est === 1 ? $apertura->copy()->addMinutes(rand(1,15)) : null,
@@ -242,13 +239,25 @@ class OmegaSeeder extends Seeder
             }
         }
 
+        // Sesión activa en el grupo 216000 para pruebas en vivo
+        DB::table('sesiones')->insert([
+            'id_grupo'     => $gids[0],
+            'clave'        => 'PRUEBA',
+            'est_sesion'   => 1,
+            'fec_sesion'   => now()->toDateString(),
+            'hora_apertura'=> now(),
+            'hora_cierre'  => null,
+            'created_at'   => now(),
+            'updated_at'   => now(),
+        ]);
+
         // ─── SUSCRIPCIONES ───────────────────────────────────────────────────
-        foreach ([$docente1Id, $docente2Id] as $docId) {
+        foreach ([$d1, $d2] as $docId) {
             DB::table('suscripciones')->insert([
                 'id_usuario'     => $docId,
-                'plan'           => 1, // Básico
-                'est_suscripcion'=> 1, // Activa
-                'fec_inicio'     => $now->toDateString(),
+                'plan'           => 1,
+                'est_suscripcion'=> 1,
+                'fec_inicio'     => now()->toDateString(),
                 'fec_fin'        => Carbon::now()->addYears(10)->toDateString(),
                 'fec_ultimo_pago'=> null,
                 'created_at'     => $now,
@@ -256,10 +265,18 @@ class OmegaSeeder extends Seeder
             ]);
         }
 
-        $this->command->info('✅ OmegaSeeder completado:');
-        $this->command->info('   - 2 Docentes: cmendoza@omega.com / lgutierrez@omega.com');
-        $this->command->info('   - 10 Alumnos: sramirez@omega.com ... mromero@omega.com');
-        $this->command->info('   - Contraseña para todos: Omega2026');
-        $this->command->info('   - 6 Grupos con sesiones y asistencias variadas');
+        $this->command->info('');
+        $this->command->info('✅ OmegaSeeder completado — Datos de prueba listos');
+        $this->command->info('');
+        $this->command->info('DOCENTES (contraseña: Omega2026)');
+        $this->command->info('  cmendoza@omega.com  → TecToluca (216000 Auditoria, 216001 SisInfo, 216002 BD)');
+        $this->command->info('  lgutierrez@omega.com → UAEM (301A Calculo, 302B Algebra, 303C Fisica)');
+        $this->command->info('');
+        $this->command->info('ALUMNOS (contraseña: Omega2026)');
+        $this->command->info('  TecToluca: sramirez, dtorres, vcastro, aflores, cherrera @omega.com');
+        $this->command->info('  UAEM:      lvargas, imorales, sruiz, fsalinas, mromero @omega.com');
+        $this->command->info('');
+        $this->command->info('SESIÓN ACTIVA LISTA: Grupo 216000 con clave PRUEBA');
+        $this->command->info('Alumnos en riesgo: dtorres (75%), vcastro (50%), aflores (50%), cherrera (62.5%)');
     }
 }

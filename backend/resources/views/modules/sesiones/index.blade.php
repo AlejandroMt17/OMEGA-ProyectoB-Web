@@ -41,24 +41,72 @@
             </button>
         </form>
     @else
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3" x-data="sesionTimer()">
             {{-- Clave activa --}}
             <div class="bg-omg-nile text-white px-4 py-2.5 rounded-lg text-center">
                 <p class="text-xs font-body opacity-75">Clave activa</p>
-                <p class="text-xl font-heading font-semibold tracking-widest">
-                    {{ $sesionActiva->clave }}
+                <p class="text-xl font-heading font-semibold tracking-widest">{{ $sesionActiva->clave }}</p>
+                <p class="text-xs font-body opacity-75 mt-1">
+                    <i class="fa-regular fa-clock"></i>
+                    <span x-text="tiempo">00:00</span>
                 </p>
             </div>
-            {{-- Cerrar sesión --}}
-            <form method="POST" action="{{ route('ca.sesiones.cerrar', $sesionActiva->id_sesion) }}">
-                @csrf
-                <button type="submit"
-                    class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-heading font-semibold px-4 py-2.5 rounded-lg transition-colors text-sm">
-                    <i class="fa-solid fa-stop"></i>
-                    Cerrar sesión
-                </button>
-            </form>
+            {{-- Cerrar sesión con confirmación RF-52, RF-53 --}}
+            <button @click="confirmar = true"
+                class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-heading font-semibold px-4 py-2.5 rounded-lg transition-colors text-sm">
+                <i class="fa-solid fa-stop"></i>
+                Cerrar sesión
+            </button>
+
+            {{-- Dialog de confirmación RF-52 --}}
+            <div x-show="confirmar" x-transition
+                 class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+                <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-xl">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+                            <i class="fa-solid fa-triangle-exclamation text-red-500"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-heading font-semibold text-omg-nile">¿Cerrar sesión?</p>
+                            <p class="text-xs font-body text-omg-kashmir">Los alumnos ya no podrán registrarse</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <button @click="confirmar = false"
+                            class="flex-1 py-2 bg-omg-chardon text-omg-nile font-heading font-semibold rounded-lg text-sm hover:bg-omg-pastel transition-colors">
+                            Cancelar
+                        </button>
+                        <form method="POST" action="{{ route('ca.sesiones.cerrar', $sesionActiva->id_sesion) }}" class="flex-1">
+                            @csrf
+                            <button type="submit"
+                                class="w-full py-2 bg-red-500 hover:bg-red-600 text-white font-heading font-semibold rounded-lg text-sm transition-colors">
+                                Cerrar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
+
+        @push('scripts')
+        <script>
+        function sesionTimer() {
+            return {
+                confirmar: false,
+                tiempo: '00:00',
+                init() {
+                    const apertura = new Date('{{ $sesionActiva->hora_apertura->toIso8601String() }}');
+                    setInterval(() => {
+                        const diff = Math.floor((new Date() - apertura) / 1000);
+                        const m = String(Math.floor(diff / 60)).padStart(2, '0');
+                        const s = String(diff % 60).padStart(2, '0');
+                        this.tiempo = m + ':' + s;
+                    }, 1000);
+                }
+            };
+        }
+        </script>
+        @endpush
     @endif
 </div>
 

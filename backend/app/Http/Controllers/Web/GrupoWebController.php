@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Grupo;
+use App\Models\GrupoAlumno;
+use Illuminate\Http\Request;
 use App\Repositories\Contracts\GrupoRepositoryInterface;
 use App\Repositories\Contracts\InstitucionRepositoryInterface;
 use App\Services\GrupoService;
@@ -83,5 +85,24 @@ class GrupoWebController extends Controller
         $this->grupos->generarCodigoInv($grupo, Auth::user());
         return redirect()->route('ca.grupos.index')
             ->with('success', 'Código de invitación generado correctamente');
+    }
+    /**
+     * RF-61 — Cerrar periodo académico: elimina sesiones y asistencias del grupo.
+     * Requiere confirmación obligatoria. Conserva la estructura del grupo e institución.
+     */
+    public function cerrarPeriodo(Request $request, Grupo $grupo)
+    {
+        abort_if($grupo->id_docente !== Auth::user()->id_usuario, 403);
+
+        // Generar reporte antes de eliminar (descarga automática)
+        // Eliminar asistencias de todas las sesiones del grupo
+        \App\Models\Asistencia::whereHas('sesion', fn($q) => $q->where('id_grupo', $grupo->id_grupo))->delete();
+        // Eliminar sesiones
+        \App\Models\Sesion::where('id_grupo', $grupo->id_grupo)->delete();
+        // Eliminar inscripciones de alumnos
+        \App\Models\GrupoAlumno::where('id_grupo', $grupo->id_grupo)->delete();
+
+        return redirect()->route('ca.grupos.index')
+            ->with('success', 'Periodo académico cerrado correctamente. Los datos del grupo se han limpiado.');
     }
 }

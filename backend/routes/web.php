@@ -21,7 +21,11 @@ use Illuminate\Support\Facades\Route;
 
 // Ruta raíz
 Route::get('/', function () {
-    return redirect()->route('ca.login');
+    return view('landing');
+})->name('landing');
+
+Route::get('/inicio', function () {
+    return redirect()->route('landing');
 });
 
 // Rutas públicas
@@ -74,6 +78,7 @@ Route::prefix('p/ca')->group(function () {
         Route::delete('grupos/{grupo}',                [GrupoWebController::class, 'destroy'])->name('ca.grupos.destroy');
         Route::post('grupos/{grupo}/codigo-inv',       [GrupoWebController::class, 'generarCodigo'])->name('ca.grupos.codigo-inv');
         Route::get('grupos/{grupo}/alumnos',           [GrupoAlumnoWebController::class, 'index'])->name('ca.grupos.alumnos');
+        Route::post('grupos/{grupo}/cerrar-periodo',    [GrupoWebController::class, 'cerrarPeriodo'])->name('ca.grupos.cerrar-periodo');
         Route::delete('grupos/{grupo}/alumnos/{grupoAlumno}', [GrupoAlumnoWebController::class, 'destroy'])->name('ca.grupos.alumnos.destroy');
 
         // Sesiones

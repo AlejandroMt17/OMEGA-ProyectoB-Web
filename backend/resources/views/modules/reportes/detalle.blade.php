@@ -165,6 +165,22 @@
                             {{ $pct }}%
                         </span>
                     </td>
+                    {{-- Rubro Ordinario (80%) --}}
+                    <td class="px-5 py-3 text-center">
+                        @if ($pct >= 80)
+                            <i class="fa-solid fa-circle-check text-green-500 fa-lg" title="Cumple ordinario"></i>
+                        @else
+                            <i class="fa-solid fa-circle-xmark text-red-500 fa-lg" title="No cumple ordinario"></i>
+                        @endif
+                    </td>
+                    {{-- Rubro Extraordinario (60%) --}}
+                    <td class="px-5 py-3 text-center">
+                        @if ($pct >= 60)
+                            <i class="fa-solid fa-circle-check text-green-500 fa-lg" title="Cumple extraordinario"></i>
+                        @else
+                            <i class="fa-solid fa-circle-xmark text-red-500 fa-lg" title="No cumple extraordinario"></i>
+                        @endif
+                    </td>
                     <td class="px-5 py-3 text-right">
                         <a href="{{ route('ca.reportes.alumno', [$grupo->id_grupo, $al->id_usuario]) }}"
                            class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-pastel hover:bg-omg-nile hover:text-white text-omg-nile rounded-lg text-xs font-body transition-colors ml-auto w-fit">
