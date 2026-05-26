@@ -127,17 +127,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <form method="POST"
-                                  action="{{ route('ca.grupos.destroy', $grupo->id_grupo) }}"
-                                  onsubmit="return confirm('Esta acción no se puede deshacer')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit"
-                                    class="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-500 hover:text-white text-red-500 rounded-lg text-xs font-body transition-colors">
-                                    <i class="fa-solid fa-delete-left"></i>
-                                    Eliminar
-                                </button>
-                            </form>
+
                         </div>
                     </td>
                 </tr>
