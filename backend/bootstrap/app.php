@@ -13,6 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->redirectGuestsTo(fn () => route('ca.login'));
+        $middleware->alias([
+            'plan.basico' => \App\Http\Middleware\VerificarPlanBasico::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

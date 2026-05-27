@@ -38,6 +38,10 @@ Route::post('auth/registro', [AuthController::class, 'registro']);
 Route::post('auth/login',    [AuthController::class, 'login']);
 
 // ─── Rutas protegidas con Sanctum ─────────────────────────────────────────
+// ── Retorno de PayPal (no requieren auth — PayPal redirige aquí) ──────────
+Route::get('pagos/paypal-return', [\App\Http\Controllers\PagoController::class, 'paypalReturn'])->name('api.pagos.paypal-return');
+Route::get('pagos/paypal-cancel', [\App\Http\Controllers\PagoController::class, 'paypalCancel'])->name('api.pagos.paypal-cancel');
+
 Route::middleware('auth:sanctum')->group(function () {
 
     // ── Dashboard del Docente (RF-76, RF-77) ───────────────────────────────

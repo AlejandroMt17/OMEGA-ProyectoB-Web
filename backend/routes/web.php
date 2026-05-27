@@ -58,7 +58,7 @@ Route::prefix('p/ca')->group(function () {
         // Instituciones
         Route::get('instituciones',                        [InstitucionWebController::class, 'index'])->name('ca.instituciones.index');
         Route::get('instituciones/crear',                  [InstitucionWebController::class, 'create'])->name('ca.instituciones.create');
-        Route::post('instituciones',                       [InstitucionWebController::class, 'store'])->name('ca.instituciones.store');
+        Route::post('instituciones',                       [InstitucionWebController::class, 'store'])->middleware('plan.basico:institucion')->name('ca.instituciones.store');
         Route::get('instituciones/{institucion}/editar',   [InstitucionWebController::class, 'edit'])->name('ca.instituciones.edit');
         Route::put('instituciones/{institucion}',          [InstitucionWebController::class, 'update'])->name('ca.instituciones.update');
         Route::delete('instituciones/{institucion}',       [InstitucionWebController::class, 'destroy'])->name('ca.instituciones.destroy');
@@ -72,7 +72,7 @@ Route::prefix('p/ca')->group(function () {
         // Grupos
         Route::get('grupos',                           [GrupoWebController::class, 'index'])->name('ca.grupos.index');
         Route::get('grupos/crear',                     [GrupoWebController::class, 'create'])->name('ca.grupos.create');
-        Route::post('grupos',                          [GrupoWebController::class, 'store'])->name('ca.grupos.store');
+        Route::post('grupos',                          [GrupoWebController::class, 'store'])->middleware('plan.basico:grupo')->name('ca.grupos.store');
         Route::get('grupos/{grupo}/editar',            [GrupoWebController::class, 'edit'])->name('ca.grupos.edit');
         Route::put('grupos/{grupo}',                   [GrupoWebController::class, 'update'])->name('ca.grupos.update');
         Route::delete('grupos/{grupo}',                [GrupoWebController::class, 'destroy'])->name('ca.grupos.destroy');
@@ -93,7 +93,7 @@ Route::prefix('p/ca')->group(function () {
         Route::post('justificantes/{asistencia}/marcar-ausente', [JustificanteWebController::class, 'marcarAusente'])->name('ca.justificantes.ausente');
 
         // Reportes
-        Route::get('reportes',                [ReporteWebController::class, 'index'])->name('ca.reportes.index');
+        Route::get('reportes',                [ReporteWebController::class, 'index'])->middleware('plan.basico:reportes')->name('ca.reportes.index');
         Route::get('reportes/{idGrupo}',      [ReporteWebController::class, 'detalle'])->name('ca.reportes.detalle');
         Route::get('reportes/{idGrupo}/excel',  [ReporteWebController::class, 'exportarExcel'])->name('ca.reportes.excel');
         Route::get('reportes/{idGrupo}/pdf',    [ReporteWebController::class, 'exportarPdf'])->name('ca.reportes.pdf');

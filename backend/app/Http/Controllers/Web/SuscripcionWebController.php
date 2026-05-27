@@ -36,8 +36,8 @@ class SuscripcionWebController extends Controller
         try {
             $orden = $this->pagos->crearOrden(Auth::user());
 
-            if ($orden['approve_url']) {
-                return redirect($orden['approve_url']);
+            if ($orden['approval_url']) {
+                return redirect($orden['approval_url']);
             }
 
             return redirect()->route('ca.suscripcion.index')
