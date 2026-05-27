@@ -57,7 +57,7 @@ Route::prefix('p/ca')->group(function () {
 
         // Instituciones
         Route::get('instituciones',                        [InstitucionWebController::class, 'index'])->name('ca.instituciones.index');
-        Route::get('instituciones/crear',                  [InstitucionWebController::class, 'create'])->name('ca.instituciones.create');
+        Route::get('instituciones/crear',                  [InstitucionWebController::class, 'create'])->middleware('plan.basico:institucion')->name('ca.instituciones.create');
         Route::post('instituciones',                       [InstitucionWebController::class, 'store'])->middleware('plan.basico:institucion')->name('ca.instituciones.store');
         Route::get('instituciones/{institucion}/editar',   [InstitucionWebController::class, 'edit'])->name('ca.instituciones.edit');
         Route::put('instituciones/{institucion}',          [InstitucionWebController::class, 'update'])->name('ca.instituciones.update');
@@ -71,7 +71,7 @@ Route::prefix('p/ca')->group(function () {
 
         // Grupos
         Route::get('grupos',                           [GrupoWebController::class, 'index'])->name('ca.grupos.index');
-        Route::get('grupos/crear',                     [GrupoWebController::class, 'create'])->name('ca.grupos.create');
+        Route::get('grupos/crear',                     [GrupoWebController::class, 'create'])->middleware('plan.basico:grupo')->name('ca.grupos.create');
         Route::post('grupos',                          [GrupoWebController::class, 'store'])->middleware('plan.basico:grupo')->name('ca.grupos.store');
         Route::get('grupos/{grupo}/editar',            [GrupoWebController::class, 'edit'])->name('ca.grupos.edit');
         Route::put('grupos/{grupo}',                   [GrupoWebController::class, 'update'])->name('ca.grupos.update');
