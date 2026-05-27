@@ -47,10 +47,11 @@ class PagoService
                     'description' => 'Plan Mensual - Control de Asistencias',
                 ]],
                 'application_context' => [
-                    'return_url' => route('ca.suscripcion.capturar'),
-                    'cancel_url' => route('ca.suscripcion.cancelar'),
+                    'return_url' => url('/api/pagos/paypal-return'),
+                    'cancel_url' => url('/api/pagos/paypal-cancel'),
                     'brand_name' => 'OMEGA Control de Asistencias',
                     'user_action' => 'PAY_NOW',
+                    'landing_page' => 'LOGIN',
                 ],
             ]);
 
@@ -79,7 +80,7 @@ class PagoService
 
         return [
             'order_id'    => $orden['id'],
-            'approve_url' => collect($orden['links'])
+            'approval_url' => collect($orden['links'])
                 ->firstWhere('rel', 'approve')['href'] ?? null,
         ];
     }

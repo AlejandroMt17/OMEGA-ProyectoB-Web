@@ -63,11 +63,18 @@
             </li>
 
             <li>
+                @php
+                    $suscDoc = app(\App\Services\SuscripcionService::class)->obtener(auth()->user());
+                    $esPremium = $suscDoc['plan'] === 2 && in_array($suscDoc['est_suscripcion'], [1,3]);
+                @endphp
                 <a href="{{ route('ca.reportes.index') }}"
                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors
                    {{ request()->routeIs('ca.reportes.*') ? 'bg-omg-coral text-white' : 'text-omg-kashmir hover:bg-omg-nile-dark hover:text-omg-white' }}">
                     <i class="fa-solid fa-chart-bar w-4"></i>
                     <span>Reportes</span>
+                    @if (!$esPremium)
+                        <i class="fa-solid fa-lock text-xs ml-auto opacity-60" title="Plan Mensual"></i>
+                    @endif
                 </a>
             </li>
 
