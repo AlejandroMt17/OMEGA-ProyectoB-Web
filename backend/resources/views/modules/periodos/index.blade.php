@@ -56,14 +56,37 @@
         </thead>
         <tbody class="divide-y divide-omg-kashmir-dark">
             @forelse ($periodos as $periodo)
-                <tr class="hover:bg-omg-chardon transition-colors">
+                <tr class="hover:bg-omg-chardon transition-colors" x-data="{ editando: false, nombre: '{{ addslashes($periodo->nombre) }}' }">
                     <td class="px-5 py-3">
-                        <p class="text-sm font-body font-semibold text-omg-dark">{{ $periodo->nombre }}</p>
+                        <div x-show="!editando">
+                            <p class="text-sm font-body font-semibold text-omg-dark">{{ $periodo->nombre }}</p>
+                        </div>
+                        <div x-show="editando">
+                            <form method="POST" action="{{ route('ca.periodos.update', [$institucion->id_institucion, $periodo->id_periodo]) }}"
+                                  class="flex items-center gap-2">
+                                @csrf @method('PATCH')
+                                <input type="text" name="nombre" x-model="nombre" required
+                                       class="flex-1 px-3 py-1.5 bg-white border border-omg-nile rounded-lg text-sm font-body text-omg-dark focus:outline-none"/>
+                                <button type="submit"
+                                    class="px-3 py-1.5 bg-omg-nile text-white rounded-lg text-xs font-body hover:bg-omg-nile-dark transition-colors">
+                                    <i class="fa-solid fa-check"></i>
+                                </button>
+                                <button type="button" @click="editando = false; nombre = '{{ addslashes($periodo->nombre) }}'"
+                                    class="px-3 py-1.5 bg-omg-chardon text-omg-kashmir rounded-lg text-xs font-body hover:bg-omg-pastel transition-colors">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </form>
+                        </div>
                     </td>
                     <td class="px-5 py-3 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                        <button type="button" @click="editando = true" x-show="!editando"
+                            class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-pastel hover:bg-omg-nile hover:text-white text-omg-nile rounded-lg text-xs font-body transition-colors">
+                            <i class="fa-regular fa-pen-to-square"></i> Editar
+                        </button>
                         <div x-data="{ open: false }">
                             <button type="button" @click="open = true"
-                                class="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-500 hover:text-white text-red-500 rounded-lg text-xs font-body transition-colors ml-auto">
+                                class="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-500 hover:text-white text-red-500 rounded-lg text-xs font-body transition-colors">
                                 <i class="fa-solid fa-trash"></i> Eliminar
                             </button>
                             <div x-show="open" x-transition class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
@@ -81,6 +104,7 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
                         </div>
                     </td>
                 </tr>

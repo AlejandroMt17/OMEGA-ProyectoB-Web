@@ -45,6 +45,22 @@ class PeriodoWebController extends Controller
             ->with('success', 'Periodo agregado correctamente');
     }
 
+    public function update(Request $request, int $idInstitucion, Periodo $periodo)
+    {
+        abort_if($periodo->id_institucion !== $idInstitucion, 403);
+
+        $request->validate([
+            'nombre' => ['required', 'string', 'max:100'],
+        ], [
+            'nombre.required' => 'El nombre del periodo es obligatorio',
+        ]);
+
+        $periodo->update(['nombre' => $request->nombre]);
+
+        return redirect()->route('ca.periodos.index', $idInstitucion)
+            ->with('success', 'Periodo actualizado correctamente');
+    }
+
     public function destroy(int $idInstitucion, Periodo $periodo)
     {
         abort_if($periodo->id_institucion !== $idInstitucion, 403);

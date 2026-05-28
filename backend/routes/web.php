@@ -71,6 +71,7 @@ Route::prefix('p/ca')->group(function () {
         Route::get('instituciones/{id}/periodos',          [PeriodoWebController::class, 'index'])->name('ca.periodos.index');
         Route::post('instituciones/{id}/periodos',         [PeriodoWebController::class, 'store'])->name('ca.periodos.store');
         Route::delete('instituciones/{id}/periodos/{periodo}', [PeriodoWebController::class, 'destroy'])->name('ca.periodos.destroy');
+        Route::patch('instituciones/{id}/periodos/{periodo}',  [PeriodoWebController::class, 'update'])->name('ca.periodos.update');
         Route::put('instituciones/{id}/rubros/{rubro}',   [RubroWebController::class, 'update'])->name('ca.rubros.update');
         Route::delete('instituciones/{id}/rubros/{rubro}',[RubroWebController::class, 'destroy'])->name('ca.rubros.destroy');
 
