@@ -100,14 +100,15 @@
 {{-- RF-76: Alumnos en riesgo --}}
 @if ($alumnosEnRiesgo->count() > 0)
 @php
-    $riesgoPorGrupo      = $alumnosEnRiesgo->groupBy(fn($i) => $i['grupo']->id_grupo);
-    // Mapa de institución → grupos en riesgo (para el filtro cascada)
-    $instConRiesgo = $alumnosEnRiesgo->groupBy(fn($i) => $i['grupo']->id_institucion ?? 0);
-    $instNombres   = [];
+    $riesgoPorGrupo = $alumnosEnRiesgo->groupBy(fn($i) => $i['grupo']->id_grupo);
+    // Usar id_institucion del item directamente (más confiable)
+    $instConRiesgo  = $alumnosEnRiesgo->groupBy(fn($i) => $i['id_institucion'] ?? 0);
+    $instNombres    = [];
+    $rubrosPorInstMap = [];
     foreach ($instConRiesgo as $instId => $items) {
-        // Buscar nombre de institución desde la colección de instituciones
         $inst = $instituciones->firstWhere('institucion.id_institucion', $instId);
-        $instNombres[$instId] = $inst ? $inst['institucion']->nombre : 'Institución';
+        $instNombres[$instId]      = $inst ? $inst['institucion']->nombre : 'Institución';
+        $rubrosPorInstMap[$instId] = $items->first()['rubro_principal'] ?? 'primer rubro';
     }
 @endphp
 <div id="alumnos-riesgo" class="bg-white rounded-xl border border-orange-200 overflow-hidden mb-6"
@@ -166,14 +167,8 @@
     </div>
 
     {{-- Leyenda de estados — dinámica por institución seleccionada --}}
-    @php
-        $rubrosPorInst = [];
-        foreach ($instConRiesgo as $instId => $items) {
-            $rubrosPorInst[$instId] = $items->first()['rubro_principal'] ?? 'primer rubro';
-        }
-    @endphp
     <div x-show="filtroInst !== ''"
-         x-data="{ rubros: @json($rubrosPorInst) }"
+         x-data="{ rubros: @json($rubrosPorInstMap) }"
          class="px-5 py-3 border-t border-orange-200 bg-white flex flex-wrap gap-6">
         <div class="flex items-start gap-2">
             <span class="bg-orange-100 text-orange-600 text-xs font-body px-2 py-0.5 rounded-full mt-0.5 flex-shrink-0">En riesgo</span>
