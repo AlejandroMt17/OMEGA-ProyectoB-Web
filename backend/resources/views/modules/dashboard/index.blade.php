@@ -100,15 +100,21 @@
 {{-- RF-76: Alumnos en riesgo --}}
 @if ($alumnosEnRiesgo->count() > 0)
 @php
-    $riesgoPorGrupo = $alumnosEnRiesgo->groupBy(fn($i) => $i['grupo']->id_grupo);
+    $riesgoPorGrupo      = $alumnosEnRiesgo->groupBy(fn($i) => $i['grupo']->id_grupo);
+    // Mapa de institución → grupos en riesgo (para el filtro cascada)
+    $instConRiesgo = $alumnosEnRiesgo->groupBy(fn($i) => $i['grupo']->id_institucion ?? 0);
+    $instNombres   = [];
+    foreach ($instConRiesgo as $instId => $items) {
+        // Buscar nombre de institución desde la colección de instituciones
+        $inst = $instituciones->firstWhere('institucion.id_institucion', $instId);
+        $instNombres[$instId] = $inst ? $inst['institucion']->nombre : 'Institución';
+    }
 @endphp
 <div id="alumnos-riesgo" class="bg-white rounded-xl border border-orange-200 overflow-hidden mb-6"
      x-data="{
+        filtroInst: '',
         filtroGrupo: '',
-        filtroEstado: '',
-        get gruposFiltrados() {
-            return this.filtroGrupo !== '' || this.filtroEstado !== '';
-        }
+        filtroEstado: ''
      }">
     {{-- Header con filtros --}}
     <div class="px-5 py-4 bg-orange-50 border-b border-orange-200">
@@ -120,23 +126,44 @@
                 </h2>
             </div>
         </div>
-        {{-- Filtros --}}
+        {{-- Filtros en cascada: Institución → Grupo → Estado --}}
         <div class="flex items-center gap-3 flex-wrap">
-            <select x-model="filtroGrupo"
+            {{-- Filtro 1: Institución --}}
+            <select x-model="filtroInst" @change="filtroGrupo=''; filtroEstado=''"
+                    class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none">
+                <option value="">Todas las instituciones</option>
+                @foreach ($instConRiesgo as $instId => $items)
+                    <option value="{{ $instId }}">{{ $instNombres[$instId] }}</option>
+                @endforeach
+            </select>
+
+            {{-- Filtro 2: Grupo (se habilita al seleccionar institución) --}}
+            <select x-model="filtroGrupo" @change="filtroEstado=''"
+                    :disabled="filtroInst === ''"
+                    :class="filtroInst === '' ? 'opacity-50 cursor-not-allowed' : ''"
                     class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none">
                 <option value="">Todos los grupos</option>
                 @foreach ($riesgoPorGrupo as $grupoId => $items)
-                    <option value="{{ $grupoId }}">{{ $items->first()['grupo']->nombre }} — {{ $items->first()['grupo']->materia }}</option>
+                    <option value="{{ $grupoId }}"
+                            data-inst="{{ $items->first()['grupo']->id_institucion ?? 0 }}"
+                            x-show="filtroInst === '' || filtroInst === '{{ $items->first()['grupo']->id_institucion ?? 0 }}'">
+                        {{ $items->first()['grupo']->nombre }} — {{ $items->first()['grupo']->materia }}
+                    </option>
                 @endforeach
             </select>
+
+            {{-- Filtro 3: Estado (se habilita al seleccionar grupo) --}}
             <select x-model="filtroEstado"
+                    :disabled="filtroGrupo === ''"
+                    :class="filtroGrupo === '' ? 'opacity-50 cursor-not-allowed' : ''"
                     class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none">
                 <option value="">Todos los estados</option>
                 <option value="riesgo">En riesgo</option>
                 <option value="excedido">Límite excedido</option>
             </select>
-            <button @click="filtroGrupo=''; filtroEstado=''"
-                    x-show="filtroGrupo !== '' || filtroEstado !== ''"
+
+            <button @click="filtroInst=''; filtroGrupo=''; filtroEstado=''"
+                    x-show="filtroInst !== '' || filtroGrupo !== '' || filtroEstado !== ''"
                     class="px-3 py-1.5 bg-white border border-orange-200 text-orange-600 rounded-lg text-xs font-body hover:bg-orange-100 transition-colors">
                 <i class="fa-solid fa-xmark mr-1"></i> Limpiar
             </button>
@@ -146,7 +173,7 @@
     {{-- Acordeón por grupo --}}
     @foreach ($riesgoPorGrupo as $grupoId => $items)
         @php $grupo = $items->first()['grupo']; @endphp
-        <div x-show="filtroGrupo === '' || filtroGrupo === '{{ $grupoId }}'"
+        <div x-show="(filtroInst === '' || filtroInst === '{{ $items->first()['grupo']->id_institucion ?? 0 }}') && (filtroGrupo === '' || filtroGrupo === '{{ $grupoId }}')"
              x-data="{ abierto: false }"
              class="border-b border-omg-kashmir-dark last:border-b-0">
 
