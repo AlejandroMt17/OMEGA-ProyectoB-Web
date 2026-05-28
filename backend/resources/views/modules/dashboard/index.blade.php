@@ -172,15 +172,15 @@
 
     {{-- Placeholder cuando no hay institución seleccionada --}}
     <div x-show="filtroInst === ''" class="px-5 py-8 text-center border-t border-omg-kashmir-dark">
-        <i class="fa-solid fa-building-columns text-orange-300 fa-2x mb-3"></i>
-        <p class="text-sm font-body text-orange-600 font-semibold">Selecciona una institución para ver los grupos en riesgo</p>
-        <p class="text-xs font-body text-orange-400 mt-1">Usa el filtro de arriba para filtrar por institución</p>
+        <i class="fa-solid fa-building-columns text-omg-nile fa-2x mb-3 opacity-40"></i>
+        <p class="text-sm font-body text-omg-nile font-semibold">Selecciona una institución para ver los grupos en riesgo</p>
+        <p class="text-xs font-body text-omg-kashmir mt-1">Usa el filtro de arriba para comenzar</p>
     </div>
 
     {{-- Acordeón por grupo --}}
     @foreach ($riesgoPorGrupo as $grupoId => $items)
         @php $grupo = $items->first()['grupo']; @endphp
-        <div x-show="(filtroInst === '' || filtroInst === '{{ $items->first()['grupo']->id_institucion ?? 0 }}') && (filtroGrupo === '' || filtroGrupo === '{{ $grupoId }}')"
+        <div x-show="filtroInst !== '' && filtroInst === '{{ $items->first()['grupo']->id_institucion ?? 0 }}' && (filtroGrupo === '' || filtroGrupo === '{{ $grupoId }}')"
              x-data="{ abierto: false }"
              class="border-b border-omg-kashmir-dark last:border-b-0">
 
