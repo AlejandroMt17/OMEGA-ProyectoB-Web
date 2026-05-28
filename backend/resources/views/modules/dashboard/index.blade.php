@@ -159,16 +159,17 @@
             <p class="text-xs font-body text-omg-kashmir mt-1">Usa el filtro de arriba para comenzar</p>
         </div>
     @else
-        {{-- Grupos en riesgo --}}
+        {{-- Grupos en riesgo (acordeón) --}}
         @forelse ($riesgoPorGrupo as $grupoId => $items)
             @php $grupo = $items->first()['grupo']; @endphp
-            <div class="border-b border-omg-kashmir-dark last:border-b-0">
+            <div class="border-b border-omg-kashmir-dark last:border-b-0" x-data="{ abierto: false }">
 
-                {{-- Header grupo --}}
-                <div class="flex items-center justify-between px-5 py-3 bg-omg-chardon">
+                {{-- Header grupo — clickeable --}}
+                <button @click="abierto = !abierto"
+                        class="w-full flex items-center justify-between px-5 py-3 bg-omg-chardon hover:bg-orange-50 transition-colors">
                     <div class="flex items-center gap-3">
                         <i class="fa-solid fa-chalkboard-user text-omg-nile text-sm"></i>
-                        <div>
+                        <div class="text-left">
                             <p class="text-sm font-heading font-semibold text-omg-nile">
                                 {{ $grupo->nombre }} — {{ $grupo->materia }}
                             </p>
@@ -186,10 +187,13 @@
                         @if ($enRiesgo > 0)
                             <span class="bg-orange-100 text-orange-600 text-xs font-body px-2 py-0.5 rounded-full">{{ $enRiesgo }} en riesgo</span>
                         @endif
+                        <i class="fa-solid fa-chevron-down text-omg-kashmir text-xs transition-transform duration-200"
+                           :class="abierto ? 'rotate-180' : ''"></i>
                     </div>
-                </div>
+                </button>
 
-                {{-- Alumnos --}}
+                {{-- Alumnos (colapsado por defecto) --}}
+                <div x-show="abierto" x-collapse>
                 <table class="w-full">
                     <thead>
                         <tr class="bg-white border-t border-omg-kashmir-dark">
@@ -229,6 +233,7 @@
                         @endforeach
                     </tbody>
                 </table>
+                </div>{{-- fin x-collapse --}}
             </div>
         @empty
             <div class="px-5 py-8 text-center">

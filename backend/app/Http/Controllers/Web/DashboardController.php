@@ -145,13 +145,11 @@ class DashboardController extends Controller
 
         $riesgoPorGrupo = $alumnosFiltrados->groupBy(fn($i) => $i['grupo']->id_grupo);
 
-        // Instituciones para el select (solo las que tienen alumnos en riesgo)
-        $instSelect = $alumnosEnRiesgo
-            ->groupBy(fn($i) => $i['id_institucion'])
-            ->map(fn($items, $instId) => [
-                'id'     => $instId,
-                'nombre' => $instituciones->firstWhere('institucion.id_institucion', $instId)['institucion']->nombre ?? 'Institución',
-            ])->values();
+        // Instituciones para el select: TODAS las del docente
+        $instSelect = $instituciones->map(fn($i) => [
+            'id'     => $i['institucion']->id_institucion,
+            'nombre' => $i['institucion']->nombre,
+        ])->values();
 
         // Grupos para el select (filtrados por institución)
         $gruposSelect = $alumnosEnRiesgo
