@@ -137,25 +137,20 @@
                 @endforeach
             </select>
 
-            {{-- Filtro 2: Grupo (se habilita al seleccionar institución) --}}
+            {{-- Filtro 2: Grupo --}}
             <select x-model="filtroGrupo" @change="filtroEstado=''"
-                    :disabled="filtroInst === ''"
-                    :class="filtroInst === '' ? 'opacity-50 cursor-not-allowed' : ''"
                     class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none">
                 <option value="">Todos los grupos</option>
                 @foreach ($riesgoPorGrupo as $grupoId => $items)
                     <option value="{{ $grupoId }}"
-                            data-inst="{{ $items->first()['grupo']->id_institucion ?? 0 }}"
                             x-show="filtroInst === '' || filtroInst === '{{ $items->first()['grupo']->id_institucion ?? 0 }}'">
                         {{ $items->first()['grupo']->nombre }} — {{ $items->first()['grupo']->materia }}
                     </option>
                 @endforeach
             </select>
 
-            {{-- Filtro 3: Estado (se habilita al seleccionar grupo) --}}
+            {{-- Filtro 3: Estado --}}
             <select x-model="filtroEstado"
-                    :disabled="filtroGrupo === ''"
-                    :class="filtroGrupo === '' ? 'opacity-50 cursor-not-allowed' : ''"
                     class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none">
                 <option value="">Todos los estados</option>
                 <option value="riesgo">En riesgo</option>
@@ -167,6 +162,24 @@
                     class="px-3 py-1.5 bg-white border border-orange-200 text-orange-600 rounded-lg text-xs font-body hover:bg-orange-100 transition-colors">
                 <i class="fa-solid fa-xmark mr-1"></i> Limpiar
             </button>
+        </div>
+    </div>
+
+    {{-- Leyenda de estados --}}
+    <div x-show="filtroInst !== ''" class="px-5 py-3 border-t border-orange-200 bg-white flex flex-wrap gap-4">
+        <div class="flex items-start gap-2">
+            <span class="bg-orange-100 text-orange-600 text-xs font-body px-2 py-0.5 rounded-full mt-0.5 flex-shrink-0">En riesgo</span>
+            <p class="text-xs font-body text-omg-kashmir">
+                Si faltas más puedes perder el derecho a tu primer rubro
+                @php $primerRubroNombre = $alumnosEnRiesgo->where('perdio', false)->first()['rubro_principal'] ?? 'primer rubro'; @endphp
+                (<strong>{{ $primerRubroNombre }}</strong>). Tienes 1 o 2 faltas antes del límite.
+            </p>
+        </div>
+        <div class="flex items-start gap-2">
+            <span class="bg-red-100 text-red-600 text-xs font-body px-2 py-0.5 rounded-full mt-0.5 flex-shrink-0">Límite excedido</span>
+            <p class="text-xs font-body text-omg-kashmir">
+                Ya perdiste la oportunidad del primer rubro (<strong>{{ $alumnosEnRiesgo->where('perdio', true)->first()['rubro_principal'] ?? $primerRubroNombre }}</strong>) con tus faltas actuales.
+            </p>
         </div>
     </div>
 
@@ -245,9 +258,15 @@
                                 </td>
                                 <td class="px-5 py-3 text-center">
                                     @if ($item['perdio'])
-                                        <span class="bg-red-100 text-red-600 text-xs font-body px-2 py-1 rounded-full">Límite excedido</span>
+                                        <span class="bg-red-100 text-red-600 text-xs font-body px-2 py-1 rounded-full"
+                                              title="Ya perdió {{ $item['rubro_principal'] }} con {{ $item['total_faltas'] }} falta(s)">
+                                            Límite excedido
+                                        </span>
                                     @else
-                                        <span class="bg-orange-100 text-orange-600 text-xs font-body px-2 py-1 rounded-full">En riesgo</span>
+                                        <span class="bg-orange-100 text-orange-600 text-xs font-body px-2 py-1 rounded-full"
+                                              title="Le quedan {{ $item['faltas_restantes'] }} falta(s) antes de perder {{ $item['rubro_principal'] }}">
+                                            En riesgo
+                                        </span>
                                     @endif
                                 </td>
                             </tr>

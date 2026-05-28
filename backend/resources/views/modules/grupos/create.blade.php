@@ -21,25 +21,7 @@
 
 
     <form method="POST" action="{{ route('ca.grupos.store') }}" class="space-y-5"
-      x-data="{ tienePeriodo: {{ $periodos->count() > 0 ? 'true' : 'false' }}, tieneHorario: false }"
-      @submit.prevent="
-        // Validar periodo
-        if (!tienePeriodo) {
-            $dispatch('mostrar-error-periodo');
-            document.querySelector('[data-error-periodo]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return;
-        }
-        // Validar horario
-        const dias = document.querySelectorAll('[name^=horario_dias]');
-        if (dias.length === 0) {
-            $dispatch('mostrar-error-horario');
-            document.querySelector('[data-error-horario]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return;
-        }
-        // Validar campos HTML5
-        if (!$el.reportValidity()) return;
-        $el.submit();
-      ">
+>
         @csrf
 
         {{-- Institución --}}
@@ -117,10 +99,12 @@
                         </a>
                     </div>
                 </div>
-                <p data-error-periodo class="text-xs text-red-500 mt-2 font-body hidden"
-                   x-on:mostrar-error-periodo.window="$el.classList.remove('hidden')">
-                    Debes configurar al menos un periodo antes de crear el aula
-                </p>
+                {{-- Input oculto para forzar validación nativa --}}
+                <input type="text" name="_periodo_check" value=""
+                       required
+                       style="opacity:0;position:absolute;height:0;pointer-events:none"
+                       oninvalid="this.setCustomValidity('Configura al menos un periodo antes de crear el aula')"
+                       oninput="this.setCustomValidity('')"/>
             @elseif ($periodos->count() === 1)
                 <input type="hidden" name="periodo" value="{{ $periodos->first()->nombre }}">
                 <div class="w-full px-4 py-2.5 bg-omg-chardon border border-omg-kashmir rounded-lg text-sm font-body text-omg-dark flex items-center justify-between">
@@ -208,13 +192,17 @@
             <p x-show="filas.length === 0" class="text-xs font-body text-omg-kashmir italic mt-1">
                 Sin horario definido — presiona "Agregar día" para comenzar
             </p>
+            {{-- Input oculto para validación nativa del navegador --}}
+            <input type="text" name="_horario_check"
+                   :value="filas.length > 0 ? 'ok' : ''"
+                   required
+                   style="opacity:0;position:absolute;height:0;pointer-events:none"
+                   x-ref="horarioCheck"
+                   oninvalid="this.setCustomValidity('Agrega al menos un día de clases')"
+                   oninput="this.setCustomValidity('')"/>
             @error('horario')
                 <p class="text-xs text-red-500 mt-2 font-body">{{ $message }}</p>
             @enderror
-            <p data-error-horario class="text-xs text-red-500 mt-2 font-body hidden"
-               x-on:mostrar-error-horario.window="$el.classList.remove('hidden')">
-                Debes agregar al menos un día de clases
-            </p>
         </div>
 
 
