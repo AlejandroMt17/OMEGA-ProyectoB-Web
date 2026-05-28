@@ -104,8 +104,8 @@ class DashboardController extends Controller
      */
     public function riesgoPartial(\Illuminate\Http\Request $request)
     {
-        $docente   = \Illuminate\Support\Facades\Auth::user();
-        $gruposIds = $this->grupos->todosPorDocente($docente->id_usuario)->pluck('id_grupo');
+        $docente       = \Illuminate\Support\Facades\Auth::user();
+        $gruposIds     = $this->grupos->todosPorDocente($docente->id_usuario)->pluck('id_grupo');
         $instituciones = $this->instituciones->todasPorDocente($docente->id_usuario);
 
         $alumnosEnRiesgo = $this->calcularAlumnosEnRiesgo($gruposIds);
@@ -115,8 +115,8 @@ class DashboardController extends Controller
         $filtroEstado = $request->query('estado', '');
 
         $alumnosFiltrados = $alumnosEnRiesgo;
-        if ($filtroInst)   $alumnosFiltrados = $alumnosFiltrados->filter(fn($i) => $i['id_institucion'] == $filtroInst);
-        if ($filtroGrupo)  $alumnosFiltrados = $alumnosFiltrados->filter(fn($i) => $i['grupo']->id_grupo == $filtroGrupo);
+        if ($filtroInst)                 $alumnosFiltrados = $alumnosFiltrados->filter(fn($i) => $i['id_institucion'] == $filtroInst);
+        if ($filtroGrupo)                $alumnosFiltrados = $alumnosFiltrados->filter(fn($i) => $i['grupo']->id_grupo == $filtroGrupo);
         if ($filtroEstado === 'excedido') $alumnosFiltrados = $alumnosFiltrados->filter(fn($i) => $i['perdio']);
         if ($filtroEstado === 'riesgo')   $alumnosFiltrados = $alumnosFiltrados->filter(fn($i) => !$i['perdio']);
 
@@ -131,15 +131,17 @@ class DashboardController extends Controller
             ->when($filtroInst, fn($c) => $c->filter(fn($i) => $i['id_institucion'] == $filtroInst))
             ->groupBy(fn($i) => $i['grupo']->id_grupo)
             ->map(fn($items, $grupoId) => [
-                'id'     => $grupoId,
+                'id'     => (string) $grupoId,
                 'nombre' => $items->first()['grupo']->nombre . ' — ' . $items->first()['grupo']->materia,
             ])->values();
 
-        return view('modules.dashboard.partials.riesgo', compact(
+        $html = view('modules.dashboard.partials.riesgo', compact(
             'alumnosEnRiesgo', 'riesgoPorGrupo',
             'instSelect', 'gruposSelect',
             'filtroInst', 'filtroGrupo', 'filtroEstado'
-        ));
+        ))->render();
+
+        return response($html, 200)->header('Content-Type', 'text/html');
     }
 
     /**
