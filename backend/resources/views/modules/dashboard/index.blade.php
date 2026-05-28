@@ -156,7 +156,7 @@
                 <option value="">Todos los grupos</option>
                 @foreach ($riesgoPorGrupo as $grupoId => $items)
                     <option value="{{ $grupoId }}"
-                            x-show="filtroInst === '' || filtroInst == '{{ $items->first()['id_institucion'] ?? 0 }}'">
+                            x-show="filtroInst === '' || String(filtroInst) === '{{ $items->first()['id_institucion'] ?? 0 }}'">
                         {{ $items->first()['grupo']->nombre }} — {{ $items->first()['grupo']->materia }}
                     </option>
                 @endforeach
@@ -211,7 +211,7 @@
     {{-- Acordeón por grupo --}}
     @foreach ($riesgoPorGrupo as $grupoId => $items)
         @php $grupo = $items->first()['grupo']; @endphp
-        <div x-show="filtroInst !== '' && filtroInst == '{{ $items->first()['id_institucion'] ?? 0 }}' && (filtroGrupo === '' || filtroGrupo === '{{ $grupoId }}')"
+        <div x-show="filtroInst !== '' && String(filtroInst) === '{{ $items->first()['id_institucion'] ?? 0 }}' && (filtroGrupo === '' || filtroGrupo === '{{ $grupoId }}')"
              x-data="{ abierto: false }"
              class="border-b border-omg-kashmir-dark last:border-b-0">
 

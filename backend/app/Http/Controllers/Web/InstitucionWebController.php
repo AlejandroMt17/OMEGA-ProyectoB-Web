@@ -83,8 +83,7 @@ class InstitucionWebController extends Controller
             'institucion_nombre' => $institucion->nombre,
         ]);
 
-        return redirect()->route('ca.grupos.index')
-            ->with('success', "Institución «{$institucion->nombre}» seleccionada");
+        return redirect()->route('ca.grupos.index');
     }
 
     /**
