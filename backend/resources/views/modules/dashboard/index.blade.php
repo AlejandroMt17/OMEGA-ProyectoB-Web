@@ -118,6 +118,16 @@
     }
 
     $instConRiesgo = $alumnosEnRiesgo->groupBy(fn($i) => $i['id_institucion'] ?? 0);
+
+    // Mapa de grupos por institución para el select dinámico
+    $gruposPorInst = [];
+    foreach ($riesgoPorGrupo as $grupoId => $items) {
+        $instId = $items->first()['id_institucion'] ?? 0;
+        $gruposPorInst[$instId][] = [
+            'id'     => (string) $grupoId,
+            'nombre' => $items->first()['grupo']->nombre . ' — ' . $items->first()['grupo']->materia,
+        ];
+    }
 @endphp
 <div id="alumnos-riesgo" class="bg-white rounded-xl border border-orange-200 overflow-hidden mb-6"
      x-data="{
@@ -125,6 +135,7 @@
         filtroGrupo: '',
         filtroEstado: '',
         rubros: @json($rubrosPorInstMap),
+        gruposPorInst: @json($gruposPorInst),
         get rubroActual() { return this.rubros[this.filtroInst] || 'primer rubro'; }
      }">
     {{-- Header con filtros --}}
@@ -154,12 +165,9 @@
                     :class="filtroInst === '' ? 'opacity-40 cursor-not-allowed' : ''"
                     class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none">
                 <option value="">Todos los grupos</option>
-                @foreach ($riesgoPorGrupo as $grupoId => $items)
-                    <option value="{{ $grupoId }}"
-                            x-show="filtroInst === '' || String(filtroInst) === '{{ $items->first()['id_institucion'] ?? 0 }}'">
-                        {{ $items->first()['grupo']->nombre }} — {{ $items->first()['grupo']->materia }}
-                    </option>
-                @endforeach
+                <template x-for="g in (gruposPorInst[filtroInst] || [])" :key="g.id">
+                    <option :value="g.id" x-text="g.nombre"></option>
+                </template>
             </select>
 
             {{-- Filtro 3: Estado (bloqueado hasta seleccionar institución) --}}
