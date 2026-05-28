@@ -42,7 +42,9 @@ class GrupoWebController extends Controller
     public function create()
     {
         $instituciones = $this->instituciones->todasPorDocente(Auth::user()->id_usuario);
-        return view('modules.grupos.create', compact('instituciones'));
+        $periodos = \App\Models\Periodo::where('id_institucion', session('institucion_id'))
+            ->where('activo', true)->orderByDesc('created_at')->get();
+        return view('modules.grupos.create', compact('instituciones', 'periodos'));
     }
 
     public function store(Request $request)

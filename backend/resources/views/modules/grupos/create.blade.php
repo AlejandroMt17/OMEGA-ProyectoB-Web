@@ -101,10 +101,7 @@
         {{-- Periodo --}}
         <div>
             <label class="block text-sm font-body text-omg-dark mb-1">Periodo</label>
-            @php
-                $periodos = \App\Models\Periodo::where('id_institucion', session('institucion_id'))
-                    ->where('activo', true)->orderByDesc('created_at')->get();
-            @endphp
+
             @if ($periodos->count() === 0)
                 {{-- Sin periodos: bloquear y mostrar mensaje --}}
                 <div class="w-full px-4 py-3 bg-orange-50 border border-orange-200 rounded-lg flex items-start gap-3">
