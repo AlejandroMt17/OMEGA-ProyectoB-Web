@@ -18,7 +18,7 @@ class DashboardController extends Controller
         private readonly InstitucionRepositoryInterface $instituciones,
     ) {}
 
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
         $docente    = Auth::user();
         $gruposIds  = $this->grupos->todosPorDocente($docente->id_usuario)->pluck('id_grupo');
@@ -132,9 +132,41 @@ class DashboardController extends Controller
         $justificantesPend = Asistencia::whereHas('sesion', fn($q) => $q->whereIn('id_grupo', $gruposIds))
             ->where('est_asistencia', 2)->count();
 
+        // Filtros GET
+        $filtroInst   = $request->query('inst', '');
+        $filtroGrupo  = $request->query('grupo', '');
+        $filtroEstado = $request->query('estado', '');
+
+        $alumnosFiltrados = $alumnosEnRiesgo;
+        if ($filtroInst)   $alumnosFiltrados = $alumnosFiltrados->filter(fn($i) => $i['id_institucion'] == $filtroInst);
+        if ($filtroGrupo)  $alumnosFiltrados = $alumnosFiltrados->filter(fn($i) => $i['grupo']->id_grupo == $filtroGrupo);
+        if ($filtroEstado === 'excedido') $alumnosFiltrados = $alumnosFiltrados->filter(fn($i) => $i['perdio']);
+        if ($filtroEstado === 'riesgo')   $alumnosFiltrados = $alumnosFiltrados->filter(fn($i) => !$i['perdio']);
+
+        $riesgoPorGrupo = $alumnosFiltrados->groupBy(fn($i) => $i['grupo']->id_grupo);
+
+        // Instituciones para el select (solo las que tienen alumnos en riesgo)
+        $instSelect = $alumnosEnRiesgo
+            ->groupBy(fn($i) => $i['id_institucion'])
+            ->map(fn($items, $instId) => [
+                'id'     => $instId,
+                'nombre' => $instituciones->firstWhere('institucion.id_institucion', $instId)['institucion']->nombre ?? 'Institución',
+            ])->values();
+
+        // Grupos para el select (filtrados por institución)
+        $gruposSelect = $alumnosEnRiesgo
+            ->when($filtroInst, fn($c) => $c->filter(fn($i) => $i['id_institucion'] == $filtroInst))
+            ->groupBy(fn($i) => $i['grupo']->id_grupo)
+            ->map(fn($items, $grupoId) => [
+                'id'     => $grupoId,
+                'nombre' => $items->first()['grupo']->nombre . ' — ' . $items->first()['grupo']->materia,
+            ])->values();
+
         return view('modules.dashboard.index', compact(
             'instituciones', 'sesionesHoy', 'aulasActivas',
-            'justificantesPend', 'alumnosEnRiesgo'
+            'justificantesPend', 'alumnosEnRiesgo',
+            'riesgoPorGrupo', 'instSelect', 'gruposSelect',
+            'filtroInst', 'filtroGrupo', 'filtroEstado'
         ));
     }
 }
