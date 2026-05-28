@@ -50,6 +50,7 @@ Route::prefix('p/ca')->group(function () {
 
         // Dashboard
         Route::get('dashboard', [DashboardController::class, 'index'])->name('ca.dashboard.index');
+        Route::get('dashboard/riesgo', [DashboardController::class, 'riesgoPartial'])->name('ca.dashboard.riesgo');
 
         // Perfil
         Route::get('perfil',                        [PerfilWebController::class, 'index'])->name('ca.perfil.index');
