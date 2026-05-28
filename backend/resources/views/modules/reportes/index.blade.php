@@ -91,7 +91,7 @@
 
         <div class="mb-3">
             <div class="flex items-center justify-between mb-1">
-                <span class="text-xs font-body text-omg-kashmir">Porcentaje de asistencia</span>
+                <span class="text-xs font-body text-omg-kashmir">Porcentaje de asistencias</span>
                 <span class="text-sm font-heading font-semibold text-omg-nile">{{ $reporte['porcentaje'] }}%</span>
             </div>
             <div class="w-full bg-omg-pastel rounded-full h-2">
@@ -105,15 +105,15 @@
         <div class="grid grid-cols-3 gap-3">
             <div class="bg-green-50 rounded-lg p-3 text-center">
                 <p class="text-lg font-heading font-semibold text-green-600">{{ $reporte['total_presentes'] }}</p>
-                <p class="text-xs font-body text-omg-kashmir">Presentes</p>
+                <p class="text-xs font-body text-omg-kashmir">Asistencias</p>
             </div>
             <div class="bg-red-50 rounded-lg p-3 text-center">
                 <p class="text-lg font-heading font-semibold text-red-500">{{ $reporte['total_ausentes'] }}</p>
-                <p class="text-xs font-body text-omg-kashmir">Ausentes</p>
+                <p class="text-xs font-body text-omg-kashmir">Faltas</p>
             </div>
             <div class="bg-omg-chardon rounded-lg p-3 text-center">
                 <p class="text-lg font-heading font-semibold text-omg-nile">{{ $reporte['total_justif'] }}</p>
-                <p class="text-xs font-body text-omg-kashmir">Justificadas</p>
+                <p class="text-xs font-body text-omg-kashmir">Justificaciones</p>
             </div>
         </div>
     </div>
