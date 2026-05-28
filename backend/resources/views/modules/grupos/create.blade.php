@@ -37,18 +37,16 @@
             <label class="block text-sm font-body text-omg-dark mb-1">
                 Institución
             </label>
-            <select
-                name="id_institucion"
-                required
-                class="w-full px-4 py-2.5 bg-white border border-omg-kashmir rounded-lg text-sm font-body text-omg-dark focus:outline-none focus:ring-2 focus:ring-omg-kashmir focus:border-transparent @error('id_institucion') border-red-400 @enderror">
-                <option value="">Selecciona una institución</option>
-                @foreach ($instituciones as $institucion)
-                    <option value="{{ $institucion->id_institucion }}"
-                        {{ old('id_institucion', session('institucion_id')) == $institucion->id_institucion ? 'selected' : '' }}>
-                        {{ $institucion->nombre }}
-                    </option>
-                @endforeach
-            </select>
+            {{-- Institución activa bloqueada (no editable) --}}
+            <input type="hidden" name="id_institucion" value="{{ session('institucion_id') }}">
+            <div class="w-full px-4 py-2.5 bg-omg-chardon border border-omg-kashmir rounded-lg text-sm font-body text-omg-dark flex items-center justify-between">
+                <span>{{ session('institucion_nombre', 'Sin institución') }}</span>
+                <i class="fa-solid fa-lock text-omg-kashmir text-xs"></i>
+            </div>
+            <p class="text-xs font-body text-omg-kashmir mt-1">
+                La aula se creará en la institución activa.
+                <a href="{{ route('ca.instituciones.index') }}" class="text-omg-nile hover:underline">Cambiar institución</a>
+            </p>
             @error('id_institucion')
                 <p class="text-xs text-red-500 mt-1 italic font-body">{{ $message }}</p>
             @enderror
