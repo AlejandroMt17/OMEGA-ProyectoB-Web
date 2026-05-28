@@ -96,14 +96,21 @@
                     ->where('activo', true)->orderByDesc('created_at')->get();
             @endphp
             @if ($periodos->count() === 0)
-                <input type="text" name="periodo" value="{{ old('periodo') }}"
-                       placeholder="Ej: Enero Junio 2026" required
-                       class="w-full px-4 py-2.5 bg-white border border-omg-kashmir rounded-lg text-sm font-body text-omg-dark focus:outline-none focus:ring-2 focus:ring-omg-kashmir @error('periodo') border-red-400 @enderror"/>
-                <p class="text-xs font-body text-omg-kashmir mt-1">
-                    <a href="{{ route('ca.periodos.index', session('institucion_id')) }}" class="text-omg-nile hover:underline">
-                        <i class="fa-solid fa-plus mr-1"></i>Configura periodos en tu institución
-                    </a> para seleccionarlos aquí.
-                </p>
+                {{-- Sin periodos: bloquear y mostrar mensaje --}}
+                <div class="w-full px-4 py-3 bg-orange-50 border border-orange-200 rounded-lg flex items-start gap-3">
+                    <i class="fa-solid fa-triangle-exclamation text-orange-500 mt-0.5 flex-shrink-0"></i>
+                    <div>
+                        <p class="text-sm font-body font-semibold text-orange-700">No hay periodos configurados</p>
+                        <p class="text-xs font-body text-orange-600 mt-0.5">
+                            Debes configurar al menos un periodo antes de crear un aula.
+                        </p>
+                        <a href="{{ route('ca.periodos.index', session('institucion_id')) }}"
+                           class="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-omg-nile text-white rounded-lg text-xs font-body hover:bg-omg-nile-dark transition-colors">
+                            <i class="fa-solid fa-calendar-alt"></i> Configurar periodos
+                        </a>
+                    </div>
+                </div>
+                {{-- Campo oculto para que la validación falle con mensaje claro --}}
             @elseif ($periodos->count() === 1)
                 <input type="hidden" name="periodo" value="{{ $periodos->first()->nombre }}">
                 <div class="w-full px-4 py-2.5 bg-omg-chardon border border-omg-kashmir rounded-lg text-sm font-body text-omg-dark flex items-center justify-between">
