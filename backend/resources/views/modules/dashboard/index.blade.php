@@ -99,163 +99,100 @@
 
 {{-- RF-76: Alumnos en riesgo --}}
 @if ($alumnosEnRiesgo->count() > 0)
-@php
-    $riesgoPorGrupo = $alumnosEnRiesgo->groupBy(fn($i) => $i['grupo']->id_grupo);
+<div id="alumnos-riesgo" class="bg-white rounded-xl border border-orange-200 overflow-hidden mb-6">
 
-    // Usar TODAS las instituciones del docente para el filtro
-    $todasInstituciones = $instituciones->map(fn($i) => $i['institucion']);
+    {{-- Header --}}
+    <div class="flex items-center gap-3 px-5 py-4 bg-orange-50 border-b border-orange-200">
+        <i class="fa-solid fa-triangle-exclamation text-orange-500"></i>
+        <h2 class="text-base font-heading font-semibold text-orange-700">
+            Alumnos en Riesgo ({{ $alumnosEnRiesgo->count() }})
+        </h2>
+    </div>
 
-    // Construir mapa de rubro principal (nombre + porcentaje) por institución
-    // usando los rubros reales de la BD
-    $rubrosPorInstMap = [];
-    foreach ($todasInstituciones as $inst) {
-        $rubro = \App\Models\RubroEvaluacion::where('id_institucion', $inst->id_institucion)
-            ->orderByDesc('porcentaje_minimo')
-            ->first();
-        if ($rubro) {
-            $rubrosPorInstMap[$inst->id_institucion] = $rubro->nombre . ' (' . $rubro->porcentaje_minimo . '%)';
-        }
-    }
+    {{-- Filtros via GET --}}
+    <form method="GET" action="{{ route('ca.dashboard.index') }}#alumnos-riesgo"
+          class="flex items-center gap-3 flex-wrap px-5 py-3 bg-orange-50 border-b border-orange-200">
 
-    $instConRiesgo = $alumnosEnRiesgo->groupBy(fn($i) => $i['id_institucion'] ?? 0);
+        {{-- Institución --}}
+        <select name="inst" onchange="this.form.submit()"
+                class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none">
+            <option value="">Todas las instituciones</option>
+            @foreach ($instSelect as $inst)
+                <option value="{{ $inst['id'] }}" {{ $filtroInst == $inst['id'] ? 'selected' : '' }}>
+                    {{ $inst['nombre'] }}
+                </option>
+            @endforeach
+        </select>
 
-    // Mapa de grupos por institución para el select dinámico
-    $gruposPorInst = [];
-    foreach ($riesgoPorGrupo as $grupoId => $items) {
-        $instId = $items->first()['id_institucion'] ?? 0;
-        $gruposPorInst[$instId][] = [
-            'id'     => (string) $grupoId,
-            'nombre' => $items->first()['grupo']->nombre . ' — ' . $items->first()['grupo']->materia,
-        ];
-    }
-@endphp
-<div id="alumnos-riesgo" class="bg-white rounded-xl border border-orange-200 overflow-hidden mb-6"
-     x-data="{
-        filtroInst: '',
-        filtroGrupo: '',
-        filtroEstado: '',
-        rubros: @json($rubrosPorInstMap),
-        gruposPorInst: @json($gruposPorInst),
-        get rubroActual() { return this.rubros[this.filtroInst] || 'primer rubro'; }
-     }">
-    {{-- Header con filtros --}}
-    <div class="px-5 py-4 bg-orange-50 border-b border-orange-200">
-        <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2">
-                <i class="fa-solid fa-triangle-exclamation text-orange-500"></i>
-                <h2 class="text-base font-heading font-semibold text-orange-700">
-                    Alumnos en Riesgo ({{ $alumnosEnRiesgo->count() }})
-                </h2>
-            </div>
-        </div>
-        {{-- Filtros en cascada: Institución → Grupo → Estado --}}
-        <div class="flex items-center gap-3 flex-wrap">
-            {{-- Filtro 1: Institución --}}
-            <select x-model="filtroInst" @change="filtroGrupo=''; filtroEstado=''"
-                    class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none">
-                <option value="">Todas las instituciones</option>
-                @foreach ($todasInstituciones as $inst)
-                    <option value="{{ $inst->id_institucion }}">{{ $inst->nombre }}</option>
-                @endforeach
-            </select>
+        {{-- Grupo (solo si hay institución) --}}
+        <select name="grupo" {{ !$filtroInst ? 'disabled' : '' }} onchange="this.form.submit()"
+                class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none {{ !$filtroInst ? 'opacity-40 cursor-not-allowed' : '' }}">
+            <option value="">Todos los grupos</option>
+            @foreach ($gruposSelect as $grupo)
+                <option value="{{ $grupo['id'] }}" {{ $filtroGrupo == $grupo['id'] ? 'selected' : '' }}>
+                    {{ $grupo['nombre'] }}
+                </option>
+            @endforeach
+        </select>
 
-            {{-- Filtro 2: Grupo (bloqueado hasta seleccionar institución) --}}
-            <select x-model="filtroGrupo" @change="filtroEstado=''"
-                    :disabled="filtroInst === ''"
-                    :class="filtroInst === '' ? 'opacity-40 cursor-not-allowed' : ''"
-                    class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none">
-                <option value="">Todos los grupos</option>
-                <template x-for="g in (gruposPorInst[filtroInst] || [])" :key="g.id">
-                    <option :value="g.id" x-text="g.nombre"></option>
-                </template>
-            </select>
+        {{-- Estado (solo si hay institución) --}}
+        <select name="estado" {{ !$filtroInst ? 'disabled' : '' }} onchange="this.form.submit()"
+                class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none {{ !$filtroInst ? 'opacity-40 cursor-not-allowed' : '' }}">
+            <option value="">Todos los estados</option>
+            <option value="riesgo" {{ $filtroEstado === 'riesgo' ? 'selected' : '' }}>En riesgo</option>
+            <option value="excedido" {{ $filtroEstado === 'excedido' ? 'selected' : '' }}>Límite excedido</option>
+        </select>
 
-            {{-- Filtro 3: Estado (bloqueado hasta seleccionar institución) --}}
-            <select x-model="filtroEstado"
-                    :disabled="filtroInst === ''"
-                    :class="filtroInst === '' ? 'opacity-40 cursor-not-allowed' : ''"
-                    class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none">
-                <option value="">Todos los estados</option>
-                <option value="riesgo">En riesgo</option>
-                <option value="excedido">Límite excedido</option>
-            </select>
-
-            <button @click="filtroInst=''; filtroGrupo=''; filtroEstado=''"
-                    x-show="filtroInst !== '' || filtroGrupo !== '' || filtroEstado !== ''"
-                    class="px-3 py-1.5 bg-white border border-orange-200 text-orange-600 rounded-lg text-xs font-body hover:bg-orange-100 transition-colors">
+        @if ($filtroInst || $filtroGrupo || $filtroEstado)
+            <a href="{{ route('ca.dashboard.index') }}#alumnos-riesgo"
+               class="px-3 py-1.5 bg-white border border-orange-200 text-orange-600 rounded-lg text-xs font-body hover:bg-orange-100 transition-colors">
                 <i class="fa-solid fa-xmark mr-1"></i> Limpiar
-            </button>
+            </a>
+        @endif
+    </form>
+
+    {{-- Placeholder --}}
+    @if (!$filtroInst)
+        <div class="px-5 py-8 text-center">
+            <i class="fa-solid fa-building-columns text-omg-nile fa-2x mb-3 opacity-40"></i>
+            <p class="text-sm font-body text-omg-nile font-semibold">Selecciona una institución para ver los grupos en riesgo</p>
+            <p class="text-xs font-body text-omg-kashmir mt-1">Usa el filtro de arriba para comenzar</p>
         </div>
-    </div>
+    @else
+        {{-- Grupos en riesgo --}}
+        @forelse ($riesgoPorGrupo as $grupoId => $items)
+            @php $grupo = $items->first()['grupo']; @endphp
+            <div class="border-b border-omg-kashmir-dark last:border-b-0">
 
-    {{-- Leyenda de estados — dinámica por institución seleccionada --}}
-    <div x-show="filtroInst !== ''"
-         class="px-5 py-3 border-t border-orange-200 bg-white flex flex-wrap gap-6">
-        <div class="flex items-start gap-2">
-            <span class="bg-orange-100 text-orange-600 text-xs font-body px-2 py-0.5 rounded-full mt-0.5 flex-shrink-0">En riesgo</span>
-            <p class="text-xs font-body text-omg-kashmir">
-                El alumno está próximo a perder el derecho a
-                <strong x-text="rubroActual"></strong>.
-                Le quedan 1 o 2 faltas antes de superar el límite permitido.
-            </p>
-        </div>
-        <div class="flex items-start gap-2">
-            <span class="bg-red-100 text-red-600 text-xs font-body px-2 py-0.5 rounded-full mt-0.5 flex-shrink-0">Límite excedido</span>
-            <p class="text-xs font-body text-omg-kashmir">
-                El alumno ya superó el número máximo de faltas para
-                <strong x-text="rubroActual"></strong>.
-                No puede ser evaluado en ese rubro con su asistencia actual.
-            </p>
-        </div>
-    </div>
-
-    {{-- Placeholder cuando no hay institución seleccionada --}}
-    <div x-show="filtroInst === ''" class="px-5 py-8 text-center border-t border-omg-kashmir-dark">
-        <i class="fa-solid fa-building-columns text-omg-nile fa-2x mb-3 opacity-40"></i>
-        <p class="text-sm font-body text-omg-nile font-semibold">Selecciona una institución para ver los grupos en riesgo</p>
-        <p class="text-xs font-body text-omg-kashmir mt-1">Usa el filtro de arriba para comenzar</p>
-    </div>
-
-    {{-- Acordeón por grupo --}}
-    @foreach ($riesgoPorGrupo as $grupoId => $items)
-        @php $grupo = $items->first()['grupo']; @endphp
-        <div x-show="filtroInst !== '' && String(filtroInst) === '{{ $items->first()['id_institucion'] ?? 0 }}' && (filtroGrupo === '' || filtroGrupo === '{{ $grupoId }}')"
-             x-data="{ abierto: false }"
-             class="border-b border-omg-kashmir-dark last:border-b-0">
-
-            {{-- Header del grupo --}}
-            <button @click="abierto = !abierto"
-                    class="w-full flex items-center justify-between px-5 py-3 hover:bg-orange-50 transition-colors">
-                <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-chalkboard-user text-omg-nile text-sm"></i>
-                    <div class="text-left">
-                        <p class="text-sm font-heading font-semibold text-omg-nile">
-                            {{ $grupo->nombre }} — {{ $grupo->materia }}
-                        </p>
-                        <p class="text-xs font-body text-omg-kashmir">{{ $grupo->periodo }}</p>
+                {{-- Header grupo --}}
+                <div class="flex items-center justify-between px-5 py-3 bg-omg-chardon">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-chalkboard-user text-omg-nile text-sm"></i>
+                        <div>
+                            <p class="text-sm font-heading font-semibold text-omg-nile">
+                                {{ $grupo->nombre }} — {{ $grupo->materia }}
+                            </p>
+                            <p class="text-xs font-body text-omg-kashmir">{{ $grupo->periodo }}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        @php
+                            $perdidos = $items->where('perdio', true)->count();
+                            $enRiesgo = $items->where('perdio', false)->count();
+                        @endphp
+                        @if ($perdidos > 0)
+                            <span class="bg-red-100 text-red-600 text-xs font-body px-2 py-0.5 rounded-full">{{ $perdidos }} excedido(s)</span>
+                        @endif
+                        @if ($enRiesgo > 0)
+                            <span class="bg-orange-100 text-orange-600 text-xs font-body px-2 py-0.5 rounded-full">{{ $enRiesgo }} en riesgo</span>
+                        @endif
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    @php
-                        $perdidos = $items->where('perdio', true)->count();
-                        $enRiesgo = $items->where('perdio', false)->count();
-                    @endphp
-                    @if ($perdidos > 0)
-                        <span class="bg-red-100 text-red-600 text-xs font-body px-2 py-0.5 rounded-full">{{ $perdidos }} excedido(s)</span>
-                    @endif
-                    @if ($enRiesgo > 0)
-                        <span class="bg-orange-100 text-orange-600 text-xs font-body px-2 py-0.5 rounded-full">{{ $enRiesgo }} en riesgo</span>
-                    @endif
-                    <i class="fa-solid fa-chevron-down text-omg-kashmir text-xs transition-transform duration-200"
-                       :class="abierto ? 'rotate-180' : ''"></i>
-                </div>
-            </button>
 
-            {{-- Alumnos del grupo --}}
-            <div x-show="abierto" x-collapse>
+                {{-- Alumnos --}}
                 <table class="w-full">
                     <thead>
-                        <tr class="bg-omg-chardon border-t border-omg-kashmir-dark">
+                        <tr class="bg-white border-t border-omg-kashmir-dark">
                             <th class="text-left px-5 py-2 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Alumno</th>
                             <th class="text-center px-5 py-2 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">% Asistencia</th>
                             <th class="text-center px-5 py-2 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Total faltas</th>
@@ -264,8 +201,7 @@
                     </thead>
                     <tbody class="divide-y divide-omg-kashmir-dark">
                         @foreach ($items->sortBy('porcentaje') as $item)
-                            <tr x-show="filtroEstado === '' || (filtroEstado === 'excedido' && {{ $item['perdio'] ? 'true' : 'false' }}) || (filtroEstado === 'riesgo' && {{ !$item['perdio'] ? 'true' : 'false' }})"
-                                class="hover:bg-omg-chardon transition-colors">
+                            <tr class="hover:bg-omg-chardon transition-colors">
                                 <td class="px-5 py-3">
                                     <p class="text-sm font-body font-semibold text-omg-dark">
                                         {{ $item['alumno']->ap_pat }} {{ $item['alumno']->ap_mat }}, {{ $item['alumno']->nombre }}
@@ -284,15 +220,9 @@
                                 </td>
                                 <td class="px-5 py-3 text-center">
                                     @if ($item['perdio'])
-                                        <span class="bg-red-100 text-red-600 text-xs font-body px-2 py-1 rounded-full"
-                                              title="Ya perdió {{ $item['rubro_principal'] }} con {{ $item['total_faltas'] }} falta(s)">
-                                            Límite excedido
-                                        </span>
+                                        <span class="bg-red-100 text-red-600 text-xs font-body px-2 py-1 rounded-full">Límite excedido</span>
                                     @else
-                                        <span class="bg-orange-100 text-orange-600 text-xs font-body px-2 py-1 rounded-full"
-                                              title="Le quedan {{ $item['faltas_restantes'] }} falta(s) antes de perder {{ $item['rubro_principal'] }}">
-                                            En riesgo
-                                        </span>
+                                        <span class="bg-orange-100 text-orange-600 text-xs font-body px-2 py-1 rounded-full">En riesgo</span>
                                     @endif
                                 </td>
                             </tr>
@@ -300,10 +230,15 @@
                     </tbody>
                 </table>
             </div>
-        </div>
-    @endforeach
+        @empty
+            <div class="px-5 py-8 text-center">
+                <p class="text-sm font-body text-omg-kashmir">No hay alumnos en riesgo con los filtros seleccionados</p>
+            </div>
+        @endforelse
+    @endif
 </div>
 @endif
+
 
 {{-- Mis Instituciones (acordeón — grupos ocultos por defecto) --}}
 <div class="mb-2">
