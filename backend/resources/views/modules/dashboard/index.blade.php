@@ -123,7 +123,9 @@
      x-data="{
         filtroInst: '',
         filtroGrupo: '',
-        filtroEstado: ''
+        filtroEstado: '',
+        rubros: @json($rubrosPorInstMap),
+        get rubroActual() { return this.rubros[this.filtroInst] || 'primer rubro'; }
      }">
     {{-- Header con filtros --}}
     <div class="px-5 py-4 bg-orange-50 border-b border-orange-200">
@@ -146,8 +148,10 @@
                 @endforeach
             </select>
 
-            {{-- Filtro 2: Grupo --}}
+            {{-- Filtro 2: Grupo (bloqueado hasta seleccionar institución) --}}
             <select x-model="filtroGrupo" @change="filtroEstado=''"
+                    :disabled="filtroInst === ''"
+                    :class="filtroInst === '' ? 'opacity-40 cursor-not-allowed' : ''"
                     class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none">
                 <option value="">Todos los grupos</option>
                 @foreach ($riesgoPorGrupo as $grupoId => $items)
@@ -158,8 +162,10 @@
                 @endforeach
             </select>
 
-            {{-- Filtro 3: Estado --}}
+            {{-- Filtro 3: Estado (bloqueado hasta seleccionar institución) --}}
             <select x-model="filtroEstado"
+                    :disabled="filtroInst === ''"
+                    :class="filtroInst === '' ? 'opacity-40 cursor-not-allowed' : ''"
                     class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none">
                 <option value="">Todos los estados</option>
                 <option value="riesgo">En riesgo</option>
@@ -176,13 +182,12 @@
 
     {{-- Leyenda de estados — dinámica por institución seleccionada --}}
     <div x-show="filtroInst !== ''"
-         x-data="{ rubros: @json($rubrosPorInstMap) }"
          class="px-5 py-3 border-t border-orange-200 bg-white flex flex-wrap gap-6">
         <div class="flex items-start gap-2">
             <span class="bg-orange-100 text-orange-600 text-xs font-body px-2 py-0.5 rounded-full mt-0.5 flex-shrink-0">En riesgo</span>
             <p class="text-xs font-body text-omg-kashmir">
                 El alumno está próximo a perder el derecho a
-                <strong x-text="rubros[filtroInst] || 'primer rubro'"></strong>.
+                <strong x-text="rubroActual"></strong>.
                 Le quedan 1 o 2 faltas antes de superar el límite permitido.
             </p>
         </div>
@@ -190,7 +195,7 @@
             <span class="bg-red-100 text-red-600 text-xs font-body px-2 py-0.5 rounded-full mt-0.5 flex-shrink-0">Límite excedido</span>
             <p class="text-xs font-body text-omg-kashmir">
                 El alumno ya superó el número máximo de faltas para
-                <strong x-text="rubros[filtroInst] || 'primer rubro'"></strong>.
+                <strong x-text="rubroActual"></strong>.
                 No puede ser evaluado en ese rubro con su asistencia actual.
             </p>
         </div>
@@ -206,7 +211,7 @@
     {{-- Acordeón por grupo --}}
     @foreach ($riesgoPorGrupo as $grupoId => $items)
         @php $grupo = $items->first()['grupo']; @endphp
-        <div x-show="(filtroInst === '' || filtroInst == '{{ $items->first()['id_institucion'] ?? 0 }}') && (filtroGrupo === '' || filtroGrupo === '{{ $grupoId }}')"
+        <div x-show="filtroInst !== '' && filtroInst == '{{ $items->first()['id_institucion'] ?? 0 }}' && (filtroGrupo === '' || filtroGrupo === '{{ $grupoId }}')"
              x-data="{ abierto: false }"
              class="border-b border-omg-kashmir-dark last:border-b-0">
 
