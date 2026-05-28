@@ -77,17 +77,36 @@
                                 <i class="fa-regular fa-pen-to-square"></i>
                                 Editar
                             </a>
-                            <form method="POST"
-                                  action="{{ route('ca.instituciones.destroy', $institucion->id_institucion) }}"
-                                  onsubmit="return confirm('Esta acción no se puede deshacer')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit"
+                            <div x-data="{ open: false }">
+                                <button type="button" @click="open = true"
                                     class="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-500 hover:text-white text-red-500 rounded-lg text-xs font-body transition-colors">
                                     <i class="fa-solid fa-delete-left"></i>
                                     Eliminar
                                 </button>
-                            </form>
+                                <div x-show="open" x-transition class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+                                    <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-xl">
+                                        <p class="text-sm font-heading font-semibold text-omg-nile mb-2">¿Eliminar institución?</p>
+                                        <p class="text-xs font-body text-omg-kashmir mb-4">
+                                            Esta acción no se puede deshacer. Se eliminarán todos los datos asociados.
+                                        </p>
+                                        <div class="flex gap-3">
+                                            <button @click="open = false"
+                                                class="flex-1 py-2 bg-omg-chardon text-omg-nile font-heading font-semibold rounded-lg text-sm">
+                                                Cancelar
+                                            </button>
+                                            <form method="POST"
+                                                  action="{{ route('ca.instituciones.destroy', $institucion->id_institucion) }}"
+                                                  class="flex-1">
+                                                @csrf @method('DELETE')
+                                                <button type="submit"
+                                                    class="w-full py-2 bg-red-500 hover:bg-red-600 text-white font-heading font-semibold rounded-lg text-sm">
+                                                    Eliminar
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </td>
                 </tr>
