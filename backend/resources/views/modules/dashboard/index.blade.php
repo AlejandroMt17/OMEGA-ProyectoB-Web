@@ -101,15 +101,23 @@
 @if ($alumnosEnRiesgo->count() > 0)
 @php
     $riesgoPorGrupo = $alumnosEnRiesgo->groupBy(fn($i) => $i['grupo']->id_grupo);
-    // Usar id_institucion del item directamente (más confiable)
-    $instConRiesgo  = $alumnosEnRiesgo->groupBy(fn($i) => $i['id_institucion'] ?? 0);
-    $instNombres    = [];
+
+    // Usar TODAS las instituciones del docente para el filtro
+    $todasInstituciones = $instituciones->map(fn($i) => $i['institucion']);
+
+    // Construir mapa de rubro principal (nombre + porcentaje) por institución
+    // usando los rubros reales de la BD
     $rubrosPorInstMap = [];
-    foreach ($instConRiesgo as $instId => $items) {
-        $inst = $instituciones->firstWhere('institucion.id_institucion', $instId);
-        $instNombres[$instId]      = $inst ? $inst['institucion']->nombre : 'Institución';
-        $rubrosPorInstMap[$instId] = $items->first()['rubro_principal'] ?? 'primer rubro';
+    foreach ($todasInstituciones as $inst) {
+        $rubro = \App\Models\RubroEvaluacion::where('id_institucion', $inst->id_institucion)
+            ->orderByDesc('porcentaje_minimo')
+            ->first();
+        if ($rubro) {
+            $rubrosPorInstMap[$inst->id_institucion] = $rubro->nombre . ' (' . $rubro->porcentaje_minimo . '%)';
+        }
     }
+
+    $instConRiesgo = $alumnosEnRiesgo->groupBy(fn($i) => $i['id_institucion'] ?? 0);
 @endphp
 <div id="alumnos-riesgo" class="bg-white rounded-xl border border-orange-200 overflow-hidden mb-6"
      x-data="{
@@ -133,8 +141,8 @@
             <select x-model="filtroInst" @change="filtroGrupo=''; filtroEstado=''"
                     class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none">
                 <option value="">Todas las instituciones</option>
-                @foreach ($instConRiesgo as $instId => $items)
-                    <option value="{{ $instId }}">{{ $instNombres[$instId] }}</option>
+                @foreach ($todasInstituciones as $inst)
+                    <option value="{{ $inst->id_institucion }}">{{ $inst->nombre }}</option>
                 @endforeach
             </select>
 
@@ -144,7 +152,7 @@
                 <option value="">Todos los grupos</option>
                 @foreach ($riesgoPorGrupo as $grupoId => $items)
                     <option value="{{ $grupoId }}"
-                            x-show="filtroInst === '' || filtroInst === '{{ $items->first()['grupo']->id_institucion ?? 0 }}'">
+                            x-show="filtroInst === '' || filtroInst == '{{ $items->first()['id_institucion'] ?? 0 }}'">
                         {{ $items->first()['grupo']->nombre }} — {{ $items->first()['grupo']->materia }}
                     </option>
                 @endforeach
@@ -174,7 +182,7 @@
             <span class="bg-orange-100 text-orange-600 text-xs font-body px-2 py-0.5 rounded-full mt-0.5 flex-shrink-0">En riesgo</span>
             <p class="text-xs font-body text-omg-kashmir">
                 El alumno está próximo a perder el derecho a
-                <strong x-text="rubros[filtroInst] ?? 'primer rubro'"></strong>.
+                <strong x-text="rubros[filtroInst] || 'primer rubro'"></strong>.
                 Le quedan 1 o 2 faltas antes de superar el límite permitido.
             </p>
         </div>
@@ -182,7 +190,7 @@
             <span class="bg-red-100 text-red-600 text-xs font-body px-2 py-0.5 rounded-full mt-0.5 flex-shrink-0">Límite excedido</span>
             <p class="text-xs font-body text-omg-kashmir">
                 El alumno ya superó el número máximo de faltas para
-                <strong x-text="rubros[filtroInst] ?? 'primer rubro'"></strong>.
+                <strong x-text="rubros[filtroInst] || 'primer rubro'"></strong>.
                 No puede ser evaluado en ese rubro con su asistencia actual.
             </p>
         </div>
@@ -198,7 +206,7 @@
     {{-- Acordeón por grupo --}}
     @foreach ($riesgoPorGrupo as $grupoId => $items)
         @php $grupo = $items->first()['grupo']; @endphp
-        <div x-show="filtroInst !== '' && filtroInst === '{{ $items->first()['grupo']->id_institucion ?? 0 }}' && (filtroGrupo === '' || filtroGrupo === '{{ $grupoId }}')"
+        <div x-show="(filtroInst === '' || filtroInst == '{{ $items->first()['id_institucion'] ?? 0 }}') && (filtroGrupo === '' || filtroGrupo === '{{ $grupoId }}')"
              x-data="{ abierto: false }"
              class="border-b border-omg-kashmir-dark last:border-b-0">
 
