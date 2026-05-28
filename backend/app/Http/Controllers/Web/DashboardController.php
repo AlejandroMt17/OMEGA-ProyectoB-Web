@@ -67,9 +67,13 @@ class DashboardController extends Controller
             $pctPrincipal      = $rubroPrincipal?->porcentaje_minimo ?? 80;
             $nombrePrincipal   = $rubroPrincipal?->nombre ?? 'Ordinario';
 
-            $sesiones   = Sesion::where('id_grupo', $idGrupo)->where('est_sesion', 0)->get();
-            $totalSes   = $sesiones->count();
-            if ($totalSes === 0) continue;
+            // Incluir sesión activa en el total proyectado
+            $sesionesActivas = Sesion::where('id_grupo', $idGrupo)->where('est_sesion', 1)->get();
+            $sesiones        = Sesion::where('id_grupo', $idGrupo)->where('est_sesion', 0)->get();
+            $totalSes        = $sesiones->count();
+            // Total proyectado = sesiones cerradas + 1 si hay sesión activa
+            $totalProyectado = $totalSes + $sesionesActivas->count();
+            if ($totalSes === 0 && $totalProyectado === 0) continue;
 
             $alumnos = GrupoAlumno::where('id_grupo', $idGrupo)->with(['alumno', 'grupo'])->get();
             foreach ($alumnos as $ga) {
@@ -85,17 +89,24 @@ class DashboardController extends Controller
                     ->where('est_asistencia', 2)->count();
 
                 $asistidas = $presentes + $justificadas;
-                $pct       = round(($asistidas / $totalSes) * 100, 1);
 
-                // Faltas permitidas basadas en el rubro principal (mayor %)
-                $faltasPermitidas = (int) floor($totalSes * (1 - $pctPrincipal / 100));
-                $faltasRestantes  = max(0, $faltasPermitidas - $ausentes);
+                // Porcentaje actual (sobre sesiones cerradas)
+                $pct = $totalSes > 0 ? round(($asistidas / $totalSes) * 100, 1) : 100.0;
 
-                // perdio = ya superó las faltas permitidas del rubro principal
-                $perdio = $ausentes > $faltasPermitidas;
+                // Proyección: si se abre una sesión más y el alumno no asiste
+                // ¿cuántas faltas tendría en total?
+                $ausentesProyectados = $ausentes + $sesionesActivas->count(); // peor caso
+                $faltasPermitidas    = (int) floor($totalProyectado * (1 - $pctPrincipal / 100));
+                $faltasRestantes     = max(0, $faltasPermitidas - $ausentes);
 
-                // En riesgo: ya perdió ordinario O le quedan <= 2 faltas para perderlo
-                if ($perdio || $faltasRestantes <= 2) {
+                // perdio = ya superó las faltas permitidas con las sesiones cerradas
+                $perdio = $totalSes > 0 && $ausentes > $faltasPermitidas;
+
+                // En riesgo proyectado = con la sesión activa podría perder el rubro
+                $enRiesgoProyectado = !$perdio && ($ausentesProyectados > $faltasPermitidas);
+
+                // Solo agregar si realmente está en riesgo o ya perdió
+                if ($perdio || $enRiesgoProyectado || ($faltasRestantes <= 2 && $totalSes > 0)) {
                     $alumnosEnRiesgo->push([
                         'alumno'           => $ga->alumno,
                         'grupo'            => $ga->grupo,
