@@ -58,8 +58,15 @@ class DashboardController extends Controller
         // RF-76: Alumnos en riesgo
         $alumnosEnRiesgo = collect();
         foreach ($gruposIds as $idGrupo) {
-            $rubros     = RubroEvaluacion::whereHas('institucion.grupos', fn($q) => $q->where('id_grupo', $idGrupo))->get();
-            $minPct     = $rubros->min('porcentaje_minimo') ?? 80;
+            $rubros = RubroEvaluacion::whereHas('institucion.grupos', fn($q) => $q->where('id_grupo', $idGrupo))
+                ->orderByDesc('porcentaje_minimo')
+                ->get();
+
+            // Primer rubro (mayor %) = ordinario o equivalente
+            $rubroPrincipal    = $rubros->first();
+            $pctPrincipal      = $rubroPrincipal?->porcentaje_minimo ?? 80;
+            $nombrePrincipal   = $rubroPrincipal?->nombre ?? 'Ordinario';
+
             $sesiones   = Sesion::where('id_grupo', $idGrupo)->where('est_sesion', 0)->get();
             $totalSes   = $sesiones->count();
             if ($totalSes === 0) continue;
@@ -80,20 +87,24 @@ class DashboardController extends Controller
                 $asistidas = $presentes + $justificadas;
                 $pct       = round(($asistidas / $totalSes) * 100, 1);
 
-                // Faltas permitidas = cuántas puede tener antes de perder el ordinario
-                $faltasPermitidas = (int) floor($totalSes * (1 - $minPct / 100));
+                // Faltas permitidas basadas en el rubro principal (mayor %)
+                $faltasPermitidas = (int) floor($totalSes * (1 - $pctPrincipal / 100));
                 $faltasRestantes  = max(0, $faltasPermitidas - $ausentes);
-                $perdio           = $pct < $minPct;
 
-                // En riesgo: ya perdió O le quedan <= 2 faltas
+                // perdio = ya superó las faltas permitidas del rubro principal
+                $perdio = $ausentes > $faltasPermitidas;
+
+                // En riesgo: ya perdió ordinario O le quedan <= 2 faltas para perderlo
                 if ($perdio || $faltasRestantes <= 2) {
                     $alumnosEnRiesgo->push([
-                        'alumno'          => $ga->alumno,
-                        'grupo'           => $ga->grupo,
-                        'porcentaje'      => $pct,
-                        'total_faltas'    => $ausentes,
-                        'faltas_restantes'=> $faltasRestantes,
-                        'perdio'          => $perdio,
+                        'alumno'           => $ga->alumno,
+                        'grupo'            => $ga->grupo,
+                        'porcentaje'       => $pct,
+                        'total_faltas'     => $ausentes,
+                        'faltas_restantes' => $faltasRestantes,
+                        'perdio'           => $perdio,
+                        'rubro_principal'  => $nombrePrincipal,
+                        'pct_principal'    => $pctPrincipal,
                     ]);
                 }
             }
