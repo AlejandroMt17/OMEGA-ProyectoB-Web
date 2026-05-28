@@ -165,20 +165,30 @@
         </div>
     </div>
 
-    {{-- Leyenda de estados --}}
-    <div x-show="filtroInst !== ''" class="px-5 py-3 border-t border-orange-200 bg-white flex flex-wrap gap-4">
+    {{-- Leyenda de estados — dinámica por institución seleccionada --}}
+    @php
+        $rubrosPorInst = [];
+        foreach ($instConRiesgo as $instId => $items) {
+            $rubrosPorInst[$instId] = $items->first()['rubro_principal'] ?? 'primer rubro';
+        }
+    @endphp
+    <div x-show="filtroInst !== ''"
+         x-data="{ rubros: @json($rubrosPorInst) }"
+         class="px-5 py-3 border-t border-orange-200 bg-white flex flex-wrap gap-6">
         <div class="flex items-start gap-2">
             <span class="bg-orange-100 text-orange-600 text-xs font-body px-2 py-0.5 rounded-full mt-0.5 flex-shrink-0">En riesgo</span>
             <p class="text-xs font-body text-omg-kashmir">
-                Si faltas más puedes perder el derecho a tu primer rubro
-                @php $primerRubroNombre = $alumnosEnRiesgo->where('perdio', false)->first()['rubro_principal'] ?? 'primer rubro'; @endphp
-                (<strong>{{ $primerRubroNombre }}</strong>). Tienes 1 o 2 faltas antes del límite.
+                El alumno está próximo a perder el derecho a
+                <strong x-text="rubros[filtroInst] ?? 'primer rubro'"></strong>.
+                Le quedan 1 o 2 faltas antes de superar el límite permitido.
             </p>
         </div>
         <div class="flex items-start gap-2">
             <span class="bg-red-100 text-red-600 text-xs font-body px-2 py-0.5 rounded-full mt-0.5 flex-shrink-0">Límite excedido</span>
             <p class="text-xs font-body text-omg-kashmir">
-                Ya perdiste la oportunidad del primer rubro (<strong>{{ $alumnosEnRiesgo->where('perdio', true)->first()['rubro_principal'] ?? $primerRubroNombre }}</strong>) con tus faltas actuales.
+                El alumno ya superó el número máximo de faltas para
+                <strong x-text="rubros[filtroInst] ?? 'primer rubro'"></strong>.
+                No puede ser evaluado en ese rubro con su asistencia actual.
             </p>
         </div>
     </div>
