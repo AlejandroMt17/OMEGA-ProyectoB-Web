@@ -170,6 +170,13 @@
         </div>
     </div>
 
+    {{-- Placeholder cuando no hay institución seleccionada --}}
+    <div x-show="filtroInst === ''" class="px-5 py-8 text-center border-t border-omg-kashmir-dark">
+        <i class="fa-solid fa-building-columns text-orange-300 fa-2x mb-3"></i>
+        <p class="text-sm font-body text-orange-600 font-semibold">Selecciona una institución para ver los grupos en riesgo</p>
+        <p class="text-xs font-body text-orange-400 mt-1">Usa el filtro de arriba para filtrar por institución</p>
+    </div>
+
     {{-- Acordeón por grupo --}}
     @foreach ($riesgoPorGrupo as $grupoId => $items)
         @php $grupo = $items->first()['grupo']; @endphp
@@ -253,11 +260,18 @@
 </div>
 @endif
 
-{{-- Instituciones y Aulas --}}
+{{-- Mis Instituciones (acordeón — grupos ocultos por defecto) --}}
+<div class="mb-2">
+    <h2 class="text-base font-heading font-semibold text-omg-nile mb-3">Mis Instituciones</h2>
+</div>
 @forelse ($instituciones as $item)
     @php $inst = $item['institucion']; $grupos = $item['grupos']; @endphp
-    <div class="bg-white rounded-xl border border-omg-kashmir-dark mb-5 overflow-hidden">
-        <div class="flex items-center gap-4 px-5 py-4 border-b border-omg-kashmir-dark bg-omg-chardon">
+    <div class="bg-white rounded-xl border border-omg-kashmir-dark mb-4 overflow-hidden"
+         x-data="{ abierto: false }">
+
+        {{-- Header institución (siempre visible) --}}
+        <div class="flex items-center gap-4 px-5 py-4 bg-omg-chardon">
+            {{-- Logo --}}
             <div class="w-10 h-10 rounded-lg border border-omg-kashmir-dark bg-white flex items-center justify-center overflow-hidden flex-shrink-0">
                 @if ($inst->logo)
                     <img src="{{ $inst->logo }}" alt="{{ $inst->nombre }}" class="h-8 w-auto object-contain"
@@ -269,54 +283,70 @@
                     <i class="fa-solid fa-building-columns text-omg-kashmir text-sm"></i>
                 @endif
             </div>
+            {{-- Nombre y contador --}}
             <div class="flex-1">
                 <p class="text-sm font-heading font-semibold text-omg-nile">{{ $inst->nombre }}</p>
                 <p class="text-xs font-body text-omg-kashmir">{{ $grupos->count() }} grupo(s)</p>
             </div>
-            <form method="POST" action="{{ route('ca.instituciones.seleccionar', $inst->id_institucion) }}">
-                @csrf
-                <button type="submit"
-                    class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-coral hover:bg-omg-coral-dark text-white rounded-lg text-xs font-body transition-colors">
-                    <i class="fa-solid fa-check"></i> Seleccionar
+            {{-- Acciones --}}
+            <div class="flex items-center gap-2">
+                <form method="POST" action="{{ route('ca.instituciones.seleccionar', $inst->id_institucion) }}">
+                    @csrf
+                    <button type="submit"
+                        class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-coral hover:bg-omg-coral-dark text-white rounded-lg text-xs font-body transition-colors">
+                        <i class="fa-solid fa-check"></i> Seleccionar
+                    </button>
+                </form>
+                {{-- Botón desplegar grupos --}}
+                <button @click="abierto = !abierto"
+                    class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-pastel hover:bg-omg-nile hover:text-white text-omg-nile rounded-lg text-xs font-body transition-colors">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span x-text="abierto ? 'Ocultar grupos' : 'Ver grupos'"></span>
+                    <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200"
+                       :class="abierto ? 'rotate-180' : ''"></i>
                 </button>
-            </form>
+            </div>
         </div>
-        @if ($grupos->count() > 0)
-            <div class="divide-y divide-omg-kashmir-dark">
-                @foreach ($grupos as $g)
-                    @php $grupo = $g['grupo']; @endphp
-                    <div class="flex items-center px-5 py-3 hover:bg-omg-chardon transition-colors">
-                        <div class="flex-1">
-                            <p class="text-sm font-body font-semibold text-omg-dark">
-                                {{ $grupo->nombre }} — {{ $grupo->materia }}
-                            </p>
-                            <p class="text-xs font-body text-omg-kashmir">
-                                {{ $grupo->periodo }} · {{ $g['totalAlumnos'] }} alumno(s)
-                            </p>
+
+        {{-- Grupos (colapsados por defecto) --}}
+        <div x-show="abierto" x-collapse>
+            @if ($grupos->count() > 0)
+                <div class="divide-y divide-omg-kashmir-dark">
+                    @foreach ($grupos as $g)
+                        @php $grupo = $g['grupo']; @endphp
+                        <div class="flex items-center px-5 py-3 hover:bg-omg-chardon transition-colors">
+                            <div class="flex-1">
+                                <p class="text-sm font-body font-semibold text-omg-dark">
+                                    {{ $grupo->nombre }} — {{ $grupo->materia }}
+                                </p>
+                                <p class="text-xs font-body text-omg-kashmir">
+                                    {{ $grupo->periodo }} · {{ $g['totalAlumnos'] }} alumno(s)
+                                </p>
+                            </div>
+                            @if ($g['sesionActiva'])
+                                <span class="bg-green-100 text-green-600 text-xs font-body px-2 py-0.5 rounded-full mr-3 animate-pulse">
+                                    EN VIVO
+                                </span>
+                            @endif
+                            <div class="flex items-center gap-2">
+                                <a href="{{ route('ca.instituciones.ir', [$inst->id_institucion, 'destino' => route('ca.grupos.sesiones', $grupo)]) }}"
+                                   class="flex items-center gap-1 px-3 py-1.5 bg-omg-nile hover:bg-omg-nile-dark text-white rounded-lg text-xs font-body transition-colors">
+                                    <i class="fa-solid fa-calendar-check"></i> Sesiones
+                                </a>
+                                <a href="{{ route('ca.instituciones.ir', [$inst->id_institucion, 'destino' => route('ca.grupos.alumnos', $grupo)]) }}"
+                                   class="flex items-center gap-1 px-3 py-1.5 bg-omg-pastel hover:bg-omg-nile hover:text-white text-omg-nile rounded-lg text-xs font-body transition-colors">
+                                    <i class="fa-solid fa-users"></i> Alumnos
+                                </a>
+                            </div>
                         </div>
-                        @if ($g['sesionActiva'])
-                            <span class="bg-green-100 text-green-600 text-xs font-body px-2 py-0.5 rounded-full mr-3 animate-pulse">
-                                EN VIVO
-                            </span>
-                        @endif
-                        <div class="flex items-center gap-2">
-                            <a href="{{ route('ca.instituciones.ir', [$inst->id_institucion, 'destino' => route('ca.grupos.sesiones', $grupo)]) }}"
-                               class="flex items-center gap-1 px-3 py-1.5 bg-omg-nile hover:bg-omg-nile-dark text-white rounded-lg text-xs font-body transition-colors">
-                                <i class="fa-solid fa-calendar-check"></i> Sesiones
-                            </a>
-                            <a href="{{ route('ca.instituciones.ir', [$inst->id_institucion, 'destino' => route('ca.grupos.alumnos', $grupo)]) }}"
-                               class="flex items-center gap-1 px-3 py-1.5 bg-omg-pastel hover:bg-omg-nile hover:text-white text-omg-nile rounded-lg text-xs font-body transition-colors">
-                                <i class="fa-solid fa-users"></i> Alumnos
-                            </a>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        @else
-            <div class="px-5 py-6 text-center">
-                <p class="text-sm font-body text-omg-kashmir">Sin grupos en esta institución</p>
-            </div>
-        @endif
+                    @endforeach
+                </div>
+            @else
+                <div class="px-5 py-6 text-center">
+                    <p class="text-sm font-body text-omg-kashmir">Sin grupos en esta institución</p>
+                </div>
+            @endif
+        </div>
     </div>
 @empty
     <div class="bg-white rounded-xl border border-omg-kashmir-dark p-12 text-center">

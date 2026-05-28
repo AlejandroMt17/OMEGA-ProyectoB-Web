@@ -18,18 +18,9 @@
 {{-- Formulario --}}
 <div class="bg-white rounded-xl border border-omg-kashmir-dark p-6 max-w-lg">
 
-    @if ($errors->any())
-        <div class="flex items-start gap-3 bg-white border border-red-200 rounded-lg px-4 py-3 mb-6">
-            <i class="fa-solid fa-circle-xmark text-red-500 mt-0.5"></i>
-            <ul class="text-sm text-omg-dark space-y-1">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
 
-    <form method="POST" action="{{ route('ca.grupos.store') }}" class="space-y-5">
+
+    <form method="POST" action="{{ route('ca.grupos.store') }}" class="space-y-5" @submit.prevent="$el.reportValidity() && $el.submit()">
         @csrf
 
         {{-- Institución --}}
