@@ -72,6 +72,11 @@
                                 <i class="fa-solid fa-chart-pie"></i>
                                 Rubros
                             </a>
+                            <a href="{{ route('ca.periodos.index', $institucion->id_institucion) }}"
+                               class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-chardon hover:bg-omg-nile hover:text-white text-omg-nile rounded-lg text-xs font-body transition-colors">
+                                <i class="fa-solid fa-calendar-alt"></i>
+                                Periodos
+                            </a>
                             <a href="{{ route('ca.instituciones.edit', $institucion->id_institucion) }}"
                                class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-pastel hover:bg-omg-nile hover:text-white text-omg-nile rounded-lg text-xs font-body transition-colors">
                                 <i class="fa-regular fa-pen-to-square"></i>

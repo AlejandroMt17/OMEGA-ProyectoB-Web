@@ -90,17 +90,38 @@
 
         {{-- Periodo --}}
         <div>
-            <label class="block text-sm font-body text-omg-dark mb-1">
-                Periodo
-            </label>
-            <input
-                type="text"
-                name="periodo"
-                value="{{ old('periodo') }}"
-                required
-                placeholder="Ej: Ene-Jun 2026"
-                class="w-full px-4 py-2.5 bg-white border border-omg-kashmir rounded-lg text-sm font-body text-omg-dark focus:outline-none focus:ring-2 focus:ring-omg-kashmir focus:border-transparent @error('periodo') border-red-400 @enderror"
-            />
+            <label class="block text-sm font-body text-omg-dark mb-1">Periodo</label>
+            @php
+                $periodos = \App\Models\Periodo::where('id_institucion', session('institucion_id'))
+                    ->where('activo', true)->orderByDesc('created_at')->get();
+            @endphp
+            @if ($periodos->count() === 0)
+                <input type="text" name="periodo" value="{{ old('periodo') }}"
+                       placeholder="Ej: Enero Junio 2026" required
+                       class="w-full px-4 py-2.5 bg-white border border-omg-kashmir rounded-lg text-sm font-body text-omg-dark focus:outline-none focus:ring-2 focus:ring-omg-kashmir @error('periodo') border-red-400 @enderror"/>
+                <p class="text-xs font-body text-omg-kashmir mt-1">
+                    <a href="{{ route('ca.periodos.index', session('institucion_id')) }}" class="text-omg-nile hover:underline">
+                        <i class="fa-solid fa-plus mr-1"></i>Configura periodos en tu institución
+                    </a> para seleccionarlos aquí.
+                </p>
+            @elseif ($periodos->count() === 1)
+                <input type="hidden" name="periodo" value="{{ $periodos->first()->nombre }}">
+                <div class="w-full px-4 py-2.5 bg-omg-chardon border border-omg-kashmir rounded-lg text-sm font-body text-omg-dark flex items-center justify-between">
+                    <span>{{ $periodos->first()->nombre }}</span>
+                    <i class="fa-solid fa-lock text-omg-kashmir text-xs"></i>
+                </div>
+                <p class="text-xs font-body text-omg-kashmir mt-1">Único periodo disponible, seleccionado automáticamente.</p>
+            @else
+                <select name="periodo" required
+                        class="w-full px-4 py-2.5 bg-white border border-omg-kashmir rounded-lg text-sm font-body text-omg-dark focus:outline-none focus:ring-2 focus:ring-omg-kashmir @error('periodo') border-red-400 @enderror">
+                    <option value="">Selecciona un periodo</option>
+                    @foreach ($periodos as $p)
+                        <option value="{{ $p->nombre }}" {{ old('periodo') === $p->nombre ? 'selected' : '' }}>
+                            {{ $p->nombre }}
+                        </option>
+                    @endforeach
+                </select>
+            @endif
             @error('periodo')
                 <p class="text-xs text-red-500 mt-1 italic font-body">{{ $message }}</p>
             @enderror

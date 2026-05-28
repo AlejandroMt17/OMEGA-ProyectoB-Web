@@ -137,7 +137,7 @@
                                                         </form>
                                                     @else
                                                         <form method="POST"
-                                                              action="{{ route('ca.justificantes.marcar-ausente', $asistencia->id_asistencia) }}">
+                                                              action="{{ route('ca.justificantes.ausente', $asistencia->id_asistencia) }}">
                                                             @csrf
                                                             <button type="submit"
                                                                 class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-chardon hover:bg-red-500 hover:text-white text-omg-kashmir rounded-lg text-xs font-body transition-colors">

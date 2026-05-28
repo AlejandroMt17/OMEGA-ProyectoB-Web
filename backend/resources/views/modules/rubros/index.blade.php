@@ -104,15 +104,25 @@
                                 class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-pastel text-omg-nile rounded-lg text-xs font-body transition-colors">
                                 <i class="fa-solid fa-ban"></i>
                             </button>
-                            <form method="POST"
-                                  action="{{ route('ca.rubros.destroy', [$institucion->id_institucion, $rubro->id_rubro]) }}"
-                                  onsubmit="return confirm('¿Eliminar este rubro?')">
-                                @csrf @method('DELETE')
-                                <button type="submit"
+                            <div x-data="{ open: false }">
+                                <button type="button" @click="open = true"
                                     class="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-500 hover:text-white text-red-500 rounded-lg text-xs font-body transition-colors">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
-                            </form>
+                                <div x-show="open" x-transition class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+                                    <div class="bg-white rounded-2xl p-6 max-w-xs w-full mx-4 shadow-xl">
+                                        <p class="text-sm font-heading font-semibold text-omg-nile mb-2">¿Eliminar rubro?</p>
+                                        <p class="text-xs font-body text-omg-kashmir mb-4">Esta acción no se puede deshacer.</p>
+                                        <div class="flex gap-3">
+                                            <button @click="open = false" class="flex-1 py-2 bg-omg-chardon text-omg-nile font-heading font-semibold rounded-lg text-sm">Cancelar</button>
+                                            <form method="POST" action="{{ route('ca.rubros.destroy', [$institucion->id_institucion, $rubro->id_rubro]) }}" class="flex-1">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="w-full py-2 bg-red-500 text-white font-heading font-semibold rounded-lg text-sm">Eliminar</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </td>
                 </tr>

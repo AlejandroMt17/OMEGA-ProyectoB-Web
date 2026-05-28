@@ -8,6 +8,7 @@ use App\Http\Controllers\Web\GrupoAlumnoWebController;
 use App\Http\Controllers\Web\InstitucionWebController;
 use App\Http\Controllers\Web\JustificanteWebController;
 use App\Http\Controllers\Web\RubroWebController;
+use App\Http\Controllers\Web\PeriodoWebController;
 use App\Http\Controllers\Web\PerfilWebController;
 use App\Http\Controllers\Web\ReporteWebController;
 use App\Http\Controllers\Web\SesionWebController;
@@ -67,6 +68,9 @@ Route::prefix('p/ca')->group(function () {
         // Rubros de evaluacion por institucion (RF-04, RF-05)
         Route::get('instituciones/{id}/rubros',            [RubroWebController::class, 'index'])->name('ca.rubros.index');
         Route::post('instituciones/{id}/rubros',           [RubroWebController::class, 'store'])->name('ca.rubros.store');
+        Route::get('instituciones/{id}/periodos',          [PeriodoWebController::class, 'index'])->name('ca.periodos.index');
+        Route::post('instituciones/{id}/periodos',         [PeriodoWebController::class, 'store'])->name('ca.periodos.store');
+        Route::delete('instituciones/{id}/periodos/{periodo}', [PeriodoWebController::class, 'destroy'])->name('ca.periodos.destroy');
         Route::put('instituciones/{id}/rubros/{rubro}',   [RubroWebController::class, 'update'])->name('ca.rubros.update');
         Route::delete('instituciones/{id}/rubros/{rubro}',[RubroWebController::class, 'destroy'])->name('ca.rubros.destroy');
 
