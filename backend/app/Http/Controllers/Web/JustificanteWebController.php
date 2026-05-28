@@ -21,8 +21,16 @@ class JustificanteWebController extends Controller
 
     public function index()
     {
+        $institucionId = session('institucion_id');
+
+        // Requerir institución activa
+        if (!$institucionId) {
+            return redirect()->route('ca.instituciones.index')
+                ->with('info', 'Selecciona una institución para ver sus justificantes');
+        }
+
         $grupos = $this->grupos
-            ->todosPorDocente(Auth::user()->id_usuario)
+            ->todosPorInstitucion($institucionId, Auth::user()->id_usuario)
             ->load([
                 'sesiones' => fn($q) => $q->where('est_sesion', 0)->orderByDesc('fec_sesion'),
                 'sesiones.asistencias' => fn($q) => $q->whereIn('est_asistencia', [2, 3]),

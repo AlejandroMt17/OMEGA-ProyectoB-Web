@@ -16,12 +16,17 @@ class GrupoRepository implements GrupoRepositoryInterface
             ->get();
     }
 
-    public function todosPorInstitucion(int $idInstitucion): Collection
+    public function todosPorInstitucion(int $idInstitucion, ?int $idDocente = null): Collection
     {
-        return Grupo::query()
+        $query = Grupo::query()
             ->where('id_institucion', $idInstitucion)
-            ->orderBy('id_grupo')
-            ->get();
+            ->orderBy('id_grupo');
+
+        if ($idDocente) {
+            $query->where('id_docente', $idDocente);
+        }
+
+        return $query->get();
     }
 
     public function buscarPorId(int $id): ?Grupo

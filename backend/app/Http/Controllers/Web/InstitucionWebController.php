@@ -86,4 +86,25 @@ class InstitucionWebController extends Controller
         return redirect()->route('ca.grupos.index')
             ->with('success', "Institución «{$institucion->nombre}» seleccionada");
     }
+
+    /**
+     * Selecciona la institución y redirige a una URL específica.
+     * Usado desde el dashboard para ir directo a sesiones/alumnos de un grupo.
+     */
+    public function seleccionarYRedirigir(int $id, Request $request)
+    {
+        $institucion = $this->repo->buscarPorId($id);
+
+        if (!$institucion || $institucion->id_docente !== Auth::user()->id_usuario) {
+            abort(403);
+        }
+
+        session([
+            'institucion_id'     => $institucion->id_institucion,
+            'institucion_nombre' => $institucion->nombre,
+        ]);
+
+        $destino = $request->query('destino', route('ca.grupos.index'));
+        return redirect($destino);
+    }
 }

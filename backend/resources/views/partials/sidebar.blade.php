@@ -14,11 +14,19 @@
 
     {{-- Institución activa --}}
     @auth
-    <div class="px-6 py-3 bg-omg-nile-dark">
+    <div class="px-6 py-3 {{ session('institucion_id') ? 'bg-omg-nile-dark' : 'bg-orange-900' }}">
         <p class="text-omg-kashmir text-xs">Institución activa</p>
-        <p class="text-omg-white text-sm font-semibold truncate">
-            {{ session('institucion_nombre', 'Sin institución') }}
-        </p>
+        @if (session('institucion_id'))
+            <p class="text-omg-white text-sm font-semibold truncate">
+                {{ session('institucion_nombre') }}
+            </p>
+        @else
+            <a href="{{ route('ca.instituciones.index') }}"
+               class="flex items-center gap-1.5 text-orange-300 text-xs font-semibold hover:text-white transition-colors">
+                <i class="fa-solid fa-triangle-exclamation text-xs"></i>
+                Selecciona una institución
+            </a>
+        @endif
     </div>
     @endauth
 

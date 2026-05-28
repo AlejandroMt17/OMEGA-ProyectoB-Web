@@ -31,15 +31,15 @@
     </div>
     <div class="bg-white rounded-xl border border-omg-kashmir-dark p-4 text-center">
         <p class="text-2xl font-heading font-bold text-green-600">{{ $presentes }}</p>
-        <p class="text-xs font-body text-omg-kashmir mt-1">Presentes</p>
+        <p class="text-xs font-body text-omg-kashmir mt-1">Asistencias</p>
     </div>
     <div class="bg-white rounded-xl border border-omg-kashmir-dark p-4 text-center">
         <p class="text-2xl font-heading font-bold text-red-500">{{ $ausentes }}</p>
-        <p class="text-xs font-body text-omg-kashmir mt-1">Ausentes</p>
+        <p class="text-xs font-body text-omg-kashmir mt-1">Faltas</p>
     </div>
     <div class="bg-white rounded-xl border border-omg-kashmir-dark p-4 text-center">
         <p class="text-2xl font-heading font-bold text-omg-nile">{{ $justificadas }}</p>
-        <p class="text-xs font-body text-omg-kashmir mt-1">Justificadas</p>
+        <p class="text-xs font-body text-omg-kashmir mt-1">Justificaciones</p>
     </div>
 </div>
 

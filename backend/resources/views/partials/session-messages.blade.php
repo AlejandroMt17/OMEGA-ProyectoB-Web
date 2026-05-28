@@ -19,3 +19,10 @@
         <p class="text-sm text-omg-dark">{{ session('warning') }}</p>
     </div>
 @endif
+
+@if (session('info'))
+    <div class="mx-6 mt-4 flex items-center gap-3 bg-white border border-blue-200 rounded-lg px-4 py-3">
+        <i class="fa-solid fa-circle-info text-blue-500"></i>
+        <p class="text-sm text-omg-dark">{{ session('info') }}</p>
+    </div>
+@endif

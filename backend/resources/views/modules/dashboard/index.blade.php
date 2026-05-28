@@ -200,11 +200,11 @@
                             </span>
                         @endif
                         <div class="flex items-center gap-2">
-                            <a href="{{ route('ca.grupos.sesiones', $grupo) }}"
+                            <a href="{{ route('ca.instituciones.ir', [$inst->id_institucion, 'destino' => route('ca.grupos.sesiones', $grupo)]) }}"
                                class="flex items-center gap-1 px-3 py-1.5 bg-omg-nile hover:bg-omg-nile-dark text-white rounded-lg text-xs font-body transition-colors">
                                 <i class="fa-solid fa-calendar-check"></i> Sesiones
                             </a>
-                            <a href="{{ route('ca.grupos.alumnos', $grupo) }}"
+                            <a href="{{ route('ca.instituciones.ir', [$inst->id_institucion, 'destino' => route('ca.grupos.alumnos', $grupo)]) }}"
                                class="flex items-center gap-1 px-3 py-1.5 bg-omg-pastel hover:bg-omg-nile hover:text-white text-omg-nile rounded-lg text-xs font-body transition-colors">
                                 <i class="fa-solid fa-users"></i> Alumnos
                             </a>

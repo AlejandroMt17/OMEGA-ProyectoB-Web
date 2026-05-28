@@ -62,6 +62,7 @@ Route::prefix('p/ca')->group(function () {
         Route::get('instituciones/{institucion}/editar',   [InstitucionWebController::class, 'edit'])->name('ca.instituciones.edit');
         Route::put('instituciones/{institucion}',          [InstitucionWebController::class, 'update'])->name('ca.instituciones.update');
         Route::delete('instituciones/{institucion}',       [InstitucionWebController::class, 'destroy'])->name('ca.instituciones.destroy');
+        Route::get('instituciones/{id}/ir',            [InstitucionWebController::class, 'seleccionarYRedirigir'])->name('ca.instituciones.ir');
         Route::post('instituciones/{id}/seleccionar',      [InstitucionWebController::class, 'seleccionar'])->name('ca.instituciones.seleccionar');
         // Rubros de evaluacion por institucion (RF-04, RF-05)
         Route::get('instituciones/{id}/rubros',            [RubroWebController::class, 'index'])->name('ca.rubros.index');
