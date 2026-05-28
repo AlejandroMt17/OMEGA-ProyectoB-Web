@@ -199,4 +199,55 @@
     </div>
 @endforelse
 
+
+@push('scripts')
+<script>
+
+function actualizarRiesgo() {
+    const inst   = document.getElementById('filtro-inst')?.value ?? '';
+    const grupo  = document.getElementById('filtro-grupo')?.value ?? '';
+    const estado = document.getElementById('filtro-estado')?.value ?? '';
+
+    // Bloquear/desbloquear combos
+    const selGrupo  = document.getElementById('filtro-grupo');
+    const selEstado = document.getElementById('filtro-estado');
+    if (selGrupo)  { selGrupo.disabled  = !inst; selGrupo.classList.toggle('opacity-40', !inst); }
+    if (selEstado) { selEstado.disabled = !inst; selEstado.classList.toggle('opacity-40', !inst); }
+
+    document.getElementById('riesgo-cargando')?.classList.remove('hidden');
+
+    fetch(`{{ route('ca.dashboard.riesgo') }}?inst=${inst}&grupo=${grupo}&estado=${estado}`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' }
+    })
+    .then(r => {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.text();
+    })
+    .then(html => {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        const nuevo = tmp.querySelector('#riesgo-resultados');
+        const nuevoGrupo = tmp.querySelector('#filtro-grupo');
+        if (nuevo)      document.getElementById('riesgo-resultados').replaceWith(nuevo);
+        if (nuevoGrupo) {
+            document.getElementById('filtro-grupo').innerHTML = nuevoGrupo.innerHTML;
+            document.getElementById('filtro-grupo').value = grupo;
+        }
+        document.getElementById('riesgo-cargando')?.classList.add('hidden');
+    })
+    .catch(err => {
+        console.error('Error al cargar riesgo:', err);
+        document.getElementById('riesgo-cargando')?.classList.add('hidden');
+    });
+}
+
+function limpiarRiesgo() {
+    const s = ['filtro-inst','filtro-grupo','filtro-estado'];
+    s.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+    actualizarRiesgo();
+}
+
+</script>
+@endpush
+
 @endsection
