@@ -97,7 +97,64 @@
 </div>
 @endif
 
-@include('modules.dashboard.partials.riesgo')
+@if ($alumnosEnRiesgo->count() > 0)
+<div class="bg-white rounded-xl border border-orange-200 overflow-hidden mb-6">
+
+    {{-- Header --}}
+    <div class="flex items-center gap-3 px-5 py-4 bg-orange-50 border-b border-orange-200">
+        <i class="fa-solid fa-triangle-exclamation text-orange-500"></i>
+        <h2 class="text-base font-heading font-semibold text-orange-700">
+            Alumnos en Riesgo ({{ $alumnosEnRiesgo->count() }})
+        </h2>
+    </div>
+
+    {{-- Filtros --}}
+    <div class="flex items-center gap-3 flex-wrap px-5 py-3 bg-orange-50 border-b border-orange-200">
+        <select id="filtro-inst" onchange="actualizarRiesgo()"
+                class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none">
+            <option value="">Todas las instituciones</option>
+            @foreach ($instSelect as $instItem)
+                <option value="{{ $instItem['id'] }}" {{ $filtroInst == $instItem['id'] ? 'selected' : '' }}>
+                    {{ $instItem['nombre'] }}
+                </option>
+            @endforeach
+        </select>
+
+        <select id="filtro-grupo" onchange="actualizarRiesgo()"
+                {{ !$filtroInst ? 'disabled' : '' }}
+                class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none {{ !$filtroInst ? 'opacity-40' : '' }}">
+            <option value="">Todos los grupos</option>
+            @foreach ($gruposSelect as $grupoItem)
+                <option value="{{ $grupoItem['id'] }}" {{ $filtroGrupo == $grupoItem['id'] ? 'selected' : '' }}>
+                    {{ $grupoItem['nombre'] }}
+                </option>
+            @endforeach
+        </select>
+
+        <select id="filtro-estado" onchange="actualizarRiesgo()"
+                {{ !$filtroInst ? 'disabled' : '' }}
+                class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none {{ !$filtroInst ? 'opacity-40' : '' }}">
+            <option value="">Todos los estados</option>
+            <option value="riesgo"    {{ $filtroEstado === 'riesgo'    ? 'selected' : '' }}>En riesgo</option>
+            <option value="excedido"  {{ $filtroEstado === 'excedido'  ? 'selected' : '' }}>Límite excedido</option>
+        </select>
+
+        @if ($filtroInst || $filtroGrupo || $filtroEstado)
+            <button onclick="limpiarRiesgo()"
+                    class="px-3 py-1.5 bg-white border border-orange-200 text-orange-600 rounded-lg text-xs font-body hover:bg-orange-100 transition-colors">
+                <i class="fa-solid fa-xmark mr-1"></i> Limpiar
+            </button>
+        @endif
+        <span id="riesgo-cargando" class="hidden text-orange-400 text-xs">
+            <i class="fa-solid fa-spinner fa-spin"></i> Cargando...
+        </span>
+    </div>
+
+    {{-- Resultados (se actualiza por fetch) --}}
+    @include('modules.dashboard.partials.riesgo')
+
+</div>
+@endif
 
 
 {{-- Mis Instituciones (acordeón — grupos ocultos por defecto) --}}
