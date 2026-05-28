@@ -109,8 +109,10 @@
     </div>
 
     {{-- Filtros --}}
-    <div class="flex items-center gap-3 flex-wrap px-5 py-3 bg-orange-50 border-b border-orange-200">
-        <select id="filtro-inst" onchange="actualizarRiesgo()"
+    <form method="GET" action="{{ route('ca.dashboard.index') }}#alumnos-riesgo"
+          class="flex items-center gap-3 flex-wrap px-5 py-3 bg-orange-50 border-b border-orange-200">
+
+        <select name="inst" onchange="this.form.submit()"
                 class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none">
             <option value="">Todas las instituciones</option>
             @foreach ($instSelect as $instItem)
@@ -120,7 +122,7 @@
             @endforeach
         </select>
 
-        <select id="filtro-grupo" onchange="actualizarRiesgo()"
+        <select name="grupo" onchange="this.form.submit()"
                 {{ !$filtroInst ? 'disabled' : '' }}
                 class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none {{ !$filtroInst ? 'opacity-40' : '' }}">
             <option value="">Todos los grupos</option>
@@ -131,24 +133,21 @@
             @endforeach
         </select>
 
-        <select id="filtro-estado" onchange="actualizarRiesgo()"
+        <select name="estado" onchange="this.form.submit()"
                 {{ !$filtroInst ? 'disabled' : '' }}
                 class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none {{ !$filtroInst ? 'opacity-40' : '' }}">
             <option value="">Todos los estados</option>
-            <option value="riesgo"    {{ $filtroEstado === 'riesgo'    ? 'selected' : '' }}>En riesgo</option>
-            <option value="excedido"  {{ $filtroEstado === 'excedido'  ? 'selected' : '' }}>Límite excedido</option>
+            <option value="riesgo"   {{ $filtroEstado === 'riesgo'   ? 'selected' : '' }}>En riesgo</option>
+            <option value="excedido" {{ $filtroEstado === 'excedido' ? 'selected' : '' }}>Límite excedido</option>
         </select>
 
         @if ($filtroInst || $filtroGrupo || $filtroEstado)
-            <button onclick="limpiarRiesgo()"
-                    class="px-3 py-1.5 bg-white border border-orange-200 text-orange-600 rounded-lg text-xs font-body hover:bg-orange-100 transition-colors">
+            <a href="{{ route('ca.dashboard.index') }}#alumnos-riesgo"
+               class="px-3 py-1.5 bg-white border border-orange-200 text-orange-600 rounded-lg text-xs font-body hover:bg-orange-100 transition-colors">
                 <i class="fa-solid fa-xmark mr-1"></i> Limpiar
-            </button>
+            </a>
         @endif
-        <span id="riesgo-cargando" class="hidden text-orange-400 text-xs">
-            <i class="fa-solid fa-spinner fa-spin"></i> Cargando...
-        </span>
-    </div>
+    </form>
 
     {{-- Resultados (se actualiza por fetch) --}}
     @include('modules.dashboard.partials.riesgo')
@@ -256,55 +255,5 @@
     </div>
 @endforelse
 
-
-@push('scripts')
-<script>
-
-function actualizarRiesgo() {
-    const inst   = document.getElementById('filtro-inst')?.value ?? '';
-    const grupo  = document.getElementById('filtro-grupo')?.value ?? '';
-    const estado = document.getElementById('filtro-estado')?.value ?? '';
-
-    // Bloquear/desbloquear combos
-    const selGrupo  = document.getElementById('filtro-grupo');
-    const selEstado = document.getElementById('filtro-estado');
-    if (selGrupo)  { selGrupo.disabled  = !inst; selGrupo.classList.toggle('opacity-40', !inst); }
-    if (selEstado) { selEstado.disabled = !inst; selEstado.classList.toggle('opacity-40', !inst); }
-
-    document.getElementById('riesgo-cargando')?.classList.remove('hidden');
-
-    fetch(`{{ route('ca.dashboard.riesgo') }}?inst=${inst}&grupo=${grupo}&estado=${estado}`, {
-        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' }
-    })
-    .then(r => {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.text();
-    })
-    .then(html => {
-        const tmp = document.createElement('div');
-        tmp.innerHTML = html;
-        const nuevo = tmp.querySelector('#riesgo-resultados');
-        const nuevoGrupo = tmp.querySelector('#filtro-grupo');
-        if (nuevo)      document.getElementById('riesgo-resultados').replaceWith(nuevo);
-        if (nuevoGrupo) {
-            document.getElementById('filtro-grupo').innerHTML = nuevoGrupo.innerHTML;
-            document.getElementById('filtro-grupo').value = grupo;
-        }
-        document.getElementById('riesgo-cargando')?.classList.add('hidden');
-    })
-    .catch(err => {
-        console.error('Error al cargar riesgo:', err);
-        document.getElementById('riesgo-cargando')?.classList.add('hidden');
-    });
-}
-
-function limpiarRiesgo() {
-    const s = ['filtro-inst','filtro-grupo','filtro-estado'];
-    s.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-    actualizarRiesgo();
-}
-
-</script>
-@endpush
 
 @endsection
