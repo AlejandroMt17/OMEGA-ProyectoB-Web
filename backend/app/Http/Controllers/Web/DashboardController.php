@@ -67,13 +67,14 @@ class DashboardController extends Controller
             $pctPrincipal      = $rubroPrincipal?->porcentaje_minimo ?? 80;
             $nombrePrincipal   = $rubroPrincipal?->nombre ?? 'Ordinario';
 
-            // Incluir sesión activa en el total proyectado
-            $sesionesActivas = Sesion::where('id_grupo', $idGrupo)->where('est_sesion', 1)->get();
-            $sesiones        = Sesion::where('id_grupo', $idGrupo)->where('est_sesion', 0)->get();
-            $totalSes        = $sesiones->count();
-            // Total proyectado = sesiones cerradas + 1 si hay sesión activa
-            $totalProyectado = $totalSes + $sesionesActivas->count();
-            if ($totalSes === 0 && $totalProyectado === 0) continue;
+            $sesiones   = Sesion::where('id_grupo', $idGrupo)->where('est_sesion', 0)->get();
+            $hayActiva  = Sesion::where('id_grupo', $idGrupo)->where('est_sesion', 1)->exists();
+            $totalSes   = $sesiones->count();
+            if ($totalSes === 0) continue;
+
+            // Faltas máximas permitidas basadas en sesiones CERRADAS
+            // $pctPrincipal = 80 → con 10 sesiones: floor(10 * 0.20) = 2 faltas permitidas
+            $faltasPermitidas = (int) floor($totalSes * (1 - $pctPrincipal / 100));
 
             $alumnos = GrupoAlumno::where('id_grupo', $idGrupo)->with(['alumno', 'grupo'])->get();
             foreach ($alumnos as $ga) {
@@ -89,24 +90,28 @@ class DashboardController extends Controller
                     ->where('est_asistencia', 2)->count();
 
                 $asistidas = $presentes + $justificadas;
+                $pct       = round(($asistidas / $totalSes) * 100, 1);
 
-                // Porcentaje actual (sobre sesiones cerradas)
-                $pct = $totalSes > 0 ? round(($asistidas / $totalSes) * 100, 1) : 100.0;
+                // Ya perdió: superó las faltas permitidas en sesiones cerradas
+                $perdio = $ausentes > $faltasPermitidas;
 
-                // Proyección: si se abre una sesión más y el alumno no asiste
-                // ¿cuántas faltas tendría en total?
-                $ausentesProyectados = $ausentes + $sesionesActivas->count(); // peor caso
-                $faltasPermitidas    = (int) floor($totalProyectado * (1 - $pctPrincipal / 100));
-                $faltasRestantes     = max(0, $faltasPermitidas - $ausentes);
+                // Faltas restantes antes de perder el rubro
+                $faltasRestantes = max(0, $faltasPermitidas - $ausentes);
 
-                // perdio = ya superó las faltas permitidas con las sesiones cerradas
-                $perdio = $totalSes > 0 && $ausentes > $faltasPermitidas;
+                // En riesgo con proyección de sesión activa:
+                // Si hay sesión activa, proyectar que el alumno no asiste (+1 falta)
+                // Con eso, ¿supera el límite calculado sobre totalSes+1?
+                $enRiesgoProyectado = false;
+                if (!$perdio && $hayActiva) {
+                    $totalProyectado     = $totalSes + 1;
+                    $faltasPermProyect   = (int) floor($totalProyectado * (1 - $pctPrincipal / 100));
+                    $ausentesProyectados = $ausentes + 1; // peor caso: no asiste
+                    $enRiesgoProyectado  = $ausentesProyectados > $faltasPermProyect;
+                }
 
-                // En riesgo proyectado = con la sesión activa podría perder el rubro
-                $enRiesgoProyectado = !$perdio && ($ausentesProyectados > $faltasPermitidas);
-
-                // Solo agregar si realmente está en riesgo o ya perdió
-                if ($perdio || $enRiesgoProyectado || ($faltasRestantes <= 2 && $totalSes > 0)) {
+                // Solo agregar si ya perdió o está genuinamente en riesgo
+                // (tiene <= 2 faltas restantes O la proyección indica riesgo)
+                if ($perdio || ($faltasRestantes <= 2 && $faltasPermitidas > 0) || $enRiesgoProyectado) {
                     $alumnosEnRiesgo->push([
                         'alumno'           => $ga->alumno,
                         'grupo'            => $ga->grupo,
@@ -116,6 +121,7 @@ class DashboardController extends Controller
                         'perdio'           => $perdio,
                         'rubro_principal'  => $nombrePrincipal,
                         'pct_principal'    => $pctPrincipal,
+                        'id_institucion'   => $ga->grupo->id_institucion,
                     ]);
                 }
             }
