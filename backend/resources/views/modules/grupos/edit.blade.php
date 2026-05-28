@@ -187,6 +187,9 @@
             <p x-show="filas.length === 0" class="text-xs font-body text-omg-kashmir italic mt-1">
                 Sin horario definido — presiona "Agregar día" para comenzar
             </p>
+            @error('horario')
+                <p class="text-xs text-red-500 mt-2 font-body">{{ $message }}</p>
+            @enderror
         </div>
 
 

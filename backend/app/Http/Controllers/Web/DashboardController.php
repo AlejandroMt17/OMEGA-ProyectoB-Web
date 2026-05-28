@@ -91,6 +91,7 @@ class DashboardController extends Controller
                         'alumno'          => $ga->alumno,
                         'grupo'           => $ga->grupo,
                         'porcentaje'      => $pct,
+                        'total_faltas'    => $ausentes,
                         'faltas_restantes'=> $faltasRestantes,
                         'perdio'          => $perdio,
                     ]);
