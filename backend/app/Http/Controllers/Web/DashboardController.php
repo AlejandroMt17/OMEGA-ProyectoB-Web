@@ -56,7 +56,7 @@ class DashboardController extends Controller
             });
 
         // RF-76: Alumnos en riesgo
-        \$alumnosEnRiesgo = \$this->calcularAlumnosEnRiesgo(\$gruposIds);
+        $alumnosEnRiesgo = $this->calcularAlumnosEnRiesgo($gruposIds);
 
         // Contadores
         $aulasActivas      = $gruposIds->count();
