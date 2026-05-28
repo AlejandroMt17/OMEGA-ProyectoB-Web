@@ -95,7 +95,10 @@ class GrupoService
             'materia'        => ['required', 'string', 'max:150'],
             'periodo'        => ['required', 'string', 'max:50'],
             'no_alumnos'     => ['required', 'integer', 'min:1'],
-            'horario'        => ['nullable', 'array'],
+            'horario'        => ['required', 'array', 'min:1'],
+        ], [
+            'horario.required' => 'Debes agregar al menos un día de clases',
+            'horario.min'      => 'Debes agregar al menos un día de clases',
         ]);
 
         if ($validator->fails()) {
