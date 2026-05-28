@@ -89,16 +89,36 @@
 
         {{-- Periodo --}}
         <div>
-            <label class="block text-sm font-body text-omg-dark mb-1">
-                Periodo
-            </label>
-            <input
-                type="text"
-                name="periodo"
-                value="{{ old('periodo', $grupo->periodo) }}"
-                required
-                class="w-full px-4 py-2.5 bg-white border border-omg-kashmir rounded-lg text-sm font-body text-omg-dark focus:outline-none focus:ring-2 focus:ring-omg-kashmir focus:border-transparent @error('periodo') border-red-400 @enderror"
-            />
+            <label class="block text-sm font-body text-omg-dark mb-1">Periodo</label>
+            @php
+                $periodos = \App\Models\Periodo::where('id_institucion', $grupo->id_institucion)
+                    ->where('activo', true)->orderByDesc('created_at')->get();
+                $periodoActual = old('periodo', $grupo->periodo);
+                // Si el periodo actual no está en la lista, agregarlo como opción
+                $enLista = $periodos->contains('nombre', $periodoActual);
+            @endphp
+            @if ($periodos->count() === 0)
+                <input type="text" name="periodo" value="{{ $periodoActual }}" required
+                       class="w-full px-4 py-2.5 bg-white border border-omg-kashmir rounded-lg text-sm font-body text-omg-dark focus:outline-none focus:ring-2 focus:ring-omg-kashmir @error('periodo') border-red-400 @enderror"/>
+                <p class="text-xs font-body text-omg-kashmir mt-1">
+                    <a href="{{ route('ca.periodos.index', $grupo->id_institucion) }}" class="text-omg-nile hover:underline">
+                        <i class="fa-solid fa-plus mr-1"></i>Configura periodos
+                    </a> para seleccionarlos aquí.
+                </p>
+            @else
+                <select name="periodo" required
+                        class="w-full px-4 py-2.5 bg-white border border-omg-kashmir rounded-lg text-sm font-body text-omg-dark focus:outline-none focus:ring-2 focus:ring-omg-kashmir @error('periodo') border-red-400 @enderror">
+                    <option value="">Selecciona un periodo</option>
+                    @if (!$enLista && $periodoActual)
+                        <option value="{{ $periodoActual }}" selected>{{ $periodoActual }} (actual)</option>
+                    @endif
+                    @foreach ($periodos as $p)
+                        <option value="{{ $p->nombre }}" {{ $periodoActual === $p->nombre ? 'selected' : '' }}>
+                            {{ $p->nombre }}
+                        </option>
+                    @endforeach
+                </select>
+            @endif
             @error('periodo')
                 <p class="text-xs text-red-500 mt-1 italic font-body">{{ $message }}</p>
             @enderror

@@ -66,7 +66,10 @@
                             <div class="flex items-center gap-2">
                                 <i class="fa-regular fa-calendar text-omg-kashmir text-xs"></i>
                                 <p class="text-sm font-body font-semibold text-omg-dark">
-                                    {{ $sesion->fec_sesion->isoFormat('dddd D [de] MMMM [de] YYYY') }}
+                                    {{ ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'][$sesion->fec_sesion->dayOfWeek === 0 ? 6 : $sesion->fec_sesion->dayOfWeek - 1] }}
+                                    {{ $sesion->fec_sesion->day }} de
+                                    {{ ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][$sesion->fec_sesion->month - 1] }}
+                                    de {{ $sesion->fec_sesion->year }}
                                 </p>
                                 <span class="text-xs font-body text-omg-kashmir">
                                     · {{ $sesion->hora_apertura->format('H:i') }}
