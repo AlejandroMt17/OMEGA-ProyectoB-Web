@@ -44,6 +44,12 @@ class PagoController extends Controller
      * La app detecta la URL con 'PayerID' y la intercepta en el WebView.
      * Si no es interceptada, redirigimos a la web.
      */
+    public function cancelarPago(Request $request): JsonResponse
+    {
+        // El pago fue cancelado por el usuario — no hay acción en el backend
+        return response()->json(['data' => ['cancelado' => true]]);
+    }
+
     public function paypalReturn(Request $request)
     {
         // Si viene con token (order_id) redirigimos a la web para capturar

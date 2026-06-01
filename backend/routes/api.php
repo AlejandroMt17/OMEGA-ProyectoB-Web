@@ -109,9 +109,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('suscripcion/basico', [SuscripcionController::class, 'activarBasico']);
 
     // ── Pagos PayPal ───────────────────────────────────────────────────────
-    Route::post('pagos/crear-orden',  [PagoController::class, 'crearOrden']);
-    Route::post('pagos/capturar',     [PagoController::class, 'capturarPago']);
-    Route::get('pagos/historial',     [PagoController::class, 'historial']);
+    Route::post('pagos/crear-orden',          [PagoController::class, 'crearOrden']);
+    Route::post('pagos/capturar',             [PagoController::class, 'capturarPago']);
+    Route::get('pagos/historial',             [PagoController::class, 'historial']);
+    // Alias para la app móvil
+    Route::post('pagos/paypal/crear-orden',   [PagoController::class, 'crearOrden']);
+    Route::post('pagos/paypal/confirmar',     [PagoController::class, 'capturarPago']);
+    Route::post('pagos/paypal/cancelar',      [PagoController::class, 'cancelarPago']);
 
     // ══════════════════════════════════════════════════════════════════════
     //  RUTAS DEL ALUMNO (app móvil Flutter)
