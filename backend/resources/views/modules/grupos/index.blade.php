@@ -97,7 +97,11 @@
                                     <i class="fa-solid fa-trash"></i>
                                     Eliminar
                                 </button>
-                                <div x-show="open" x-transition class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+                                <div
+                                        x-show="open"
+                                        x-cloak
+                                        x-transition
+                                        class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
                                     <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-xl">
                                         <div class="flex items-center gap-3 mb-3">
                                             <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">

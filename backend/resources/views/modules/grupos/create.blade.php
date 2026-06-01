@@ -196,12 +196,9 @@
             </p>
             {{-- Input de validación — visible pero sin apariencia, posicionado para que el tooltip aparezca aquí --}}
             <div class="relative h-0 overflow-visible">
-                <input type="text" name="_horario_check"
-                       :value="filas.length > 0 ? 'ok' : ''"
-                       required tabindex="-1"
-                       style="width:1px;height:1px;opacity:0;position:absolute;top:0;left:0;pointer-events:none"
-                       oninvalid="this.setCustomValidity('Agrega al menos un día de clases al horario')"
-                       oninput="this.setCustomValidity('')"/>
+                <input type="hidden"
+                       name="_horario_check"
+                       x-bind:value="filas.length > 0 ? 'ok' : ''">
             </div>
             @error('horario')
                 <p class="text-xs text-red-500 mt-2 font-body">{{ $message }}</p>

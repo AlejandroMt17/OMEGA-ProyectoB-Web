@@ -109,10 +109,10 @@
     </div>
 
     {{-- Filtros --}}
-    <form method="GET" action="{{ route('ca.dashboard.index') }}#alumnos-riesgo"
+    <form id="riesgoFiltros"
           class="flex items-center gap-3 flex-wrap px-5 py-3 bg-orange-50 border-b border-orange-200">
 
-        <select name="inst" onchange="this.form.submit()"
+        <select name="inst" id="filtroInst"
                 class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none">
             <option value="">Todas las instituciones</option>
             @foreach ($instSelect as $instItem)
@@ -122,9 +122,8 @@
             @endforeach
         </select>
 
-        <select name="grupo" onchange="this.form.submit()"
-                {{ !$filtroInst ? 'disabled' : '' }}
-                class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none {{ !$filtroInst ? 'opacity-40' : '' }}">
+        <select name="grupo" id="filtroGrupo"
+                class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none">
             <option value="">Todos los grupos</option>
             @foreach ($gruposSelect as $grupoItem)
                 <option value="{{ $grupoItem['id'] }}" {{ $filtroGrupo == $grupoItem['id'] ? 'selected' : '' }}>
@@ -133,25 +132,23 @@
             @endforeach
         </select>
 
-        <select name="estado" onchange="this.form.submit()"
-                {{ !$filtroInst ? 'disabled' : '' }}
-                class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none {{ !$filtroInst ? 'opacity-40' : '' }}">
+        <select name="estado" id="filtroEstado"
+                class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none">
             <option value="">Todos los estados</option>
-            <option value="riesgo"   {{ $filtroEstado === 'riesgo'   ? 'selected' : '' }}>En riesgo</option>
+            <option value="riesgo" {{ $filtroEstado === 'riesgo' ? 'selected' : '' }}>En riesgo</option>
             <option value="excedido" {{ $filtroEstado === 'excedido' ? 'selected' : '' }}>Límite excedido</option>
         </select>
 
-        @if ($filtroInst || $filtroGrupo || $filtroEstado)
-            <a href="{{ route('ca.dashboard.index') }}#alumnos-riesgo"
-               class="px-3 py-1.5 bg-white border border-orange-200 text-orange-600 rounded-lg text-xs font-body hover:bg-orange-100 transition-colors">
-                <i class="fa-solid fa-xmark mr-1"></i> Limpiar
-            </a>
-        @endif
+        <button type="button" id="limpiarFiltros"
+                class="px-3 py-1.5 bg-white border border-orange-200 text-orange-600 rounded-lg text-xs font-body hover:bg-orange-100 transition-colors">
+            <i class="fa-solid fa-xmark mr-1"></i> Limpiar
+        </button>
     </form>
 
     {{-- Resultados (se actualiza por fetch) --}}
-    @include('modules.dashboard.partials.riesgo')
-
+    <div id="riesgoResultados">
+        @include('modules.dashboard.partials.riesgo')
+    </div>
 </div>
 @endif
 
@@ -255,5 +252,78 @@
     </div>
 @endforelse
 
+@php
+    $gruposPorInstitucion = $alumnosEnRiesgo
+        ->groupBy('id_institucion')
+        ->map(function ($items) {
+            return $items
+                ->groupBy(fn($i) => $i['grupo']->id_grupo)
+                ->map(fn($grupoItems, $grupoId) => [
+                    'id' => (string) $grupoId,
+                    'nombre' => $grupoItems->first()['grupo']->nombre . ' — ' . $grupoItems->first()['grupo']->materia,
+                ])
+                ->values();
+        });
+@endphp
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('riesgoFiltros');
+        const resultados = document.getElementById('riesgoResultados');
+        const limpiar = document.getElementById('limpiarFiltros');
+        const filtroInst = document.getElementById('filtroInst');
+        const filtroGrupo = document.getElementById('filtroGrupo');
+
+        const gruposPorInstitucion = @json($gruposPorInstitucion);
+
+        if (!form || !resultados) return;
+
+        function actualizarGrupos() {
+            const instId = filtroInst.value;
+            const grupos = instId ? (gruposPorInstitucion[instId] || []) : [];
+
+            filtroGrupo.innerHTML = '<option value="">Todos los grupos</option>';
+
+            grupos.forEach(grupo => {
+                const option = document.createElement('option');
+                option.value = grupo.id;
+                option.textContent = grupo.nombre;
+                filtroGrupo.appendChild(option);
+            });
+
+            filtroGrupo.value = '';
+        }
+
+        async function cargarRiesgo() {
+            const params = new URLSearchParams(new FormData(form));
+
+            const response = await fetch(`{{ route('ca.dashboard.riesgo') }}?${params.toString()}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            resultados.innerHTML = await response.text();
+        }
+
+        filtroInst.addEventListener('change', () => {
+            actualizarGrupos();
+            cargarRiesgo();
+        });
+
+        form.querySelectorAll('select').forEach(select => {
+            if (select.id !== 'filtroInst') {
+                select.addEventListener('change', cargarRiesgo);
+            }
+        });
+
+        limpiar.addEventListener('click', () => {
+            form.reset();
+            filtroGrupo.innerHTML = '<option value="">Todos los grupos</option>';
+            cargarRiesgo();
+        });
+    });
+</script>
 
 @endsection
