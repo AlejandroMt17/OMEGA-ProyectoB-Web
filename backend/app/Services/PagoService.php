@@ -47,8 +47,8 @@ class PagoService
                     'description' => 'Plan Mensual - Control de Asistencias',
                 ]],
                 'application_context' => [
-                    'return_url' => url('/api/pagos/paypal-return'),
-                    'cancel_url' => url('/api/pagos/paypal-cancel'),
+                    'return_url' => 'https://omega-atn.app/paypal/success',
+                    'cancel_url' => 'https://omega-atn.app/paypal/cancel',
                     'brand_name' => 'OMEGA Control de Asistencias',
                     'user_action' => 'PAY_NOW',
                     'landing_page' => 'LOGIN',
