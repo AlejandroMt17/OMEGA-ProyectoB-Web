@@ -96,7 +96,7 @@ class SesionService
         }
 
         $validator = Validator::make($entrada, [
-            'fec_sesion' => ['required', 'date'],
+            'fec_sesion' => ['nullable', 'date'],
         ], [
             'fec_sesion.required' => 'La fecha de sesión es obligatoria.',
             'fec_sesion.date'     => 'La fecha de sesión no tiene un formato válido.',
@@ -108,6 +108,11 @@ class SesionService
 
         // RF-62, RNF-W-44 — Clave alfanumérica de 6 caracteres, única e irrepetible
         $clave = strtoupper(Str::random(6));
+
+        // Si no viene fec_sesion, usar la fecha de hoy
+        if (empty($entrada['fec_sesion'])) {
+            $entrada['fec_sesion'] = now()->toDateString();
+        }
 
         $sesion = $this->sesiones->crear([
             'id_grupo'      => $idGrupo,
