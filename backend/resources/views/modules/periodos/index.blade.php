@@ -107,42 +107,23 @@
 
 {{-- Lista de periodos --}}
 <div class="bg-white rounded-xl border border-omg-kashmir-dark overflow-hidden">
-    <table class="w-full">
-        <thead>
-            <tr class="border-b border-omg-kashmir-dark bg-omg-chardon">
-                <th class="text-left px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Periodo</th>
-                <th class="text-right px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Acciones</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-omg-kashmir-dark">
-            @forelse ($periodos as $periodo)
-                <tr class="hover:bg-omg-chardon transition-colors" x-data="{ editando: false, nombre: '{{ addslashes($periodo->nombre) }}' }">
-                    <td class="px-5 py-3">
-                        <div x-show="!editando">
-                            <p class="text-sm font-body font-semibold text-omg-dark">{{ $periodo->nombre }}</p>
-                        </div>
-                        <div x-show="editando">
-                            <form method="POST" action="{{ route('ca.periodos.update', [$institucion->id_institucion, $periodo->id_periodo]) }}"
-                                  class="flex flex-col gap-2">
-                                @csrf @method('PATCH')
-                                <input type="text" name="nombre" x-model="nombre" required
-                                       class="w-full px-3 py-1.5 bg-white border border-omg-nile rounded-lg text-sm font-body text-omg-dark focus:outline-none"/>
-                                <div class="flex gap-2 justify-end">
-                                    <button type="button" @click="editando = false; nombre = '{{ addslashes($periodo->nombre) }}'"
-                                        class="flex items-center gap-1 px-3 py-1.5 bg-omg-chardon text-omg-nile rounded-lg text-xs font-body hover:bg-omg-pastel transition-colors">
-                                        <i class="fa-solid fa-xmark"></i> Cancelar
-                                    </button>
-                                    <button type="submit"
-                                        class="flex items-center gap-1 px-3 py-1.5 bg-omg-coral text-white rounded-lg text-xs font-body hover:bg-omg-coral-dark transition-colors">
-                                        <i class="fa-solid fa-check"></i> Guardar
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </td>
-                    <td class="px-5 py-3 text-right">
-                        <div class="flex items-center justify-end gap-2">
-                        <button type="button" @click="editando = true" x-show="!editando"
+
+    {{-- Encabezado --}}
+    <div class="flex items-center px-5 py-3 bg-omg-chardon border-b border-omg-kashmir-dark">
+        <span class="flex-1 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Periodo</span>
+        <span class="text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Acciones</span>
+    </div>
+
+    <div class="divide-y divide-omg-kashmir-dark">
+        @forelse ($periodos as $periodo)
+            <div class="px-5 py-3 hover:bg-omg-chardon transition-colors"
+                 x-data="{ editando: false, nombre: '{{ addslashes($periodo->nombre) }}' }">
+
+                {{-- Vista normal --}}
+                <div x-show="!editando" class="flex items-center gap-3">
+                    <span class="flex-1 text-sm font-body font-semibold text-omg-dark">{{ $periodo->nombre }}</span>
+                    <div class="flex items-center gap-2">
+                        <button type="button" @click="editando = true"
                             class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-pastel hover:bg-omg-nile hover:text-white text-omg-nile rounded-lg text-xs font-body transition-colors">
                             <i class="fa-regular fa-pen-to-square"></i> Editar
                         </button>
@@ -167,20 +148,37 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                {{-- Vista edición --}}
+                <div x-show="editando">
+                    <form method="POST" action="{{ route('ca.periodos.update', [$institucion->id_institucion, $periodo->id_periodo]) }}">
+                        @csrf @method('PATCH')
+                        <div class="flex flex-wrap items-center gap-2">
+                            <input type="text" name="nombre" x-model="nombre" required
+                                   class="flex-1 min-w-0 px-3 py-1.5 border border-omg-nile rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile"/>
+                            <button type="button" @click="editando = false; nombre = '{{ addslashes($periodo->nombre) }}'"
+                                class="flex items-center gap-1 px-2.5 py-1.5 bg-omg-chardon text-omg-nile rounded-lg text-xs font-body hover:bg-omg-pastel transition-colors whitespace-nowrap">
+                                <i class="fa-solid fa-xmark"></i> Cancelar
+                            </button>
+                            <button type="submit"
+                                class="flex items-center gap-1 px-2.5 py-1.5 bg-omg-coral text-white rounded-lg text-xs font-body hover:bg-omg-coral-dark transition-colors whitespace-nowrap">
+                                <i class="fa-solid fa-check"></i> Guardar
+                            </button>
                         </div>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="2" class="px-5 py-10 text-center">
-                        <i class="fa-solid fa-calendar text-omg-kashmir fa-2x mb-3"></i>
-                        <p class="text-sm font-body text-omg-kashmir">Sin periodos configurados</p>
-                        <p class="text-xs font-body text-omg-kashmir mt-1">Agrega el primero con el formulario de arriba</p>
-                    </td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+                    </form>
+                </div>
+
+            </div>
+        @empty
+            <div class="px-5 py-10 text-center">
+                <i class="fa-solid fa-calendar text-omg-kashmir fa-2x mb-3"></i>
+                <p class="text-sm font-body text-omg-kashmir">Sin periodos configurados</p>
+                <p class="text-xs font-body text-omg-kashmir mt-1">Agrega el primero con el formulario de arriba</p>
+            </div>
+        @endforelse
+    </div>
 </div>
 
 @endsection
