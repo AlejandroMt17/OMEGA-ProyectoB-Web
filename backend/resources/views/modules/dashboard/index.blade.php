@@ -149,6 +149,23 @@
         @endif
     </form>
 
+    {{-- Leyenda de colores --}}
+    <div class="flex items-center gap-4 flex-wrap px-5 py-2.5 bg-white border-b border-orange-100">
+        <span class="text-xs font-body text-omg-kashmir font-semibold uppercase tracking-wide">Leyenda:</span>
+        <div class="flex items-center gap-1.5">
+            <span class="inline-block w-2.5 h-2.5 rounded-full bg-green-400"></span>
+            <span class="text-xs font-body text-omg-dark">Dentro del margen de riesgo (menos de 5% sobre el mínimo del 1.er rubro)</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+            <span class="inline-block w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
+            <span class="text-xs font-body text-omg-dark">Perdió derecho al 1.er rubro — solo puede acceder al 2.do</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+            <span class="inline-block w-2.5 h-2.5 rounded-full bg-red-400"></span>
+            <span class="text-xs font-body text-omg-dark">Solo tiene derecho al último rubro o sin derecho a evaluaciones</span>
+        </div>
+    </div>
+
     {{-- Resultados (se actualiza por fetch) --}}
     @include('modules.dashboard.partials.riesgo')
 
