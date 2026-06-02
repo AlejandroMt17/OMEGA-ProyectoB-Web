@@ -96,6 +96,7 @@ Route::prefix('p/ca')->group(function () {
 
         // Justificantes
         Route::get('justificantes',                              [JustificanteWebController::class, 'index'])->name('ca.justificantes.index');
+        Route::get('justificantes-json',                         [JustificanteWebController::class, 'indexJson'])->name('ca.justificantes.json');
         Route::post('justificantes/{asistencia}/justificar',     [JustificanteWebController::class, 'justificar'])->name('ca.justificantes.justificar');
         Route::post('justificantes/{asistencia}/marcar-ausente', [JustificanteWebController::class, 'marcarAusente'])->name('ca.justificantes.ausente');
 
