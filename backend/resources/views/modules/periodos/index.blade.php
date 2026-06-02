@@ -43,7 +43,7 @@
      x-data="{
         mostrarPersonalizado: false,
         personalizado: '',
-        existentes: @json($periodosExistentes),
+        existentes: JSON.parse('{{ addslashes(json_encode($periodosExistentes)) }}'),
         get opciones() {
             const anio = new Date().getFullYear();
             return [
