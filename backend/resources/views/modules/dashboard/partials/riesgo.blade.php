@@ -73,11 +73,41 @@
                                         </span>
                                     </td>
                                     <td class="px-5 py-3 text-center">
-                                        @if ($item['perdio'])
-                                            <span class="bg-red-100 text-red-600 text-xs font-body px-2 py-1 rounded-full">Límite excedido</span>
-                                        @else
-                                            <span class="bg-orange-100 text-orange-600 text-xs font-body px-2 py-1 rounded-full">En riesgo</span>
-                                        @endif
+                                        @php
+                                            $totalRubros = isset($item['rubros']) ? count($item['rubros']) : 0;
+                                            $idx         = $item['idx_rubro_derecho'] ?? null;
+                                            $nombre      = $item['nombre_rubro_derecho'] ?? null;
+
+                                            if ($totalRubros === 0) {
+                                                // Sin rubros configurados: fallback original
+                                                if ($item['perdio']) {
+                                                    $badgeClass = 'bg-red-100 text-red-600';
+                                                    $badgeText  = 'Sin derecho a evaluaciones';
+                                                } else {
+                                                    $badgeClass = 'bg-orange-100 text-orange-600';
+                                                    $badgeText  = 'En riesgo';
+                                                }
+                                            } elseif ($idx === null || $nombre === null) {
+                                                // No cumple ningún rubro
+                                                $badgeClass = 'bg-red-100 text-red-600';
+                                                $badgeText  = 'Sin derecho a evaluaciones';
+                                            } elseif ($idx === 0) {
+                                                // Cumple el rubro más exigente (1.º, ordenado desc)
+                                                $badgeClass = 'bg-green-100 text-green-700';
+                                                $badgeText  = 'Derecho: ' . $nombre;
+                                            } elseif ($totalRubros >= 3 && $idx === 1) {
+                                                // Cumple el segundo rubro (de tres o más)
+                                                $badgeClass = 'bg-yellow-100 text-yellow-700';
+                                                $badgeText  = 'Derecho: ' . $nombre;
+                                            } else {
+                                                // Solo tiene derecho al último rubro (el menos exigente)
+                                                $badgeClass = 'bg-red-100 text-red-600';
+                                                $badgeText  = 'Derecho: ' . $nombre;
+                                            }
+                                        @endphp
+                                        <span class="{{ $badgeClass }} text-xs font-body px-2 py-1 rounded-full whitespace-nowrap">
+                                            {{ $badgeText }}
+                                        </span>
                                     </td>
                                 </tr>
                             @endforeach
