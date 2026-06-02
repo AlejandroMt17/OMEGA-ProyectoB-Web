@@ -102,10 +102,9 @@
                     <input type="text" name="logo" x-model="logo"
                            placeholder="https://ejemplo.com/logo.png"
                            class="w-full px-4 py-2.5 bg-white border border-omg-kashmir rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile"/>
-                    <div x-show="logo.trim().length > 0" class="mt-3 flex items-center gap-3">
+                    <div x-show="logo.trim().length >= 20" class="mt-3 flex items-center gap-3">
                         <img :src="logo" alt="Vista previa"
                              class="w-16 h-16 object-contain rounded-lg border border-omg-kashmir-dark bg-omg-chardon p-1"
-                             @@error="$el.src=''; $el.closest('div').querySelector('p').textContent='URL no válida'"
                         />
                         <p class="text-xs font-body text-omg-kashmir">Vista previa del logotipo</p>
                     </div>
