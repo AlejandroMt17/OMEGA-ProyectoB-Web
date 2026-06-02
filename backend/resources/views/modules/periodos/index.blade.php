@@ -123,18 +123,20 @@
                         </div>
                         <div x-show="editando">
                             <form method="POST" action="{{ route('ca.periodos.update', [$institucion->id_institucion, $periodo->id_periodo]) }}"
-                                  class="flex items-center gap-2">
+                                  class="flex flex-col gap-2">
                                 @csrf @method('PATCH')
                                 <input type="text" name="nombre" x-model="nombre" required
-                                       class="flex-1 px-3 py-1.5 bg-white border border-omg-nile rounded-lg text-sm font-body text-omg-dark focus:outline-none"/>
-                                <button type="submit"
-                                    class="px-3 py-1.5 bg-omg-nile text-white rounded-lg text-xs font-body hover:bg-omg-nile-dark transition-colors">
-                                    <i class="fa-solid fa-check"></i>
-                                </button>
-                                <button type="button" @click="editando = false; nombre = '{{ addslashes($periodo->nombre) }}'"
-                                    class="px-3 py-1.5 bg-omg-chardon text-omg-kashmir rounded-lg text-xs font-body hover:bg-omg-pastel transition-colors">
-                                    <i class="fa-solid fa-xmark"></i>
-                                </button>
+                                       class="w-full px-3 py-1.5 bg-white border border-omg-nile rounded-lg text-sm font-body text-omg-dark focus:outline-none"/>
+                                <div class="flex gap-2 justify-end">
+                                    <button type="button" @click="editando = false; nombre = '{{ addslashes($periodo->nombre) }}'"
+                                        class="flex items-center gap-1 px-3 py-1.5 bg-omg-chardon text-omg-nile rounded-lg text-xs font-body hover:bg-omg-pastel transition-colors">
+                                        <i class="fa-solid fa-xmark"></i> Cancelar
+                                    </button>
+                                    <button type="submit"
+                                        class="flex items-center gap-1 px-3 py-1.5 bg-omg-coral text-white rounded-lg text-xs font-body hover:bg-omg-coral-dark transition-colors">
+                                        <i class="fa-solid fa-check"></i> Guardar
+                                    </button>
+                                </div>
                             </form>
                         </div>
                     </td>

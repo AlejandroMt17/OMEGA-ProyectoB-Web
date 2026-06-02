@@ -112,27 +112,25 @@
                 <div x-show="editando">
                     <form method="POST" action="{{ route('ca.rubros.update', [$institucion->id_institucion, $rubro->id_rubro]) }}">
                         @csrf @method('PUT')
-                        <div class="flex flex-col gap-3">
-                            <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="block text-xs font-body text-omg-kashmir mb-1">Nombre</label>
-                                    <input type="text" name="nombre" x-model="nombre" required
-                                           class="w-full px-3 py-1.5 border border-omg-nile rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile"/>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-body text-omg-kashmir mb-1">% Mínimo</label>
-                                    <input type="number" name="porcentaje_minimo" x-model="pct"
-                                           min="0" max="100" step="0.5" required
-                                           class="w-full px-3 py-1.5 border border-omg-nile rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile"/>
-                                </div>
+                        <div class="grid grid-cols-12 items-center gap-2">
+                            <div class="col-span-5">
+                                <input type="text" name="nombre" x-model="nombre" required
+                                       placeholder="Nombre"
+                                       class="w-full px-3 py-1.5 border border-omg-nile rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile"/>
                             </div>
-                            <div class="flex gap-2 justify-end">
+                            <div class="col-span-3">
+                                <input type="number" name="porcentaje_minimo" x-model="pct"
+                                       min="0" max="100" step="0.5" required
+                                       placeholder="%"
+                                       class="w-full px-3 py-1.5 border border-omg-nile rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile"/>
+                            </div>
+                            <div class="col-span-4 flex items-center justify-end gap-1.5">
                                 <button type="button" @click="editando = false; nombre = '{{ addslashes($rubro->nombre) }}'; pct = {{ $rubro->porcentaje_minimo }}"
-                                    class="flex items-center gap-1 px-3 py-1.5 bg-omg-chardon text-omg-nile rounded-lg text-xs font-body hover:bg-omg-pastel transition-colors">
+                                    class="flex items-center gap-1 px-2.5 py-1.5 bg-omg-chardon text-omg-nile rounded-lg text-xs font-body hover:bg-omg-pastel transition-colors">
                                     <i class="fa-solid fa-xmark"></i> Cancelar
                                 </button>
                                 <button type="submit"
-                                    class="flex items-center gap-1 px-3 py-1.5 bg-omg-coral text-white rounded-lg text-xs font-body hover:bg-omg-coral-dark transition-colors">
+                                    class="flex items-center gap-1 px-2.5 py-1.5 bg-omg-coral text-white rounded-lg text-xs font-body hover:bg-omg-coral-dark transition-colors">
                                     <i class="fa-solid fa-check"></i> Guardar
                                 </button>
                             </div>
