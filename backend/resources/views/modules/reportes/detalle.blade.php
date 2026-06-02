@@ -63,7 +63,6 @@
                 <tr class="border-t border-b border-omg-kashmir-dark bg-omg-chardon">
                     <th class="text-left px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">#</th>
                     <th class="text-left px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Fecha de la sesión</th>
-                    <th class="text-left px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Estado</th>
                     <th class="text-center px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Asistencias</th>
                     <th class="text-center px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Faltas</th>
                     <th class="text-center px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Justificaciones</th>
@@ -81,13 +80,6 @@
                                 @if($item['sesion']->hora_cierre) — {{ $item['sesion']->hora_cierre->format('H:i') }} @endif
                             </p>
                         </td>
-                        <td class="px-5 py-3">
-                            @if ($item['sesion']->est_sesion === 1)
-                                <span class="bg-green-100 text-green-700 text-xs font-body px-2 py-1 rounded-full">Activa</span>
-                            @else
-                                <span class="bg-omg-pastel text-omg-kashmir text-xs font-body px-2 py-1 rounded-full">Cerrada</span>
-                            @endif
-                        </td>
                         <td class="px-5 py-3 text-center text-sm font-heading font-semibold text-green-600">{{ $item['presentes'] }}</td>
                         <td class="px-5 py-3 text-center text-sm font-heading font-semibold text-red-500">{{ $item['ausentes'] }}</td>
                         <td class="px-5 py-3 text-center text-sm font-heading font-semibold text-omg-nile">{{ $item['justif'] }}</td>
@@ -100,7 +92,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-5 py-12 text-center text-sm font-body text-omg-kashmir">
+                        <td colspan="6" class="px-5 py-12 text-center text-sm font-body text-omg-kashmir">
                             No hay sesiones registradas para este grupo
                         </td>
                     </tr>
