@@ -24,6 +24,15 @@ class GrupoService
             ->all();
     }
 
+    public function listarPorInstitucion(int $idInstitucion, Usuario $docente): array
+    {
+        return $this->grupos->todosPorDocente($docente->id_usuario)
+            ->filter(fn(Grupo $g) => $g->id_institucion === $idInstitucion)
+            ->map(fn(Grupo $g) => $this->serializar($g))
+            ->values()
+            ->all();
+    }
+
     public function obtener(Grupo $grupo, Usuario $docente): array
     {
         $this->verificarPropietario($grupo, $docente);

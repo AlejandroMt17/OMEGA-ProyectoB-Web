@@ -78,6 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // ── Grupos ─────────────────────────────────────────────────────────────
     Route::get('grupos',                     [GrupoController::class, 'index']);
     Route::post('grupos',                    [GrupoController::class, 'store']);
+    Route::get('instituciones/{idInstitucion}/grupos',  [GrupoController::class, 'indexParaInstitucion']);
     Route::post('instituciones/{idInstitucion}/grupos', [GrupoController::class, 'storeParaInstitucion']);
     Route::get('grupos/{grupo}',             [GrupoController::class, 'show']);
     Route::put('grupos/{grupo}',             [GrupoController::class, 'update']);
