@@ -48,6 +48,20 @@ class InstitucionService
     public function eliminar(Institucion $institucion, Usuario $docente): void
     {
         $this->verificarPropietario($institucion, $docente);
+
+        // Eliminar en cascada: asistencias → sesiones → grupo_alumnos → grupos → rubros → institución
+        $grupos = \App\Models\Grupo::where('id_institucion', $institucion->id_institucion)->get();
+        foreach ($grupos as $grupo) {
+            $sesiones = \App\Models\Sesion::where('id_grupo', $grupo->id_grupo)->get();
+            foreach ($sesiones as $sesion) {
+                \App\Models\Asistencia::where('id_sesion', $sesion->id_sesion)->delete();
+            }
+            \App\Models\Sesion::where('id_grupo', $grupo->id_grupo)->delete();
+            \App\Models\GrupoAlumno::where('id_grupo', $grupo->id_grupo)->delete();
+        }
+        \App\Models\Grupo::where('id_institucion', $institucion->id_institucion)->delete();
+        \App\Models\RubroEvaluacion::where('id_institucion', $institucion->id_institucion)->delete();
+
         $this->instituciones->eliminar($institucion);
     }
 
