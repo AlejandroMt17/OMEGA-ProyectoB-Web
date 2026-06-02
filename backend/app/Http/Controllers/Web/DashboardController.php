@@ -91,11 +91,21 @@ class DashboardController extends Controller
                 'nombre' => $items->first()['grupo']->nombre . ' — ' . $items->first()['grupo']->materia,
             ])->values();
 
+        // Rubros para la leyenda: los de la institución filtrada,
+        // o los de la primera institución con alumnos en riesgo
+        $idInstLeyenda = $filtroInst
+            ?: $alumnosEnRiesgo->first()['id_institucion'] ?? null;
+        $rubrosLeyenda = $idInstLeyenda
+            ? RubroEvaluacion::where('id_institucion', $idInstLeyenda)
+                ->orderByDesc('porcentaje_minimo')->get()
+            : collect();
+
         return view('modules.dashboard.index', compact(
             'instituciones', 'sesionesHoy', 'aulasActivas',
             'justificantesPend', 'alumnosEnRiesgo',
             'riesgoPorGrupo', 'instSelect', 'gruposSelect',
-            'filtroInst', 'filtroGrupo', 'filtroEstado'
+            'filtroInst', 'filtroGrupo', 'filtroEstado',
+            'rubrosLeyenda'
         ));
     }
 
@@ -135,10 +145,18 @@ class DashboardController extends Controller
                 'nombre' => $items->first()['grupo']->nombre . ' — ' . $items->first()['grupo']->materia,
             ])->values();
 
+        $idInstLeyenda = $filtroInst
+            ?: $alumnosEnRiesgo->first()['id_institucion'] ?? null;
+        $rubrosLeyenda = $idInstLeyenda
+            ? RubroEvaluacion::where('id_institucion', $idInstLeyenda)
+                ->orderByDesc('porcentaje_minimo')->get()
+            : collect();
+
         $html = view('modules.dashboard.partials.riesgo', compact(
             'alumnosEnRiesgo', 'riesgoPorGrupo',
             'instSelect', 'gruposSelect',
-            'filtroInst', 'filtroGrupo', 'filtroEstado'
+            'filtroInst', 'filtroGrupo', 'filtroEstado',
+            'rubrosLeyenda'
         ))->render();
 
         return response($html, 200)->header('Content-Type', 'text/html');

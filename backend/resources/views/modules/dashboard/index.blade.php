@@ -149,22 +149,44 @@
         @endif
     </form>
 
-    {{-- Leyenda de colores --}}
-    <div class="flex items-center gap-4 flex-wrap px-5 py-2.5 bg-white border-b border-orange-100">
-        <span class="text-xs font-body text-omg-kashmir font-semibold uppercase tracking-wide">Leyenda:</span>
-        <div class="flex items-center gap-1.5">
-            <span class="inline-block w-2.5 h-2.5 rounded-full bg-green-400"></span>
-            <span class="text-xs font-body text-omg-dark">Dentro del margen de riesgo (menos de 5% sobre el mínimo del 1.er rubro)</span>
+    {{-- Leyenda de colores dinámica --}}
+    @if ($rubrosLeyenda->isNotEmpty())
+    @php
+        $r = $rubrosLeyenda->values();
+        $r0 = $r->get(0)?->nombre ?? 'Primer rubro';
+        $r1 = $r->get(1)?->nombre ?? null;
+        $r2 = $r->get(2)?->nombre ?? null;
+    @endphp
+    <div class="px-5 py-3 bg-white border-b border-orange-100 space-y-1.5">
+        {{-- Verde: dentro del margen (5% sobre el primer rubro) --}}
+        <div class="flex items-start gap-2">
+            <span class="mt-0.5 inline-block w-2.5 h-2.5 rounded-full bg-green-400 flex-shrink-0"></span>
+            <span class="text-xs font-body text-omg-dark">
+                Dentro del margen de riesgo (menos del 5% sobre {{ $r0 }})
+            </span>
         </div>
-        <div class="flex items-center gap-1.5">
-            <span class="inline-block w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
-            <span class="text-xs font-body text-omg-dark">Perdió derecho al 1.er rubro — solo puede acceder al 2.do</span>
+        {{-- Amarillo: perdió el primer rubro, accede al segundo (solo si hay al menos 2) --}}
+        @if ($r1)
+        <div class="flex items-start gap-2">
+            <span class="mt-0.5 inline-block w-2.5 h-2.5 rounded-full bg-yellow-400 flex-shrink-0"></span>
+            <span class="text-xs font-body text-omg-dark">
+                Perdió el derecho a {{ $r0 }} — Solo puede acceder a {{ $r1 }}
+            </span>
         </div>
-        <div class="flex items-center gap-1.5">
-            <span class="inline-block w-2.5 h-2.5 rounded-full bg-red-400"></span>
-            <span class="text-xs font-body text-omg-dark">Solo tiene derecho al último rubro o sin derecho a evaluaciones</span>
+        @endif
+        {{-- Rojo: solo tercer rubro o sin derecho --}}
+        <div class="flex items-start gap-2">
+            <span class="mt-0.5 inline-block w-2.5 h-2.5 rounded-full bg-red-400 flex-shrink-0"></span>
+            <span class="text-xs font-body text-omg-dark">
+                @if ($r2)
+                    Solo tiene derecho a {{ $r2 }}
+                @else
+                    Sin derecho a evaluaciones
+                @endif
+            </span>
         </div>
     </div>
+    @endif
 
     {{-- Resultados (se actualiza por fetch) --}}
     @include('modules.dashboard.partials.riesgo')
