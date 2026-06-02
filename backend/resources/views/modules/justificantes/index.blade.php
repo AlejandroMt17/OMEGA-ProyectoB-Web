@@ -4,10 +4,8 @@
 
 {{-- Header --}}
 <div class="mb-6">
-        <h1 class="text-2xl font-heading font-semibold text-omg-nile">Justificantes</h1>
-        <p class="text-sm font-body text-omg-kashmir mt-1">Gestiona las ausencias y justificantes de tus alumnos</p>
-    </div>
-
+    <h1 class="text-2xl font-heading font-semibold text-omg-nile">Justificantes</h1>
+    <p class="text-sm font-body text-omg-kashmir mt-1">Gestiona las ausencias y justificantes de tus alumnos</p>
 </div>
 
 {{-- Filtros --}}
