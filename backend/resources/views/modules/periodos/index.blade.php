@@ -70,7 +70,7 @@
                     </button>
                 </form>
                 <span x-show="existentes.includes(op.toLowerCase())"
-                      class="px-3 py-1.5 border border-green-300 rounded-lg text-xs font-body bg-green-50 text-green-600 flex items-center gap-1">
+                      class="px-3 py-1.5 border border-omg-nile rounded-lg text-xs font-body bg-omg-nile text-white flex items-center gap-1">
                     <i class="fa-solid fa-check text-xs"></i>
                     <span x-text="op"></span>
                 </span>

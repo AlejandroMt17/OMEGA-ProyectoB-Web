@@ -19,7 +19,13 @@
         { nombre: 'Ordinario', porcentaje: 80 },
         { nombre: 'Extraordinario', porcentaje: 60 }
     ],
+    get anio() { return new Date().getFullYear(); },
+    get periodosDefecto() {
+        const a = new Date().getFullYear();
+        return ['Ene-Jun ' + a, 'Ago-Dic ' + a];
+    },
     periodos: [],
+    init() { this.periodos = this.periodosDefecto; },
     periodoPersonalizado: '',
     mostrarPersonalizado: false,
 
