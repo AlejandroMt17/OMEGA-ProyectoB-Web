@@ -38,7 +38,7 @@
         @if (session('institucion_id'))
             <p class="text-omg-white text-sm font-semibold truncate" id="sidebar-inst-nombre">{{ session('institucion_nombre') }}</p>
         @else
-            <a href="{{ route('ca.instituciones.index') }}"
+            <a href="{{ route('ca.instituciones.index') }}" id="sidebar-inst-aviso"
                class="flex items-center gap-1.5 text-orange-300 text-xs font-semibold hover:text-white transition-colors">
                 <i class="fa-solid fa-triangle-exclamation text-xs"></i>
                 Selecciona una institución

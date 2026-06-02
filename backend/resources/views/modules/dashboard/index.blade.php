@@ -199,12 +199,22 @@
                         }
                     });
                     if (res.ok) {
+                        const data = await res.json();
                         // Desmarcar todas las demás instituciones
                         document.querySelectorAll('[data-inst-badge]').forEach(el => {
-                            el.dataset.instSelected = 'false';
-                            el._x_dataStack?.[0] && (el._x_dataStack[0].seleccionada = false);
+                            if (el !== $el.closest('[data-inst-badge]')) {
+                                Alpine.$data(el).seleccionada = false;
+                            }
                         });
                         this.seleccionada = true;
+                        // Actualizar sidebar sin recargar
+                        const sidebarNombre = document.getElementById('sidebar-inst-nombre');
+                        const sidebarAviso  = document.getElementById('sidebar-inst-aviso');
+                        if (sidebarNombre) {
+                            sidebarNombre.textContent = data.nombre;
+                            sidebarNombre.closest('div')?.classList.replace('bg-orange-900', 'bg-omg-nile-dark');
+                        }
+                        if (sidebarAviso) sidebarAviso.style.display = 'none';
                     }
                     this.cargando = false;
                 }
