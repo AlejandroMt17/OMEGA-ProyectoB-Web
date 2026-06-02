@@ -60,35 +60,34 @@
 
 {{-- Lista de rubros --}}
 <div class="bg-white rounded-xl border border-omg-kashmir-dark overflow-hidden max-w-lg">
-    <div class="divide-y divide-omg-kashmir-dark">
-        {{-- Encabezado --}}
-        <div class="grid grid-cols-12 bg-omg-chardon px-5 py-3 gap-2">
-            <div class="col-span-5 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Rubro</div>
-            <div class="col-span-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide text-center">% Mínimo</div>
-            <div class="col-span-4 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide text-right">Acciones</div>
-        </div>
 
+    {{-- Encabezado --}}
+    <div class="flex items-center gap-3 px-5 py-3 bg-omg-chardon border-b border-omg-kashmir-dark">
+        <span class="flex-1 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Rubro</span>
+        <span class="w-20 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide text-center">% Mín.</span>
+        <span class="w-28 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide text-right">Acciones</span>
+    </div>
+
+    <div class="divide-y divide-omg-kashmir-dark">
         @forelse ($rubros as $rubro)
-            <div class="px-5 py-4 hover:bg-omg-chardon transition-colors"
+            <div class="px-5 py-3 hover:bg-omg-chardon transition-colors"
                  x-data="{ editando: false, nombre: '{{ addslashes($rubro->nombre) }}', pct: {{ $rubro->porcentaje_minimo }} }">
 
                 {{-- Vista normal --}}
-                <div x-show="!editando" class="grid grid-cols-12 items-center gap-2">
-                    <div class="col-span-5">
-                        <p class="text-sm font-body font-semibold text-omg-dark" x-text="nombre"></p>
-                    </div>
-                    <div class="col-span-3 text-center">
+                <div x-show="!editando" class="flex items-center gap-3">
+                    <span class="flex-1 text-sm font-body font-semibold text-omg-dark" x-text="nombre"></span>
+                    <span class="w-20 text-center">
                         <span class="bg-omg-pastel text-omg-nile text-xs font-body px-2 py-1 rounded-full font-semibold"
                               x-text="pct + '%'"></span>
-                    </div>
-                    <div class="col-span-4 flex items-center justify-end gap-1.5">
+                    </span>
+                    <div class="w-28 flex items-center justify-end gap-1.5">
                         <button @click="editando = true"
                             class="flex items-center gap-1 px-2.5 py-1.5 bg-omg-pastel hover:bg-omg-nile hover:text-white text-omg-nile rounded-lg text-xs font-body transition-colors">
                             <i class="fa-regular fa-pen-to-square"></i> Editar
                         </button>
                         <div x-data="{ open: false }">
                             <button type="button" @click="open = true"
-                                class="flex items-center gap-1 px-2.5 py-1.5 bg-red-50 hover:bg-red-500 hover:text-white text-red-500 rounded-lg text-xs font-body transition-colors">
+                                class="flex items-center px-2.5 py-1.5 bg-red-50 hover:bg-red-500 hover:text-white text-red-500 rounded-lg text-xs font-body transition-colors">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                             <div x-show="open" x-transition class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
@@ -108,45 +107,38 @@
                     </div>
                 </div>
 
-                {{-- Vista edición inline --}}
+                {{-- Vista edición --}}
                 <div x-show="editando">
                     <form method="POST" action="{{ route('ca.rubros.update', [$institucion->id_institucion, $rubro->id_rubro]) }}">
                         @csrf @method('PUT')
-                        <div class="grid grid-cols-12 items-center gap-2">
-                            <div class="col-span-5">
-                                <input type="text" name="nombre" x-model="nombre" required
-                                       placeholder="Nombre"
-                                       class="w-full px-3 py-1.5 border border-omg-nile rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile"/>
-                            </div>
-                            <div class="col-span-3">
-                                <input type="number" name="porcentaje_minimo" x-model="pct"
-                                       min="0" max="100" step="0.5" required
-                                       placeholder="%"
-                                       class="w-full px-3 py-1.5 border border-omg-nile rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile"/>
-                            </div>
-                            <div class="col-span-4 flex items-center justify-end gap-1.5">
-                                <button type="button" @click="editando = false; nombre = '{{ addslashes($rubro->nombre) }}'; pct = {{ $rubro->porcentaje_minimo }}"
-                                    class="flex items-center gap-1 px-2.5 py-1.5 bg-omg-chardon text-omg-nile rounded-lg text-xs font-body hover:bg-omg-pastel transition-colors">
-                                    <i class="fa-solid fa-xmark"></i> Cancelar
-                                </button>
-                                <button type="submit"
-                                    class="flex items-center gap-1 px-2.5 py-1.5 bg-omg-coral text-white rounded-lg text-xs font-body hover:bg-omg-coral-dark transition-colors">
-                                    <i class="fa-solid fa-check"></i> Guardar
-                                </button>
-                            </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <input type="text" name="nombre" x-model="nombre" required
+                                   placeholder="Nombre"
+                                   class="flex-1 min-w-0 px-3 py-1.5 border border-omg-nile rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile"/>
+                            <input type="number" name="porcentaje_minimo" x-model="pct"
+                                   min="0" max="100" step="0.5" required
+                                   placeholder="%"
+                                   class="w-20 px-3 py-1.5 border border-omg-nile rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile"/>
+                            <button type="button" @click="editando = false; nombre = '{{ addslashes($rubro->nombre) }}'; pct = {{ $rubro->porcentaje_minimo }}"
+                                class="flex items-center gap-1 px-2.5 py-1.5 bg-omg-chardon text-omg-nile rounded-lg text-xs font-body hover:bg-omg-pastel transition-colors whitespace-nowrap">
+                                <i class="fa-solid fa-xmark"></i> Cancelar
+                            </button>
+                            <button type="submit"
+                                class="flex items-center gap-1 px-2.5 py-1.5 bg-omg-coral text-white rounded-lg text-xs font-body hover:bg-omg-coral-dark transition-colors whitespace-nowrap">
+                                <i class="fa-solid fa-check"></i> Guardar
+                            </button>
                         </div>
                     </form>
                 </div>
+
             </div>
         @empty
             <div class="px-5 py-10 text-center">
                 <i class="fa-solid fa-chart-pie text-omg-kashmir fa-2x mb-3"></i>
                 <p class="text-sm font-body text-omg-kashmir">No hay rubros configurados</p>
-                <p class="text-xs font-body text-omg-kashmir mt-1">Agrega el primero con el formulario de arriba</p>
             </div>
         @endforelse
     </div>
 </div>
-
 
 @endsection
