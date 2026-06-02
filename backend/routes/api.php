@@ -35,8 +35,10 @@ use Illuminate\Support\Facades\Route;
 
 // ─── Rutas públicas ────────────────────────────────────────────────────────
 Route::post('auth/registro', [AuthController::class, 'registro']);
-Route::post('auth/register', [AuthController::class, 'registro']); // alias app móvil
-Route::post('auth/login',    [AuthController::class, 'login']);
+Route::post('auth/register',       [AuthController::class, 'registro']); // alias app móvil
+Route::post('auth/login',          [AuthController::class, 'login']);
+Route::post('auth/forgot-password', [\App\Http\Controllers\Api\PasswordResetApiController::class, 'sendResetLink']);
+Route::post('auth/reset-password',  [\App\Http\Controllers\Api\PasswordResetApiController::class, 'reset']);
 
 // ─── Rutas protegidas con Sanctum ─────────────────────────────────────────
 // ── Retorno de PayPal (no requieren auth — PayPal redirige aquí) ──────────
