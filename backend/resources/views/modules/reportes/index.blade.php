@@ -4,10 +4,8 @@
 
 {{-- Header --}}
 <div class="mb-6">
-        <h1 class="text-2xl font-heading font-semibold text-omg-nile">Reportes</h1>
+    <h1 class="text-2xl font-heading font-semibold text-omg-nile">Reportes</h1>
         <p class="text-sm font-body text-omg-kashmir mt-1">Visualiza el resumen de asistencias por grupo</p>
-    </div>
-
 </div>
 
 {{-- Componente Alpine con AJAX --}}

@@ -81,7 +81,7 @@ class ReporteWebController extends Controller
 
         $grupos = $this->grupos->todosPorInstitucion($institucionId, Auth::user()->id_usuario);
         return view('modules.reportes.index', compact(
-            'reportes', 'periodos',
+            'reportes', 'periodos', 'grupos',
             'busqueda', 'periodo', 'minPct', 'maxPct'
         ));
     }

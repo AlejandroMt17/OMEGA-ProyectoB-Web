@@ -9,10 +9,8 @@
 
 {{-- Título --}}
 <div class="mb-6">
-        <h1 class="text-2xl font-heading font-semibold text-omg-nile">Mi Suscripción</h1>
+    <h1 class="text-2xl font-heading font-semibold text-omg-nile">Mi Suscripción</h1>
         <p class="text-sm font-body text-omg-kashmir mt-1">Gestiona tu plan y métodos de pago</p>
-    </div>
-
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -164,8 +162,6 @@
                 Pago seguro procesado por PayPal
             </p>
         </div>
-    </div>
-
 </div>
 
 
