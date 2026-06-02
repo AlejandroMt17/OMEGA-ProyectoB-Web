@@ -30,8 +30,8 @@
         if (this.rubros.length > 1) this.rubros.splice(i, 1);
     },
     agregarPeriodo(nombre) {
-        if (nombre && !this.periodos.includes(nombre)) {
-            this.periodos.push(nombre);
+        if (nombre) {
+            this.periodos = [nombre]; // solo 1 periodo
         }
     },
     eliminarPeriodo(i) {
@@ -162,7 +162,7 @@
                         <i class="fa-solid fa-arrow-left"></i> Atrás
                     </button>
                     <a href="{{ route('ca.instituciones.index') }}"
-                       class="flex items-center gap-2 px-4 py-2.5 bg-omg-chardon text-omg-kashmir font-heading font-semibold rounded-lg text-sm hover:bg-omg-pastel transition-colors">
+                       class="flex items-center gap-2 px-4 py-2.5 bg-omg-chardon text-omg-nile font-heading font-semibold rounded-lg text-sm hover:bg-omg-pastel transition-colors">
                         <i class="fa-solid fa-ban"></i> Cancelar
                     </a>
                 </div>
@@ -181,14 +181,14 @@
             </h2>
             <p class="text-xs font-body text-omg-kashmir mb-4">Agrega al menos un periodo. Podrás agregar más después.</p>
 
-            {{-- Opciones rápidas --}}
+            {{-- Opciones rápidas (selección única) --}}
             <div class="flex flex-wrap gap-2 mb-4">
                 <template x-for="op in periodosOpciones" :key="op">
                     <button type="button"
-                            @click="agregarPeriodo(op)"
-                            :class="periodos.includes(op) ? 'bg-omg-nile text-white border-omg-nile' : 'bg-white text-omg-nile border-omg-kashmir hover:border-omg-nile'"
+                            @click="periodos[0] === op ? periodos = [] : agregarPeriodo(op)"
+                            :class="periodos[0] === op ? 'bg-omg-nile text-white border-omg-nile' : 'bg-white text-omg-nile border-omg-kashmir hover:border-omg-nile'"
                             class="px-3 py-1.5 border rounded-lg text-xs font-body transition-colors">
-                        <i class="fa-solid fa-check mr-1" x-show="periodos.includes(op)"></i>
+                        <i class="fa-solid fa-check mr-1" x-show="periodos[0] === op"></i>
                         <span x-text="op"></span>
                     </button>
                 </template>
@@ -241,7 +241,7 @@
                         <i class="fa-solid fa-arrow-left"></i> Atrás
                     </button>
                     <a href="{{ route('ca.instituciones.index') }}"
-                       class="flex items-center gap-2 px-4 py-2.5 bg-omg-chardon text-omg-kashmir font-heading font-semibold rounded-lg text-sm hover:bg-omg-pastel transition-colors">
+                       class="flex items-center gap-2 px-4 py-2.5 bg-omg-chardon text-omg-nile font-heading font-semibold rounded-lg text-sm hover:bg-omg-pastel transition-colors">
                         <i class="fa-solid fa-ban"></i> Cancelar
                     </a>
                 </div>

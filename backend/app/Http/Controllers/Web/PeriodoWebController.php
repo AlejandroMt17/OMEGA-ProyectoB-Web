@@ -35,9 +35,19 @@ class PeriodoWebController extends Controller
             'nombre.required' => 'El nombre del periodo es obligatorio',
         ]);
 
+        // Verificar duplicado
+        $existe = Periodo::where('id_institucion', $idInstitucion)
+            ->whereRaw('LOWER(nombre) = ?', [strtolower(trim($request->nombre))])
+            ->exists();
+
+        if ($existe) {
+            return redirect()->route('ca.periodos.index', $idInstitucion)
+                ->with('error', 'El periodo "' . $request->nombre . '" ya está registrado');
+        }
+
         Periodo::create([
             'id_institucion' => $idInstitucion,
-            'nombre'         => $request->nombre,
+            'nombre'         => trim($request->nombre),
             'activo'         => true,
         ]);
 
