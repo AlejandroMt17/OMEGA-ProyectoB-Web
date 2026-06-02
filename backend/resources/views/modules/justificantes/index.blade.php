@@ -77,18 +77,6 @@
     <div class="bg-white rounded-xl border border-omg-kashmir-dark p-5 mb-6">
         <div class="flex flex-wrap items-end gap-3">
 
-            {{-- Periodo --}}
-            <div class="flex-1 min-w-36">
-                <label class="block text-xs font-body text-omg-kashmir mb-1">Periodo</label>
-                <select x-model="periodo" @change="cargar()"
-                        class="w-full px-3 py-2 bg-white border border-omg-kashmir rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile">
-                    <option value="">Todos los periodos</option>
-                    @foreach ($periodos as $p)
-                        <option value="{{ $p }}">{{ $p }}</option>
-                    @endforeach
-                </select>
-            </div>
-
             {{-- Grupo --}}
             <div class="flex-1 min-w-44">
                 <label class="block text-xs font-body text-omg-kashmir mb-1">Grupo</label>
@@ -97,6 +85,18 @@
                     <option value="">Todos los grupos</option>
                     @foreach ($todosGrupos as $g)
                         <option value="{{ $g->id_grupo }}">{{ $g->nombre }} — {{ $g->materia }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Periodo --}}
+            <div class="flex-1 min-w-36">
+                <label class="block text-xs font-body text-omg-kashmir mb-1">Periodo</label>
+                <select x-model="periodo" @change="cargar()"
+                        class="w-full px-3 py-2 bg-white border border-omg-kashmir rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile">
+                    <option value="">Todos los periodos</option>
+                    @foreach ($periodos as $p)
+                        <option value="{{ $p }}">{{ $p }}</option>
                     @endforeach
                 </select>
             </div>
@@ -217,14 +217,26 @@
                                                       class="bg-green-100 text-green-600 text-xs font-body px-2 py-1 rounded-full">Justificada</span>
 
                                                 <button x-show="alumno.estado === 2" :disabled="alumno.cargando"
-                                                        @click="$root.__x.$data.justificar(alumno)"
+                                                        @click="
+                                                            alumno.cargando = true;
+                                                            fetch(alumno.url_justificar, {
+                                                                method: 'POST',
+                                                                headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest' }
+                                                            }).then(r=>r.json()).then(d=>{ if(d.ok) alumno.estado=3; }).finally(()=>alumno.cargando=false);
+                                                        "
                                                         class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-nile hover:bg-omg-nile-dark text-white rounded-lg text-xs font-body transition-colors">
                                                     <i class="fa-solid fa-file-circle-check" x-show="!alumno.cargando"></i>
                                                     <i class="fa-solid fa-spinner fa-spin" x-show="alumno.cargando"></i>
                                                     Justificar
                                                 </button>
                                                 <button x-show="alumno.estado === 3" :disabled="alumno.cargando"
-                                                        @click="$root.__x.$data.revertir(alumno)"
+                                                        @click="
+                                                            alumno.cargando = true;
+                                                            fetch(alumno.url_ausente, {
+                                                                method: 'POST',
+                                                                headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest' }
+                                                            }).then(r=>r.json()).then(d=>{ if(d.ok) alumno.estado=2; }).finally(()=>alumno.cargando=false);
+                                                        "
                                                         class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-chardon hover:bg-red-500 hover:text-white text-omg-kashmir rounded-lg text-xs font-body transition-colors">
                                                     <i class="fa-solid fa-rotate-left" x-show="!alumno.cargando"></i>
                                                     <i class="fa-solid fa-spinner fa-spin" x-show="alumno.cargando"></i>

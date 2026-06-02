@@ -27,9 +27,8 @@
     </div>
 </div>
 
-{{-- Exportar + orden --}}
-<div class="flex items-center justify-between mb-6">
-    <div class="flex items-center gap-3">
+{{-- Exportar --}}
+<div class="flex items-center gap-3 mb-6">
     <a href="{{ route('ca.reportes.excel', $grupo->id_grupo) }}"
        class="flex items-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white font-heading font-semibold rounded-lg transition-colors text-sm">
         <i class="fa-solid fa-file-excel"></i> Exportar Excel
@@ -38,37 +37,59 @@
        class="flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-heading font-semibold rounded-lg transition-colors text-sm">
         <i class="fa-solid fa-file-pdf"></i> Exportar PDF
     </a>
-    </div>
-    <div class="flex items-center gap-2">
-        <label class="text-xs font-body text-omg-kashmir">Ordenar sesiones:</label>
-        <select onchange="window.location.href='{{ route('ca.reportes.detalle', $grupo->id_grupo) }}?orden=' + this.value"
-                class="px-3 py-2 bg-white border border-omg-kashmir rounded-lg text-sm font-body focus:outline-none">
-            <option value="asc"  {{ ($orden ?? 'asc') === 'asc'  ? 'selected' : '' }}>Más antigua primero</option>
-            <option value="desc" {{ ($orden ?? 'asc') === 'desc' ? 'selected' : '' }}>Más reciente primero</option>
-        </select>
-    </div>
+
 </div>
 
-{{-- Sección sesiones (colapsable) --}}
+{{-- Sección sesiones con AJAX --}}
 <div class="bg-white rounded-xl border border-omg-kashmir-dark overflow-hidden mb-6"
-     x-data="{ abierto: false }">
+     x-data="{
+         abierto: false,
+         sesiones: [],
+         cargando: false,
+         orden: 'asc',
 
-    {{-- Header acordeón --}}
+         async cargar() {
+             this.cargando = true;
+             const res = await fetch('{{ route('ca.reportes.sesiones.json', $grupo->id_grupo) }}?orden=' + this.orden, {
+                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
+             });
+             this.sesiones = await res.json();
+             this.cargando = false;
+         },
+
+         cambiarOrden(v) {
+             this.orden = v;
+             this.cargar();
+         }
+     }"
+     x-init="cargar()">
+
     <button @click="abierto = !abierto"
             class="w-full flex items-center justify-between px-5 py-4 hover:bg-omg-chardon transition-colors">
         <div class="flex items-center gap-3">
             <i class="fa-solid fa-calendar-days text-omg-nile"></i>
             <div class="text-left">
                 <p class="text-base font-heading font-semibold text-omg-nile">Total de sesiones</p>
-                <p class="text-xs font-body text-omg-kashmir">{{ $sesiones->count() }} sesión(es) registradas</p>
+                <p class="text-xs font-body text-omg-kashmir" x-text="sesiones.length + ' sesión(es) registradas'"></p>
             </div>
         </div>
-        <i class="fa-solid fa-chevron-down text-omg-kashmir transition-transform duration-200"
-           :class="abierto ? 'rotate-180' : ''"></i>
+        <div class="flex items-center gap-3">
+            {{-- Selector orden AJAX --}}
+            <select @click.stop @change="cambiarOrden($event.target.value)" x-model="orden"
+                    class="px-3 py-1.5 bg-white border border-omg-kashmir rounded-lg text-xs font-body focus:outline-none">
+                <option value="asc">Más antigua primero</option>
+                <option value="desc">Más reciente primero</option>
+            </select>
+            <i class="fa-solid fa-chevron-down text-omg-kashmir transition-transform duration-200"
+               :class="abierto ? 'rotate-180' : ''"></i>
+        </div>
     </button>
 
     <div x-show="abierto" x-collapse>
-        <table class="w-full">
+        <div x-show="cargando" class="flex justify-center py-8 border-t border-omg-kashmir-dark">
+            <i class="fa-solid fa-spinner fa-spin text-omg-nile fa-lg"></i>
+        </div>
+        <table class="w-full" x-show="!cargando">
             <thead>
                 <tr class="border-t border-b border-omg-kashmir-dark bg-omg-chardon">
                     <th class="text-left px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">#</th>
@@ -80,33 +101,28 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-omg-kashmir-dark">
-                @forelse ($sesiones as $i => $item)
+                <template x-if="sesiones.length === 0">
+                    <tr><td colspan="6" class="px-5 py-10 text-center text-sm font-body text-omg-kashmir">Sin sesiones registradas</td></tr>
+                </template>
+                <template x-for="s in sesiones" :key="s.num">
                     <tr class="hover:bg-omg-chardon transition-colors">
-                        <td class="px-5 py-3 text-sm font-body text-omg-kashmir">{{ $i + 1 }}</td>
+                        <td class="px-5 py-3 text-sm font-body text-omg-kashmir" x-text="s.num"></td>
                         <td class="px-5 py-3">
-                            <p class="text-sm font-body text-omg-dark">{{ $item['sesion']->fec_sesion->format('d/m/Y') }}</p>
-                            <p class="text-xs font-body text-omg-kashmir">
-                                {{ $item['sesion']->hora_apertura->format('H:i') }}
-                                @if($item['sesion']->hora_cierre) — {{ $item['sesion']->hora_cierre->format('H:i') }} @endif
-                            </p>
+                            <p class="text-sm font-body text-omg-dark" x-text="s.fecha"></p>
+                            <p class="text-xs font-body text-omg-kashmir"
+                               x-text="s.hora_a + (s.hora_c ? ' — ' + s.hora_c : '')"></p>
                         </td>
-                        <td class="px-5 py-3 text-center text-sm font-heading font-semibold text-green-600">{{ $item['presentes'] }}</td>
-                        <td class="px-5 py-3 text-center text-sm font-heading font-semibold text-red-500">{{ $item['ausentes'] }}</td>
-                        <td class="px-5 py-3 text-center text-sm font-heading font-semibold text-omg-nile">{{ $item['justif'] }}</td>
+                        <td class="px-5 py-3 text-center text-sm font-heading font-semibold text-green-600" x-text="s.presentes"></td>
+                        <td class="px-5 py-3 text-center text-sm font-heading font-semibold text-red-500" x-text="s.ausentes"></td>
+                        <td class="px-5 py-3 text-center text-sm font-heading font-semibold text-omg-nile" x-text="s.justif"></td>
                         <td class="px-5 py-3 text-right">
-                            <a href="{{ route('ca.sesiones.asistencias', $item['sesion']->id_sesion) }}"
+                            <a :href="s.url"
                                class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-pastel hover:bg-omg-nile hover:text-white text-omg-nile rounded-lg text-xs font-body transition-colors ml-auto w-fit">
                                 <i class="fa-solid fa-ellipsis"></i> Detalles
                             </a>
                         </td>
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="6" class="px-5 py-12 text-center text-sm font-body text-omg-kashmir">
-                            No hay sesiones registradas para este grupo
-                        </td>
-                    </tr>
-                @endforelse
+                </template>
             </tbody>
         </table>
     </div>
