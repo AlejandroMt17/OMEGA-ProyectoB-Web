@@ -35,9 +35,36 @@ class InstitucionWebController extends Controller
     public function store(Request $request)
     {
         try {
-            $this->instituciones->crear($request->all(), Auth::user());
+            $institucion = $this->instituciones->crearModelo($request->all(), Auth::user());
+
+            // Crear rubros
+            if ($request->has('rubros')) {
+                foreach ($request->rubros as $rubro) {
+                    if (!empty($rubro['nombre'])) {
+                        \App\Models\RubroEvaluacion::create([
+                            'id_institucion'   => $institucion->id_institucion,
+                            'nombre'           => $rubro['nombre'],
+                            'porcentaje_minimo' => (int) $rubro['porcentaje'],
+                        ]);
+                    }
+                }
+            }
+
+            // Crear periodos
+            if ($request->has('periodos')) {
+                foreach ($request->periodos as $periodo) {
+                    if (!empty($periodo)) {
+                        \App\Models\Periodo::create([
+                            'id_institucion' => $institucion->id_institucion,
+                            'nombre'         => $periodo,
+                            'activo'         => true,
+                        ]);
+                    }
+                }
+            }
+
             return redirect()->route('ca.instituciones.index')
-                ->with('success', 'La información se registró correctamente');
+                ->with('success', 'Institución creada correctamente con sus rubros y periodos');
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
         }
