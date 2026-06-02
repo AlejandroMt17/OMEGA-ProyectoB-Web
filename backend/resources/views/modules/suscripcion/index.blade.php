@@ -122,13 +122,7 @@
             </div>
         @endif
 
-        {{-- Mensajes de éxito / error --}}
-        @if (session('success'))
-            <div class="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3 mb-4">
-                <i class="fa-solid fa-circle-check text-green-500"></i>
-                <p class="text-sm font-body text-green-700">{{ session('success') }}</p>
-            </div>
-        @endif
+        
         @if (session('error'))
             <div class="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4">
                 <i class="fa-solid fa-circle-xmark text-red-500"></i>
