@@ -48,7 +48,7 @@
         ];
     },
     paso1Valido() {
-        return this.nombre.trim().length >= 3;
+        return this.nombre.trim().length >= 3 && this.logo.trim().length >= 20;
     },
     paso2Valido() {
         return this.rubros.every(r => r.nombre.trim() !== '' && r.porcentaje >= 1 && r.porcentaje <= 100);
