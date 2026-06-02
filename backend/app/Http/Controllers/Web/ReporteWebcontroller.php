@@ -196,7 +196,7 @@ class ReporteWebController extends Controller
 
         $alumnos = GrupoAlumno::where('id_grupo', $idGrupo)->with('alumno')->get()
             ->filter(fn($ga) => $ga->alumno !== null)
-            ->map(function ($ga) use ($sesionesIds, $total) {
+            ->map(function ($ga) use ($sesionesIds, $total, $idGrupo) {
                 $al = $ga->alumno;
                 $p  = Asistencia::whereIn('id_sesion', $sesionesIds)->where('id_alumno', $al->id_usuario)->where('est_asistencia', 1)->count();
                 $a  = Asistencia::whereIn('id_sesion', $sesionesIds)->where('id_alumno', $al->id_usuario)->where('est_asistencia', 2)->count();
