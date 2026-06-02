@@ -16,7 +16,7 @@
         </p>
     </div>
     <a href="{{ route('ca.grupos.index') }}"
-       class="flex items-center gap-1.5 px-3 py-2.5 bg-white border border-omg-kashmir-dark hover:bg-omg-chardon text-omg-nile rounded-lg text-sm font-body transition-colors">
+       class="flex items-center gap-2 px-4 py-2.5 bg-omg-chardon hover:bg-omg-pastel text-omg-nile font-heading font-semibold rounded-lg transition-colors text-sm">
         <i class="fa-solid fa-arrow-left text-xs"></i> Volver
     </a>
 </div>
