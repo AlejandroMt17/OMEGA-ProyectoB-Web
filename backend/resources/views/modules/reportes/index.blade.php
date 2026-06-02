@@ -27,7 +27,8 @@
         if (this.maxPct)   params.set('max_pct',  this.maxPct);
 
         const res  = await fetch('{{ route('ca.reportes.json') }}?' + params.toString(), {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
         this.reportes = await res.json();
         this.cargando = false;

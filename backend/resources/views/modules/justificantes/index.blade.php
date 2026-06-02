@@ -31,7 +31,8 @@
         if (this.hasta)   params.set('hasta',   this.hasta);
 
         const res  = await fetch('{{ route('ca.justificantes.json') }}?' + params.toString(), {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
         this.grupos = await res.json();
         this.cargando = false;
@@ -221,7 +222,7 @@
                                                             alumno.cargando = true;
                                                             fetch(alumno.url_justificar, {
                                                                 method: 'POST',
-                                                                headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest' }
+                                                                credentials: 'same-origin', headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest' }
                                                             }).then(r=>r.json()).then(d=>{ if(d.ok) alumno.estado=3; }).finally(()=>alumno.cargando=false);
                                                         "
                                                         class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-nile hover:bg-omg-nile-dark text-white rounded-lg text-xs font-body transition-colors">
@@ -234,7 +235,7 @@
                                                             alumno.cargando = true;
                                                             fetch(alumno.url_ausente, {
                                                                 method: 'POST',
-                                                                headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest' }
+                                                                credentials: 'same-origin', headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest' }
                                                             }).then(r=>r.json()).then(d=>{ if(d.ok) alumno.estado=2; }).finally(()=>alumno.cargando=false);
                                                         "
                                                         class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-chardon hover:bg-red-500 hover:text-white text-omg-kashmir rounded-lg text-xs font-body transition-colors">
