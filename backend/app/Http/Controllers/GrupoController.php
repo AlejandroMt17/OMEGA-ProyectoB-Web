@@ -30,6 +30,17 @@ class GrupoController extends Controller
         return response()->json(['data' => $creado], 201);
     }
 
+    /**
+     * POST /api/instituciones/{idInstitucion}/grupos
+     * Versión para la app móvil que recibe el id_institucion en la URL.
+     */
+    public function storeParaInstitucion(Request $request, int $idInstitucion): JsonResponse
+    {
+        $datos = array_merge($request->all(), ['id_institucion' => $idInstitucion]);
+        $creado = $this->grupos->crear($datos, $request->user());
+        return response()->json(['data' => $creado], 201);
+    }
+
     public function show(Request $request, Grupo $grupo): JsonResponse
     {
         return response()->json([
