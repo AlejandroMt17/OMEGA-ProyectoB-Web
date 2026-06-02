@@ -60,87 +60,95 @@
 
 {{-- Lista de rubros --}}
 <div class="bg-white rounded-xl border border-omg-kashmir-dark overflow-hidden max-w-lg">
-    <table class="w-full">
-        <thead>
-            <tr class="border-b border-omg-kashmir-dark bg-omg-chardon">
-                <th class="text-left px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Rubro</th>
-                <th class="text-center px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">% Mínimo</th>
-                <th class="text-right px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Acciones</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-omg-kashmir-dark">
-            @forelse ($rubros as $rubro)
-                <tr class="hover:bg-omg-chardon transition-colors" x-data="{ editando: false }">
-                    <td class="px-5 py-4">
-                        <form id="form-{{ $rubro->id_rubro }}" method="POST"
-                              action="{{ route('ca.rubros.update', [$institucion->id_institucion, $rubro->id_rubro]) }}">
-                            @csrf @method('PUT')
-                            <div x-show="!editando">
-                                <p class="text-sm font-body font-semibold text-omg-dark">{{ $rubro->nombre }}</p>
-                            </div>
-                            <div x-show="editando" class="flex gap-2">
-                                <input type="text" name="nombre" value="{{ $rubro->nombre }}"
-                                       class="px-2 py-1 border border-omg-kashmir rounded text-sm font-body w-32"/>
-                                <input type="number" name="porcentaje_minimo" value="{{ $rubro->porcentaje_minimo }}"
-                                       min="0" max="100" step="0.5"
-                                       class="px-2 py-1 border border-omg-kashmir rounded text-sm font-body w-20"/>
-                            </div>
-                        </form>
-                    </td>
-                    <td class="px-5 py-4 text-center">
-                        <span x-show="!editando"
-                              class="bg-omg-pastel text-omg-nile text-xs font-body px-2 py-1 rounded-full font-semibold">
-                            {{ number_format($rubro->porcentaje_minimo, 0) }}%
-                        </span>
-                    </td>
-                    <td class="px-5 py-4">
-                        <div class="flex items-center justify-end gap-2">
-                            <button x-show="!editando" @click="editando = true"
-                                class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-pastel hover:bg-omg-nile hover:text-white text-omg-nile rounded-lg text-xs font-body transition-colors">
-                                <i class="fa-regular fa-pen-to-square"></i> Editar
+    <div class="divide-y divide-omg-kashmir-dark">
+        {{-- Encabezado --}}
+        <div class="grid grid-cols-12 bg-omg-chardon px-5 py-3 gap-2">
+            <div class="col-span-5 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Rubro</div>
+            <div class="col-span-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide text-center">% Mínimo</div>
+            <div class="col-span-4 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide text-right">Acciones</div>
+        </div>
+
+        @forelse ($rubros as $rubro)
+            <div class="px-5 py-4 hover:bg-omg-chardon transition-colors"
+                 x-data="{ editando: false, nombre: '{{ addslashes($rubro->nombre) }}', pct: {{ $rubro->porcentaje_minimo }} }">
+
+                {{-- Vista normal --}}
+                <div x-show="!editando" class="grid grid-cols-12 items-center gap-2">
+                    <div class="col-span-5">
+                        <p class="text-sm font-body font-semibold text-omg-dark" x-text="nombre"></p>
+                    </div>
+                    <div class="col-span-3 text-center">
+                        <span class="bg-omg-pastel text-omg-nile text-xs font-body px-2 py-1 rounded-full font-semibold"
+                              x-text="pct + '%'"></span>
+                    </div>
+                    <div class="col-span-4 flex items-center justify-end gap-1.5">
+                        <button @click="editando = true"
+                            class="flex items-center gap-1 px-2.5 py-1.5 bg-omg-pastel hover:bg-omg-nile hover:text-white text-omg-nile rounded-lg text-xs font-body transition-colors">
+                            <i class="fa-regular fa-pen-to-square"></i> Editar
+                        </button>
+                        <div x-data="{ open: false }">
+                            <button type="button" @click="open = true"
+                                class="flex items-center gap-1 px-2.5 py-1.5 bg-red-50 hover:bg-red-500 hover:text-white text-red-500 rounded-lg text-xs font-body transition-colors">
+                                <i class="fa-solid fa-trash"></i>
                             </button>
-                            <button x-show="editando"
-                                @click="document.getElementById('form-{{ $rubro->id_rubro }}').submit()"
-                                class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-coral text-white rounded-lg text-xs font-body transition-colors">
-                                <i class="fa-solid fa-check"></i> Guardar
-                            </button>
-                            <button x-show="editando" @click="editando = false"
-                                class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-pastel text-omg-nile rounded-lg text-xs font-body transition-colors">
-                                <i class="fa-solid fa-ban"></i>
-                            </button>
-                            <div x-data="{ open: false }">
-                                <button type="button" @click="open = true"
-                                    class="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-500 hover:text-white text-red-500 rounded-lg text-xs font-body transition-colors">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
-                                <div x-show="open" x-transition class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-                                    <div class="bg-white rounded-2xl p-6 max-w-xs w-full mx-4 shadow-xl">
-                                        <p class="text-sm font-heading font-semibold text-omg-nile mb-2">¿Eliminar rubro?</p>
-                                        <p class="text-xs font-body text-omg-kashmir mb-4">Esta acción no se puede deshacer.</p>
-                                        <div class="flex gap-3">
-                                            <button @click="open = false" class="flex-1 py-2 bg-omg-chardon text-omg-nile font-heading font-semibold rounded-lg text-sm">Cancelar</button>
-                                            <form method="POST" action="{{ route('ca.rubros.destroy', [$institucion->id_institucion, $rubro->id_rubro]) }}" class="flex-1">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="w-full py-2 bg-red-500 text-white font-heading font-semibold rounded-lg text-sm">Eliminar</button>
-                                            </form>
-                                        </div>
+                            <div x-show="open" x-transition class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+                                <div class="bg-white rounded-2xl p-6 max-w-xs w-full mx-4 shadow-xl">
+                                    <p class="text-sm font-heading font-semibold text-omg-nile mb-2">¿Eliminar rubro?</p>
+                                    <p class="text-xs font-body text-omg-kashmir mb-4">Esta acción no se puede deshacer.</p>
+                                    <div class="flex gap-3">
+                                        <button @click="open = false" class="flex-1 py-2 bg-omg-chardon text-omg-nile font-heading font-semibold rounded-lg text-sm">Cancelar</button>
+                                        <form method="POST" action="{{ route('ca.rubros.destroy', [$institucion->id_institucion, $rubro->id_rubro]) }}" class="flex-1">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="w-full py-2 bg-red-500 text-white font-heading font-semibold rounded-lg text-sm">Eliminar</button>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="3" class="px-5 py-10 text-center">
-                        <i class="fa-solid fa-chart-pie text-omg-kashmir fa-2x mb-3"></i>
-                        <p class="text-sm font-body text-omg-kashmir">No hay rubros configurados</p>
-                        <p class="text-xs font-body text-omg-kashmir mt-1">Agrega el primero con el formulario de arriba</p>
-                    </td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+                    </div>
+                </div>
+
+                {{-- Vista edición inline --}}
+                <div x-show="editando">
+                    <form method="POST" action="{{ route('ca.rubros.update', [$institucion->id_institucion, $rubro->id_rubro]) }}">
+                        @csrf @method('PUT')
+                        <div class="flex flex-col gap-3">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-xs font-body text-omg-kashmir mb-1">Nombre</label>
+                                    <input type="text" name="nombre" x-model="nombre" required
+                                           class="w-full px-3 py-1.5 border border-omg-nile rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile"/>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-body text-omg-kashmir mb-1">% Mínimo</label>
+                                    <input type="number" name="porcentaje_minimo" x-model="pct"
+                                           min="0" max="100" step="0.5" required
+                                           class="w-full px-3 py-1.5 border border-omg-nile rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile"/>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 justify-end">
+                                <button type="button" @click="editando = false; nombre = '{{ addslashes($rubro->nombre) }}'; pct = {{ $rubro->porcentaje_minimo }}"
+                                    class="flex items-center gap-1 px-3 py-1.5 bg-omg-chardon text-omg-nile rounded-lg text-xs font-body hover:bg-omg-pastel transition-colors">
+                                    <i class="fa-solid fa-xmark"></i> Cancelar
+                                </button>
+                                <button type="submit"
+                                    class="flex items-center gap-1 px-3 py-1.5 bg-omg-coral text-white rounded-lg text-xs font-body hover:bg-omg-coral-dark transition-colors">
+                                    <i class="fa-solid fa-check"></i> Guardar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        @empty
+            <div class="px-5 py-10 text-center">
+                <i class="fa-solid fa-chart-pie text-omg-kashmir fa-2x mb-3"></i>
+                <p class="text-sm font-body text-omg-kashmir">No hay rubros configurados</p>
+                <p class="text-xs font-body text-omg-kashmir mt-1">Agrega el primero con el formulario de arriba</p>
+            </div>
+        @endforelse
+    </div>
 </div>
+
 
 @endsection
