@@ -88,6 +88,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // ── Alumnos en grupos (gestión docente) ────────────────────────────────
     Route::get('grupos/{idGrupo}/alumnos',       [GrupoAlumnoController::class, 'index']);
     Route::delete('grupo-alumnos/{grupoAlumno}', [GrupoAlumnoController::class, 'destroy']);
+    Route::delete('grupos/{idGrupo}/alumnos/{idAlumno}', [GrupoAlumnoController::class, 'destroyPorGrupoAlumno']);
 
     // ── Sesiones ───────────────────────────────────────────────────────────
     // IMPORTANTE: la ruta /activa debe ir ANTES de /abrir para no colisionar

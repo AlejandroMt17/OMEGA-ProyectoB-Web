@@ -33,6 +33,16 @@ class GrupoAlumnoController extends Controller
     public function destroy(Request $request, GrupoAlumno $grupoAlumno): JsonResponse
     {
         $this->grupoAlumnos->eliminar($grupoAlumno, $request->user());
-        return response()->noContent();
+        return response()->json(['message' => 'Alumno eliminado del grupo']);
+    }
+
+    public function destroyPorGrupoAlumno(Request $request, int $idGrupo, int $idAlumno): JsonResponse
+    {
+        $grupoAlumno = \App\Models\GrupoAlumno::where('id_grupo', $idGrupo)
+            ->where('id_alumno', $idAlumno)
+            ->firstOrFail();
+
+        $this->grupoAlumnos->eliminar($grupoAlumno, $request->user());
+        return response()->json(['message' => 'Alumno eliminado del grupo']);
     }
 }
