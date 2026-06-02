@@ -54,8 +54,12 @@
                             <p class="text-xs font-body text-omg-kashmir mt-0.5">
                                 <i class="fa-regular fa-clock mr-1"></i>
                                 @foreach ($grupo->horario as $h)
-                                    <span>{{ ['L'=>'Lun','M'=>'Mar','X'=>'Mié','J'=>'Jue','V'=>'Vie','S'=>'Sáb','D'=>'Dom'][$h['dia']] ?? $h['dia'] }}
-                                    {{ $h['hora_inicio'] }}–{{ $h['hora_fin'] }}</span>@if (!$loop->last), @endif
+                                    @if (isset($h['dia']))
+                                        <span>{{ ['L'=>'Lun','M'=>'Mar','X'=>'Mié','J'=>'Jue','V'=>'Vie','S'=>'Sáb','D'=>'Dom'][$h['dia']] ?? $h['dia'] }}
+                                        {{ $h['hora_inicio'] }}–{{ $h['hora_fin'] }}</span>@if (!$loop->last), @endif
+                                    @elseif (isset($h['texto']))
+                                        <span>{{ $h['texto'] }}</span>
+                                    @endif
                                 @endforeach
                             </p>
                         @endif
