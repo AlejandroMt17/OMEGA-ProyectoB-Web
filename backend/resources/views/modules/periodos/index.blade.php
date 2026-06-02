@@ -28,6 +28,12 @@
         <p class="text-sm font-body text-omg-dark">{{ session('success') }}</p>
     </div>
 @endif
+@if (session('error'))
+    <div class="flex items-center gap-3 bg-white border border-orange-200 rounded-lg px-4 py-3 mb-6">
+        <i class="fa-solid fa-triangle-exclamation text-orange-500"></i>
+        <p class="text-sm font-body text-omg-dark">{{ session('error') }}</p>
+    </div>
+@endif
 
 {{-- Agregar periodo --}}
 <div class="bg-white rounded-xl border border-omg-kashmir-dark p-5 mb-6"
@@ -48,18 +54,27 @@
 
     {{-- Opciones rápidas --}}
     @php
-        $periodosExistentes = $periodos->pluck('nombre')->toArray();
+        $periodosExistentes = $periodos->pluck('nombre')->map(fn($n) => strtolower(trim($n)))->toArray();
     @endphp
-    <div class="flex flex-wrap gap-2 mb-4">
+    <div class="flex flex-wrap gap-2 mb-4"
+         x-data="{ existentes: @json($periodosExistentes) }">
         <template x-for="op in opciones" :key="op">
-            <form method="POST" action="{{ route('ca.periodos.store', $institucion->id_institucion) }}">
-                @csrf
-                <input type="hidden" name="nombre" :value="op">
-                <button type="submit"
-                        class="px-3 py-1.5 border rounded-lg text-xs font-body transition-colors bg-white text-omg-nile border-omg-kashmir hover:border-omg-nile hover:bg-omg-chardon"
-                        x-text="op">
-                </button>
-            </form>
+            <span>
+                <form x-show="!existentes.includes(op.toLowerCase())"
+                      method="POST" action="{{ route('ca.periodos.store', $institucion->id_institucion) }}">
+                    @csrf
+                    <input type="hidden" name="nombre" :value="op">
+                    <button type="submit"
+                            class="px-3 py-1.5 border rounded-lg text-xs font-body transition-colors bg-white text-omg-nile border-omg-kashmir hover:border-omg-nile hover:bg-omg-chardon"
+                            x-text="op">
+                    </button>
+                </form>
+                <span x-show="existentes.includes(op.toLowerCase())"
+                      class="px-3 py-1.5 border border-green-300 rounded-lg text-xs font-body bg-green-50 text-green-600 flex items-center gap-1">
+                    <i class="fa-solid fa-check text-xs"></i>
+                    <span x-text="op"></span>
+                </span>
+            </span>
         </template>
     </div>
 
