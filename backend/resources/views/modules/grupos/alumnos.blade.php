@@ -18,6 +18,11 @@
         <span class="bg-omg-pastel text-omg-nile text-sm font-body px-3 py-1.5 rounded-lg">
             {{ $alumnos->count() }} / {{ $grupo->no_alumnos }} alumnos
         </span>
+        <a href="{{ route('ca.dashboard.index') }}"
+           class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-omg-kashmir-dark hover:bg-omg-chardon text-omg-nile rounded-lg text-sm font-body transition-colors">
+            <i class="fa-solid fa-arrow-left text-xs"></i>
+            Volver
+        </a>
     </div>
 </div>
 
