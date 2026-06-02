@@ -43,7 +43,7 @@
         <label class="text-xs font-body text-omg-kashmir">Ordenar sesiones:</label>
         <select onchange="window.location.href='{{ route('ca.reportes.detalle', $grupo->id_grupo) }}?orden=' + this.value"
                 class="px-3 py-2 bg-white border border-omg-kashmir rounded-lg text-sm font-body focus:outline-none">
-            <option value="asc"  {{ ($orden ?? 'asc') === 'asc'  ? 'selected' : '' }}>Primera primero</option>
+            <option value="asc"  {{ ($orden ?? 'asc') === 'asc'  ? 'selected' : '' }}>Más antigua primero</option>
             <option value="desc" {{ ($orden ?? 'asc') === 'desc' ? 'selected' : '' }}>Más reciente primero</option>
         </select>
     </div>
@@ -163,7 +163,7 @@
              return 'text-red-500';
          }
      }"
-     x-init="abierto && cargar()">
+     x-init="cargar()">
 
     <button @click="abierto = !abierto; if(abierto && alumnos.length === 0) cargar()"
             class="w-full flex items-center justify-between px-5 py-4 hover:bg-omg-chardon transition-colors">

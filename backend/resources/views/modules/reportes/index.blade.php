@@ -138,7 +138,7 @@
                             <p class="text-xs font-body text-omg-kashmir mt-0.5"
                                x-text="r.periodo + ' · ' + r.total_sesiones + ' sesión(es)'"></p>
                             {{-- Porcentaje debajo del periodo --}}
-                            <p class="text-sm font-heading font-bold mt-1 text-omg-dark"
+                            <p class="text-sm font-heading font-bold mt-1 text-omg-nile"
                                x-text="'Porcentaje de asistencias totales: ' + r.porcentaje + '%'"></p>
                         </div>
                         <a :href="r.url_detalle"
