@@ -69,7 +69,17 @@ class GrupoService
 
     private function validar(array $entrada): array
     {
-        // Construir el array de horario desde los campos del formulario
+        // Si la app manda horario como string, convertirlo a array simple
+        if (isset($entrada['horario']) && is_string($entrada['horario'])) {
+            $horarioStr = trim($entrada['horario']);
+            if (!empty($horarioStr)) {
+                $entrada['horario'] = [['texto' => $horarioStr]];
+            } else {
+                $entrada['horario'] = null;
+            }
+        }
+
+        // Construir el array de horario desde los campos del formulario (web)
         if (isset($entrada['horario_dias'])) {
             $horario  = [];
             $diasUsados = [];
@@ -77,7 +87,6 @@ class GrupoService
                 $hi = $entrada['horario_inicio'][$i] ?? null;
                 $hf = $entrada['horario_fin'][$i] ?? null;
                 if (!$dia || !$hi || !$hf) continue;
-                // Ignorar días duplicados — tomar solo el primero
                 if (in_array($dia, $diasUsados)) continue;
                 $diasUsados[] = $dia;
                 $horario[] = [
@@ -89,16 +98,23 @@ class GrupoService
             $entrada['horario'] = !empty($horario) ? $horario : null;
         }
 
+        // Campos opcionales de la app móvil
+        if (!isset($entrada['no_alumnos'])) {
+            $entrada['no_alumnos'] = 30; // valor por defecto
+        }
+        if (!isset($entrada['id_institucion'])) {
+            $entrada['id_institucion'] = $entrada['institucion_id'] ?? null;
+        }
+
         $validator = Validator::make($entrada, [
             'id_institucion' => ['required', 'integer', 'exists:instituciones,id_institucion'],
             'nombre'         => ['required', 'string', 'max:100'],
             'materia'        => ['required', 'string', 'max:150'],
             'periodo'        => ['required', 'string', 'max:50'],
             'no_alumnos'     => ['required', 'integer', 'min:1'],
-            'horario'        => ['required', 'array', 'min:1'],
+            'horario'        => ['nullable', 'array'],
         ], [
             'horario.required' => 'Debes agregar al menos un día de clases',
-            'horario.min'      => 'Debes agregar al menos un día de clases',
         ]);
 
         if ($validator->fails()) {
