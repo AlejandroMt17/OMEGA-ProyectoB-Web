@@ -31,7 +31,7 @@ class AuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         $this->auth->logout($request->user());
-        return response()->noContent();
+        return response()->json(['message' => 'Sesión cerrada correctamente']);
     }
 
     public function me(Request $request): JsonResponse
