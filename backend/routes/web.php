@@ -103,7 +103,8 @@ Route::prefix('p/ca')->group(function () {
         // Reportes
         Route::get('reportes',                [ReporteWebController::class, 'index'])->middleware('plan.basico:reportes')->name('ca.reportes.index');
         Route::get('reportes-json',           [ReporteWebController::class, 'indexJson'])->middleware('plan.basico:reportes')->name('ca.reportes.json');
-        Route::get('reportes/{idGrupo}/alumnos-json', [ReporteWebController::class, 'alumnosJson'])->name('ca.reportes.alumnos.json');
+        Route::get('reportes/{idGrupo}/alumnos-json',  [ReporteWebController::class, 'alumnosJson'])->name('ca.reportes.alumnos.json');
+        Route::get('reportes/{idGrupo}/sesiones-json', [ReporteWebController::class, 'sesionesJson'])->name('ca.reportes.sesiones.json');
         Route::get('reportes/{idGrupo}',      [ReporteWebController::class, 'detalle'])->name('ca.reportes.detalle');
         Route::get('reportes/{idGrupo}/excel',  [ReporteWebController::class, 'exportarExcel'])->name('ca.reportes.excel');
         Route::get('reportes/{idGrupo}/pdf',    [ReporteWebController::class, 'exportarPdf'])->name('ca.reportes.pdf');

@@ -155,6 +155,33 @@ class ReporteWebController extends Controller
     /**
      * RF-06 — Exportar reporte de asistencia por alumno en Excel.
      */
+    public function sesionesJson(Request $request, int $idGrupo)
+    {
+        $grupo = $this->grupos->buscarPorId($idGrupo);
+        abort_if(!$grupo || $grupo->id_docente !== Auth::user()->id_usuario, 403);
+
+        $orden = $request->query('orden', 'asc');
+
+        $sesiones = Sesion::where('id_grupo', $idGrupo)
+            ->orderBy('fec_sesion', $orden === 'desc' ? 'desc' : 'asc')
+            ->get()
+            ->map(function ($sesion, $i) {
+                return [
+                    'num'       => $i + 1,
+                    'fecha'     => $sesion->fec_sesion->format('d/m/Y'),
+                    'hora_a'    => $sesion->hora_apertura->format('H:i'),
+                    'hora_c'    => $sesion->hora_cierre?->format('H:i'),
+                    'activa'    => $sesion->est_sesion === 1,
+                    'presentes' => Asistencia::where('id_sesion', $sesion->id_sesion)->where('est_asistencia', 1)->count(),
+                    'ausentes'  => Asistencia::where('id_sesion', $sesion->id_sesion)->where('est_asistencia', 2)->count(),
+                    'justif'    => Asistencia::where('id_sesion', $sesion->id_sesion)->where('est_asistencia', 3)->count(),
+                    'url'       => route('ca.sesiones.asistencias', $sesion->id_sesion),
+                ];
+            });
+
+        return response()->json($sesiones->values());
+    }
+
     public function alumnosJson(Request $request, int $idGrupo)
     {
         $grupo = $this->grupos->buscarPorId($idGrupo);
