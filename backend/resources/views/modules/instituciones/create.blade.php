@@ -105,7 +105,7 @@
                     <div x-show="logo.trim().length > 0" class="mt-3 flex items-center gap-3">
                         <img :src="logo" alt="Vista previa"
                              class="w-16 h-16 object-contain rounded-lg border border-omg-kashmir-dark bg-omg-chardon p-1"
-                             @error="$el.src=''; $el.closest('div').querySelector('p').textContent='URL no válida'"
+                             @@error="$el.src=''; $el.closest('div').querySelector('p').textContent='URL no válida'"
                         />
                         <p class="text-xs font-body text-omg-kashmir">Vista previa del logotipo</p>
                     </div>
