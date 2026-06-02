@@ -20,12 +20,18 @@ class AuthService
 
     public function registro(array $entrada): array
     {
+        // Aceptar 'password' como alias de 'contrasenia' (app móvil)
+        if (!isset($entrada['contrasenia']) && isset($entrada['password'])) {
+            $entrada['contrasenia']              = $entrada['password'];
+            $entrada['contrasenia_confirmation'] = $entrada['password_confirmation'] ?? $entrada['password'];
+        }
+
         $validator = Validator::make($entrada, [
             'nombre'      => ['required', 'string', 'max:100'],
             'ap_pat'      => ['required', 'string', 'max:100'],
             'ap_mat'      => ['required', 'string', 'max:100'],
             'email'       => ['required', 'email', 'max:200', 'unique:usuarios,email'],
-            'contrasenia' => ['required', 'string', 'min:8', 'confirmed'],
+            'contrasenia' => ['required', 'string', 'min:6'],
             'rol'         => ['required', 'integer', 'in:1,2'],
         ]);
 
@@ -45,6 +51,11 @@ class AuthService
 
     public function login(array $entrada): array
     {
+        // Aceptar 'password' como alias de 'contrasenia' (app móvil)
+        if (!isset($entrada['contrasenia']) && isset($entrada['password'])) {
+            $entrada['contrasenia'] = $entrada['password'];
+        }
+
         $validator = Validator::make($entrada, [
             'email'       => ['required', 'email'],
             'contrasenia' => ['required', 'string'],
