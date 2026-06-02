@@ -8,11 +8,17 @@
 @section('content')
 
 {{-- Título --}}
-<div class="mb-6">
-    <h1 class="text-2xl font-heading font-semibold text-omg-nile">Editar Aula</h1>
-    <p class="text-sm font-body text-omg-kashmir mt-1">
-        Modifica la información de {{ $grupo->nombre }} — {{ $grupo->materia }}
-    </p>
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-2xl font-heading font-semibold text-omg-nile">Editar Aula</h1>
+        <p class="text-sm font-body text-omg-kashmir mt-1">
+            Modifica la información de {{ $grupo->nombre }} — {{ $grupo->materia }}
+        </p>
+    </div>
+    <a href="{{ route('ca.grupos.index') }}"
+       class="flex items-center gap-1.5 px-3 py-2.5 bg-white border border-omg-kashmir-dark hover:bg-omg-chardon text-omg-nile rounded-lg text-sm font-body transition-colors">
+        <i class="fa-solid fa-arrow-left text-xs"></i> Volver
+    </a>
 </div>
 
 {{-- Formulario --}}

@@ -26,10 +26,15 @@
         </p>
     </div>
 
-    {{-- Botón abrir sesión --}}
+    {{-- Botones --}}
     @php
         $sesionActiva = $sesiones->firstWhere('est_sesion', 1);
     @endphp
+    <div class="flex items-center gap-2">
+        <a href="{{ route('ca.grupos.index') }}"
+           class="flex items-center gap-1.5 px-3 py-2.5 bg-white border border-omg-kashmir-dark hover:bg-omg-chardon text-omg-nile rounded-lg text-sm font-body transition-colors">
+            <i class="fa-solid fa-arrow-left text-xs"></i> Volver
+        </a>
 
     @if (!$sesionActiva)
         <form method="POST" action="{{ route('ca.grupos.sesiones.abrir', $grupo->id_grupo) }}">
@@ -108,6 +113,7 @@
         </script>
         @endpush
     @endif
+    </div>{{-- /flex botones --}}
 </div>
 
 {{-- Sesión activa banner --}}
