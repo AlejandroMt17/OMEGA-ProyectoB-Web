@@ -8,11 +8,21 @@
 @section('content')
 
 {{-- Título --}}
-<div class="mb-6">
-    <h1 class="text-2xl font-heading font-semibold text-omg-nile">Mi Suscripción</h1>
-    <p class="text-sm font-body text-omg-kashmir mt-1">
-        Gestiona tu plan y métodos de pago
-    </p>
+<div class="flex items-start justify-between mb-6">
+    <div>
+        <h1 class="text-2xl font-heading font-semibold text-omg-nile">Mi Suscripción</h1>
+        <p class="text-sm font-body text-omg-kashmir mt-1">Gestiona tu plan y métodos de pago</p>
+    </div>
+    <div class="flex items-center gap-2">
+        <a href="{{ route('ca.dashboard.index') }}"
+           class="flex items-center gap-2 px-4 py-2.5 bg-omg-chardon hover:bg-omg-pastel text-omg-nile font-heading font-semibold rounded-lg transition-colors text-sm">
+            <i class="fa-solid fa-house"></i> Inicio
+        </a>
+        <a href="javascript:history.back()"
+           class="flex items-center gap-2 px-4 py-2.5 bg-omg-chardon hover:bg-omg-pastel text-omg-nile font-heading font-semibold rounded-lg transition-colors text-sm">
+            <i class="fa-solid fa-arrow-left"></i> Volver
+        </a>
+    </div>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
