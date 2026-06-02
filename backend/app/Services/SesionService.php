@@ -197,14 +197,25 @@ class SesionService
      */
     private function serializar(Sesion $sesion): array
     {
+        // Calcular estadísticas de asistencia para el historial
+        $asistencias  = $sesion->asistencias ?? \App\Models\Asistencia::where('id_sesion', $sesion->id_sesion)->get();
+        $presentes    = $asistencias->where('est_asistencia', 1)->count();
+        $faltas       = $asistencias->where('est_asistencia', 2)->count();
+        $justificadas = $asistencias->where('est_asistencia', 3)->count();
+        $totalAlumnos = \App\Models\GrupoAlumno::where('id_grupo', $sesion->id_grupo)->count();
+
         return [
             'id_sesion'     => $sesion->id_sesion,
             'id_grupo'      => $sesion->id_grupo,
             'clave'         => $sesion->est_sesion === 1 ? $sesion->clave : null,
             'est_sesion'    => $sesion->est_sesion,
             'fec_sesion'    => $sesion->fec_sesion?->toDateString(),
-            'hora_apertura' => $sesion->hora_apertura?->toIso8601String(),
-            'hora_cierre'   => $sesion->hora_cierre?->toIso8601String(),
+            'hora_apertura' => $sesion->hora_apertura?->format('H:i'),
+            'hora_cierre'   => $sesion->hora_cierre?->format('H:i'),
+            'total_alumnos' => $totalAlumnos,
+            'presentes'     => $presentes,
+            'faltas'        => $faltas,
+            'justificadas'  => $justificadas,
         ];
     }
 
