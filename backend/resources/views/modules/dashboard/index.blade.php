@@ -137,8 +137,8 @@
                 {{ !$filtroInst ? 'disabled' : '' }}
                 class="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-xs font-body text-omg-dark focus:outline-none {{ !$filtroInst ? 'opacity-40' : '' }}">
             <option value="">Todos los estados</option>
-            <option value="riesgo"   {{ $filtroEstado === 'riesgo'   ? 'selected' : '' }}>En riesgo</option>
-            <option value="excedido" {{ $filtroEstado === 'excedido' ? 'selected' : '' }}>Límite excedido</option>
+            <option value="riesgo"   {{ $filtroEstado === 'riesgo'   ? 'selected' : '' }}>🟢 Dentro del margen de riesgo</option>
+            <option value="excedido" {{ $filtroEstado === 'excedido' ? 'selected' : '' }}>🟡 Perdió primera evaluación / 🔴 Perdió segunda</option>
         </select>
 
         @if ($filtroInst || $filtroGrupo || $filtroEstado)
@@ -150,7 +150,7 @@
     </form>
 
     {{-- Leyenda de colores (solo si hay institución seleccionada) --}}
-    @if ($filtroInst)
+    @if (!empty($filtroInst))
     <div class="px-5 py-3 bg-white border-b border-orange-100 space-y-1.5">
         <div class="flex items-start gap-2">
             <span class="mt-0.5 inline-block w-2.5 h-2.5 rounded-full bg-green-400 flex-shrink-0"></span>
