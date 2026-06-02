@@ -30,8 +30,9 @@
         if (this.rubros.length > 1) this.rubros.splice(i, 1);
     },
     agregarPeriodo(nombre) {
-        if (nombre) {
-            this.periodos = [nombre]; // solo 1 periodo
+        const n = nombre.trim();
+        if (n && !this.periodos.map(p => p.toLowerCase()).includes(n.toLowerCase())) {
+            this.periodos.push(n);
         }
     },
     eliminarPeriodo(i) {
@@ -97,10 +98,17 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-body text-omg-dark mb-1">URL del logotipo <span class="text-omg-kashmir text-xs">(opcional)</span></label>
+                    <label class="block text-sm font-body text-omg-dark mb-1">URL del logotipo <span class="text-red-500">*</span></label>
                     <input type="text" name="logo" x-model="logo"
                            placeholder="https://ejemplo.com/logo.png"
                            class="w-full px-4 py-2.5 bg-white border border-omg-kashmir rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile"/>
+                    <div x-show="logo.trim().length > 0" class="mt-3 flex items-center gap-3">
+                        <img :src="logo" alt="Vista previa"
+                             class="w-16 h-16 object-contain rounded-lg border border-omg-kashmir-dark bg-omg-chardon p-1"
+                             @error="$el.src=''; $el.closest('div').querySelector('p').textContent='URL no válida'"
+                        />
+                        <p class="text-xs font-body text-omg-kashmir">Vista previa del logotipo</p>
+                    </div>
                 </div>
             </div>
 
@@ -185,10 +193,10 @@
             <div class="flex flex-wrap gap-2 mb-4">
                 <template x-for="op in periodosOpciones" :key="op">
                     <button type="button"
-                            @click="periodos[0] === op ? periodos = [] : agregarPeriodo(op)"
-                            :class="periodos[0] === op ? 'bg-omg-nile text-white border-omg-nile' : 'bg-white text-omg-nile border-omg-kashmir hover:border-omg-nile'"
+                            @click="periodos.map(p=>p.toLowerCase()).includes(op.toLowerCase()) ? periodos = periodos.filter(p=>p.toLowerCase()!==op.toLowerCase()) : agregarPeriodo(op)"
+                            :class="periodos.map(p=>p.toLowerCase()).includes(op.toLowerCase()) ? 'bg-omg-nile text-white border-omg-nile' : 'bg-white text-omg-nile border-omg-kashmir hover:border-omg-nile'"
                             class="px-3 py-1.5 border rounded-lg text-xs font-body transition-colors">
-                        <i class="fa-solid fa-check mr-1" x-show="periodos[0] === op"></i>
+                        <i class="fa-solid fa-check mr-1" x-show="periodos.map(p=>p.toLowerCase()).includes(op.toLowerCase())"></i>
                         <span x-text="op"></span>
                     </button>
                 </template>
@@ -206,7 +214,7 @@
                            placeholder="Ej: Feb-Jul 2026"
                            class="flex-1 px-3 py-1.5 bg-white border border-omg-kashmir rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile"/>
                     <button type="button"
-                            @click="agregarPeriodo(periodoPersonalizado); periodoPersonalizado = ''; mostrarPersonalizado = false"
+                            @click="if(periodoPersonalizado.trim() && !periodos.map(p=>p.toLowerCase()).includes(periodoPersonalizado.trim().toLowerCase())) { agregarPeriodo(periodoPersonalizado); periodoPersonalizado = ''; mostrarPersonalizado = false; } else if(periodos.map(p=>p.toLowerCase()).includes(periodoPersonalizado.trim().toLowerCase())) { alert('Este periodo ya fue agregado') }"
                             class="px-3 py-1.5 bg-omg-coral text-white rounded-lg text-sm font-body hover:bg-omg-coral-dark transition-colors">
                         Agregar
                     </button>
