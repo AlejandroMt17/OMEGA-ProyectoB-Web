@@ -187,16 +187,28 @@ class DashboardController extends Controller
                 if (!$perdio && $pct > 90.0 && !$enRiesgoProyectado) continue;
 
                 if ($perdio || ($faltasRestantes <= 2 && $faltasPermitidas > 0) || $enRiesgoProyectado) {
+                    // Calcular a qué rubro tiene derecho según su porcentaje actual
+                    // Los rubros vienen ordenados descendente (más exigente primero)
+                    // Se busca el primer rubro cuyo mínimo el alumno SÍ cumple
+                    $rubroConDerecho = $rubros->first(fn($r) => $pct >= (float) $r->porcentaje_minimo);
+
                     $alumnosEnRiesgo->push([
-                        'alumno'           => $ga->alumno,
-                        'grupo'            => $ga->grupo,
-                        'porcentaje'       => $pct,
-                        'total_faltas'     => $ausentes,
-                        'faltas_restantes' => $faltasRestantes,
-                        'perdio'           => $perdio,
-                        'rubro_principal'  => $nombrePrincipal,
-                        'pct_principal'    => $pctPrincipal,
-                        'id_institucion'   => $ga->grupo->id_institucion,
+                        'alumno'             => $ga->alumno,
+                        'grupo'              => $ga->grupo,
+                        'porcentaje'         => $pct,
+                        'total_faltas'       => $ausentes,
+                        'faltas_restantes'   => $faltasRestantes,
+                        'perdio'             => $perdio,
+                        'rubro_principal'    => $nombrePrincipal,
+                        'pct_principal'      => $pctPrincipal,
+                        'id_institucion'     => $ga->grupo->id_institucion,
+                        // Rubros ordenados desc para la vista (índice 0 = más exigente)
+                        'rubros'             => $rubros->values(),
+                        // Índice del rubro al que tiene derecho (null = sin derecho)
+                        'idx_rubro_derecho'  => $rubroConDerecho
+                            ? $rubros->search(fn($r) => $r->id_rubro === $rubroConDerecho->id_rubro)
+                            : null,
+                        'nombre_rubro_derecho' => $rubroConDerecho?->nombre,
                     ]);
                 }
             }
