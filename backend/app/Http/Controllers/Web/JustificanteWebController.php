@@ -127,6 +127,7 @@ class JustificanteWebController extends Controller
                                 'estado'        => $a->est_asistencia,
                                 'url_justificar' => route('ca.justificantes.justificar', $a->id_asistencia),
                                 'url_ausente'    => route('ca.justificantes.ausente',    $a->id_asistencia),
+                                'cargando'       => false,
                             ];
                         })->values(),
                     ];
