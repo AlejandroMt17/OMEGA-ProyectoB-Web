@@ -103,7 +103,7 @@ class InstitucionWebController extends Controller
     /**
      * Guarda la institución activa en sesión y redirige a Mis Aulas.
      */
-    public function seleccionar(int $id)
+    public function seleccionar(int $id, Request $request)
     {
         $institucion = $this->repo->buscarPorId($id);
 
@@ -115,6 +115,15 @@ class InstitucionWebController extends Controller
             'institucion_id'     => $institucion->id_institucion,
             'institucion_nombre' => $institucion->nombre,
         ]);
+
+        // Si es AJAX, solo confirmar — no redirigir
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'ok'     => true,
+                'nombre' => $institucion->nombre,
+                'id'     => $institucion->id_institucion,
+            ]);
+        }
 
         return redirect()->route('ca.grupos.index');
     }

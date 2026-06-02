@@ -3,21 +3,11 @@
 @section('content')
 
 {{-- Header --}}
-<div class="flex items-start justify-between mb-6">
-    <div>
+<div class="mb-6">
         <h1 class="text-2xl font-heading font-semibold text-omg-nile">Justificantes</h1>
         <p class="text-sm font-body text-omg-kashmir mt-1">Gestiona las ausencias y justificantes de tus alumnos</p>
     </div>
-    <div class="flex items-center gap-2">
-        <a href="{{ route('ca.dashboard.index') }}"
-           class="flex items-center gap-2 px-4 py-2.5 bg-omg-chardon hover:bg-omg-pastel text-omg-nile font-heading font-semibold rounded-lg transition-colors text-sm">
-            <i class="fa-solid fa-house"></i> Inicio
-        </a>
-        <a href="javascript:history.back()"
-           class="flex items-center gap-2 px-4 py-2.5 bg-omg-chardon hover:bg-omg-pastel text-omg-nile font-heading font-semibold rounded-lg transition-colors text-sm">
-            <i class="fa-solid fa-arrow-left"></i> Volver
-        </a>
-    </div>
+
 </div>
 
 {{-- Filtros --}}
