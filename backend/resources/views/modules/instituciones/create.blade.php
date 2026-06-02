@@ -104,10 +104,14 @@
                 </div>
             </div>
 
-            <div class="flex justify-end mt-6">
+            <div class="flex justify-between mt-6">
+                <a href="{{ route('ca.instituciones.index') }}"
+                   class="flex items-center gap-2 px-4 py-2.5 bg-omg-chardon text-omg-nile font-heading font-semibold rounded-lg text-sm hover:bg-omg-pastel transition-colors">
+                    <i class="fa-solid fa-ban"></i> Cancelar
+                </a>
                 <button type="button" @click="if(paso1Valido()) paso = 2"
-                        :class="paso1Valido() ? 'bg-omg-coral hover:bg-omg-coral-dark' : 'bg-omg-chardon text-omg-kashmir cursor-not-allowed'"
-                        class="flex items-center gap-2 px-5 py-2.5 text-white font-heading font-semibold rounded-lg transition-colors text-sm">
+                        :class="paso1Valido() ? 'bg-omg-coral hover:bg-omg-coral-dark text-white' : 'bg-omg-chardon text-omg-kashmir cursor-not-allowed'"
+                        class="flex items-center gap-2 px-5 py-2.5 font-heading font-semibold rounded-lg transition-colors text-sm">
                     Siguiente <i class="fa-solid fa-arrow-right"></i>
                 </button>
             </div>
