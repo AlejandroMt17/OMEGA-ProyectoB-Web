@@ -37,6 +37,13 @@ class InstitucionService
         return $this->serializar($institucion);
     }
 
+    public function crearModelo(array $entrada, Usuario $docente): \App\Models\Institucion
+    {
+        $datos = $this->validar($entrada);
+        $datos['id_docente'] = $docente->id_usuario;
+        return $this->instituciones->crear($datos);
+    }
+
     public function actualizar(Institucion $institucion, array $entrada, Usuario $docente): array
     {
         $this->verificarPropietario($institucion, $docente);
