@@ -77,4 +77,29 @@ class AsistenciaController extends Controller
         $actualizada = $this->asistencias->editarEstado($asistencia, $request->all());
         return response()->json(['data' => $actualizada]);
     }
+
+    /**
+     * PATCH /sesiones/{idSesion}/alumnos/{idAlumno}/asistencia
+     * Edita la asistencia de un alumno en una sesión específica.
+     */
+    public function editarPorSesionAlumno(Request $request, int $idSesion, int $idAlumno): JsonResponse
+    {
+        $asistencia = \App\Models\Asistencia::where('id_sesion', $idSesion)
+            ->where('id_alumno', $idAlumno)
+            ->first();
+
+        if (!$asistencia) {
+            // Crear la asistencia si no existe
+            $asistencia = \App\Models\Asistencia::create([
+                'id_sesion'      => $idSesion,
+                'id_alumno'      => $idAlumno,
+                'est_asistencia' => $request->input('est_asistencia', 2),
+                'hora_registro'  => now(),
+            ]);
+        } else {
+            $actualizada = $this->asistencias->editarEstado($asistencia, $request->all());
+        }
+
+        return response()->json(['data' => $asistencia->fresh()]);
+    }
 }

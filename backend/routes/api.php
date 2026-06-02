@@ -35,6 +35,7 @@ use Illuminate\Support\Facades\Route;
 
 // ─── Rutas públicas ────────────────────────────────────────────────────────
 Route::post('auth/registro', [AuthController::class, 'registro']);
+Route::post('auth/register', [AuthController::class, 'registro']); // alias app móvil
 Route::post('auth/login',    [AuthController::class, 'login']);
 
 // ─── Rutas protegidas con Sanctum ─────────────────────────────────────────
@@ -103,6 +104,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('grupos/{idGrupo}/alumnos/{idAlumno}/porcentaje', [AsistenciaController::class, 'porcentajeAlumno']);
     // Editar estado (Presente/Ausente/Justificado) — RF-67, RF-74
     Route::put('asistencias/{asistencia}/estado',         [AsistenciaController::class, 'editarEstado']);
+    Route::patch('sesiones/{idSesion}/alumnos/{idAlumno}/asistencia', [AsistenciaController::class, 'editarPorSesionAlumno']);
 
     // ── Suscripciones ──────────────────────────────────────────────────────
     Route::get('suscripcion',         [SuscripcionController::class, 'show']);
