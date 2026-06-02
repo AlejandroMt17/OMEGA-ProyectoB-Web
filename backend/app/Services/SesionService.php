@@ -175,7 +175,22 @@ class SesionService
     {
         $grupo = $this->grupos->buscarPorId($sesion->id_grupo);
         $this->verificarPropietarioGrupo($grupo, $docente);
-        return $this->serializarConEstadisticas($sesion);
+
+        $base        = $this->serializarConEstadisticas($sesion);
+        $asistencias = $this->asistencias->todasPorSesion($sesion->id_sesion);
+
+        // Incluir lista completa de asistencias para el detalle en la app
+        $base['asistencias'] = $asistencias->map(fn($a) => [
+            'id_asistencia'  => $a->id_asistencia,
+            'id_alumno'      => $a->id_alumno,
+            'nombre_alumno'  => $a->alumno
+                ? "{$a->alumno->ap_pat} {$a->alumno->ap_mat}, {$a->alumno->nombre}"
+                : null,
+            'est_asistencia' => $a->est_asistencia,
+            'hora_registro'  => $a->hora_registro?->format('H:i'),
+        ])->values()->all();
+
+        return $base;
     }
 
     // ─────────────────────────────────────────────────────────────
