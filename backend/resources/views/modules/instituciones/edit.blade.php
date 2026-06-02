@@ -99,9 +99,9 @@
         {{-- Botones --}}
         <div class="flex items-center justify-end gap-3 pt-2">
             <a href="{{ route('ca.instituciones.index') }}"
-               class="flex items-center gap-2 px-4 py-2.5 bg-omg-pastel hover:bg-omg-nile hover:text-white text-omg-nile font-heading font-semibold rounded-lg transition-colors text-sm">
-                <i class="fa-solid fa-ban"></i>
-                Cancelar
+               class="flex items-center gap-2 px-4 py-2.5 bg-omg-chardon hover:bg-omg-pastel text-omg-nile font-heading font-semibold rounded-lg transition-colors text-sm">
+                <i class="fa-solid fa-arrow-left"></i>
+                Volver
             </a>
             <button
                 type="submit"
