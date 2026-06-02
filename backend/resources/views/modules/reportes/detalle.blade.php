@@ -27,8 +27,9 @@
     </div>
 </div>
 
-{{-- Exportar --}}
-<div class="flex items-center gap-3 mb-6">
+{{-- Exportar + orden --}}
+<div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-3">
     <a href="{{ route('ca.reportes.excel', $grupo->id_grupo) }}"
        class="flex items-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white font-heading font-semibold rounded-lg transition-colors text-sm">
         <i class="fa-solid fa-file-excel"></i> Exportar Excel
@@ -37,6 +38,15 @@
        class="flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-heading font-semibold rounded-lg transition-colors text-sm">
         <i class="fa-solid fa-file-pdf"></i> Exportar PDF
     </a>
+    </div>
+    <div class="flex items-center gap-2">
+        <label class="text-xs font-body text-omg-kashmir">Ordenar sesiones:</label>
+        <select onchange="window.location.href='{{ route('ca.reportes.detalle', $grupo->id_grupo) }}?orden=' + this.value"
+                class="px-3 py-2 bg-white border border-omg-kashmir rounded-lg text-sm font-body focus:outline-none">
+            <option value="asc"  {{ ($orden ?? 'asc') === 'asc'  ? 'selected' : '' }}>Primera primero</option>
+            <option value="desc" {{ ($orden ?? 'asc') === 'desc' ? 'selected' : '' }}>Más reciente primero</option>
+        </select>
+    </div>
 </div>
 
 {{-- Sección sesiones (colapsable) --}}
@@ -102,18 +112,66 @@
     </div>
 </div>
 
-{{-- Sección alumnos (colapsable) --}}
+{{-- Sección alumnos con AJAX --}}
 <div class="bg-white rounded-xl border border-omg-kashmir-dark overflow-hidden"
-     x-data="{ abierto: false }">
+     x-data="{
+         abierto: false,
+         alumnos: [],
+         cargando: false,
+         nombre: '',
+         ordenarPor: '',
+         dir: 'desc',
+         debounce: null,
 
-    {{-- Header acordeón --}}
-    <button @click="abierto = !abierto"
+         async cargar() {
+             this.cargando = true;
+             const params = new URLSearchParams();
+             if (this.nombre)    params.set('nombre',   this.nombre);
+             if (this.ordenarPor) { params.set('ordenar', this.ordenarPor); params.set('dir', this.dir); }
+             const res = await fetch('{{ route('ca.reportes.alumnos.json', $grupo->id_grupo) }}?' + params.toString(), {
+                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
+             });
+             this.alumnos = await res.json();
+             this.cargando = false;
+         },
+
+         onNombre() {
+             clearTimeout(this.debounce);
+             this.debounce = setTimeout(() => this.cargar(), 400);
+         },
+
+         setOrden(campo) {
+             if (this.ordenarPor === campo) {
+                 this.dir = this.dir === 'desc' ? 'asc' : 'desc';
+             } else {
+                 this.ordenarPor = campo;
+                 this.dir = 'desc';
+             }
+             this.cargar();
+         },
+
+         limpiar() {
+             this.nombre = '';
+             this.ordenarPor = '';
+             this.dir = 'desc';
+             this.cargar();
+         },
+
+         colorPct(pct) {
+             if (pct >= 80) return 'text-green-600';
+             if (pct >= 60) return 'text-yellow-500';
+             return 'text-red-500';
+         }
+     }"
+     x-init="abierto && cargar()">
+
+    <button @click="abierto = !abierto; if(abierto && alumnos.length === 0) cargar()"
             class="w-full flex items-center justify-between px-5 py-4 hover:bg-omg-chardon transition-colors">
         <div class="flex items-center gap-3">
             <i class="fa-solid fa-users text-omg-nile"></i>
             <div class="text-left">
                 <p class="text-base font-heading font-semibold text-omg-nile">Detalle por alumno</p>
-                <p class="text-xs font-body text-omg-kashmir">Haz clic para ver el historial sesión a sesión de cada alumno</p>
+                <p class="text-xs font-body text-omg-kashmir mt-0.5">Historial sesión a sesión de cada alumno</p>
             </div>
         </div>
         <i class="fa-solid fa-chevron-down text-omg-kashmir transition-transform duration-200"
@@ -121,12 +179,66 @@
     </button>
 
     <div x-show="abierto" x-collapse>
+
+        {{-- Filtros AJAX --}}
+        <div class="px-5 py-3 border-t border-omg-kashmir-dark bg-omg-chardon flex flex-wrap items-end gap-3">
+            <div class="flex-1 min-w-40">
+                <label class="block text-xs font-body text-omg-kashmir mb-1">Buscar alumno</label>
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-omg-kashmir text-xs"></i>
+                    <input type="text" x-model="nombre" @input="onNombre()"
+                           placeholder="Nombre o apellido..."
+                           class="w-full pl-8 pr-3 py-1.5 bg-white border border-omg-kashmir rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile"/>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-body text-omg-kashmir mb-1">Ordenar por</label>
+                <div class="flex items-center gap-1.5">
+                    <button type="button"
+                            @click="setOrden('asistencias')"
+                            :class="ordenarPor === 'asistencias' ? 'bg-green-600 text-white border-green-600' : 'bg-white text-omg-nile border-omg-kashmir hover:border-green-600'"
+                            class="flex items-center gap-1 px-2.5 py-1.5 border rounded-lg text-xs font-body transition-colors">
+                        <i class="fa-solid fa-sort-down text-xs" x-show="ordenarPor === 'asistencias' && dir === 'desc'"></i>
+                        <i class="fa-solid fa-sort-up text-xs"   x-show="ordenarPor === 'asistencias' && dir === 'asc'"></i>
+                        Asistencias
+                    </button>
+                    <button type="button"
+                            @click="setOrden('faltas')"
+                            :class="ordenarPor === 'faltas' ? 'bg-red-500 text-white border-red-500' : 'bg-white text-omg-nile border-omg-kashmir hover:border-red-400'"
+                            class="flex items-center gap-1 px-2.5 py-1.5 border rounded-lg text-xs font-body transition-colors">
+                        <i class="fa-solid fa-sort-down text-xs" x-show="ordenarPor === 'faltas' && dir === 'desc'"></i>
+                        <i class="fa-solid fa-sort-up text-xs"   x-show="ordenarPor === 'faltas' && dir === 'asc'"></i>
+                        Faltas
+                    </button>
+                    <button type="button"
+                            @click="setOrden('justificaciones')"
+                            :class="ordenarPor === 'justificaciones' ? 'bg-omg-nile text-white border-omg-nile' : 'bg-white text-omg-nile border-omg-kashmir hover:border-omg-nile'"
+                            class="flex items-center gap-1 px-2.5 py-1.5 border rounded-lg text-xs font-body transition-colors">
+                        <i class="fa-solid fa-sort-down text-xs" x-show="ordenarPor === 'justificaciones' && dir === 'desc'"></i>
+                        <i class="fa-solid fa-sort-up text-xs"   x-show="ordenarPor === 'justificaciones' && dir === 'asc'"></i>
+                        Justificaciones
+                    </button>
+                    <button type="button" @click="limpiar()"
+                            x-show="nombre || ordenarPor"
+                            class="px-2.5 py-1.5 bg-omg-chardon text-omg-kashmir border border-omg-kashmir rounded-lg text-xs font-body hover:bg-omg-pastel transition-colors">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {{-- Loading --}}
+        <div x-show="cargando" class="flex justify-center py-8 border-t border-omg-kashmir-dark">
+            <i class="fa-solid fa-spinner fa-spin text-omg-nile fa-lg"></i>
+        </div>
+
+        {{-- Tabla --}}
         @php
             use App\Models\RubroEvaluacion;
             $rubros = RubroEvaluacion::where('id_institucion', $grupo->id_institucion)
                 ->orderBy('porcentaje_minimo', 'desc')->get();
         @endphp
-        <table class="w-full">
+        <table class="w-full" x-show="!cargando">
             <thead>
                 <tr class="border-t border-b border-omg-kashmir-dark bg-omg-chardon">
                     <th class="text-left px-5 py-3 text-xs font-heading font-semibold text-omg-nile uppercase tracking-wide">Alumno</th>
@@ -144,58 +256,43 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-omg-kashmir-dark">
-                @php
-                    use App\Models\GrupoAlumno;
-                    use App\Models\Asistencia;
-                    use App\Models\Sesion;
-                    $sesionesIds = Sesion::where('id_grupo', $grupo->id_grupo)->where('est_sesion', 0)->pluck('id_sesion');
-                    $alumnosGrupo = GrupoAlumno::where('id_grupo', $grupo->id_grupo)->with('alumno')->get()->sortBy('alumno.ap_pat');
-                @endphp
-                @forelse ($alumnosGrupo as $ga)
-                    @php
-                        $al  = $ga->alumno;
-                        $p   = Asistencia::whereIn('id_sesion', $sesionesIds)->where('id_alumno', $al->id_usuario)->where('est_asistencia', 1)->count();
-                        $a   = Asistencia::whereIn('id_sesion', $sesionesIds)->where('id_alumno', $al->id_usuario)->where('est_asistencia', 2)->count();
-                        $j   = Asistencia::whereIn('id_sesion', $sesionesIds)->where('id_alumno', $al->id_usuario)->where('est_asistencia', 3)->count();
-                        $t   = $sesionesIds->count();
-                        $pct = $t > 0 ? round((($p + $j) / $t) * 100, 1) : 0;
-                    @endphp
+                <template x-if="alumnos.length === 0">
+                    <tr>
+                        <td colspan="{{ 6 + $rubros->count() }}" class="px-5 py-8 text-center text-sm font-body text-omg-kashmir">
+                            Sin alumnos encontrados
+                        </td>
+                    </tr>
+                </template>
+                <template x-for="al in alumnos" :key="al.id">
                     <tr class="hover:bg-omg-chardon transition-colors">
                         <td class="px-5 py-3">
-                            <p class="text-sm font-body font-semibold text-omg-dark">{{ $al->ap_pat }} {{ $al->ap_mat }}, {{ $al->nombre }}</p>
-                            <p class="text-xs font-body text-omg-kashmir">{{ $al->email }}</p>
+                            <p class="text-sm font-body font-semibold text-omg-dark" x-text="al.nombre"></p>
+                            <p class="text-xs font-body text-omg-kashmir" x-text="al.email"></p>
                         </td>
-                        <td class="px-5 py-3 text-center text-sm font-heading font-semibold text-green-600">{{ $p }}</td>
-                        <td class="px-5 py-3 text-center text-sm font-heading font-semibold text-red-500">{{ $a }}</td>
-                        <td class="px-5 py-3 text-center text-sm font-heading font-semibold text-omg-nile">{{ $j }}</td>
+                        <td class="px-5 py-3 text-center text-sm font-heading font-semibold text-green-600" x-text="al.p"></td>
+                        <td class="px-5 py-3 text-center text-sm font-heading font-semibold text-red-500" x-text="al.a"></td>
+                        <td class="px-5 py-3 text-center text-sm font-heading font-semibold text-omg-nile" x-text="al.j"></td>
                         <td class="px-5 py-3 text-center">
-                            <span class="text-sm font-heading font-bold {{ $pct >= 80 ? 'text-green-600' : ($pct >= 60 ? 'text-yellow-500' : 'text-red-500') }}">
-                                {{ $pct }}%
-                            </span>
+                            <span class="text-sm font-heading font-bold" :class="colorPct(al.pct)" x-text="al.pct + '%'"></span>
                         </td>
                         @foreach ($rubros as $rubro)
                             <td class="px-5 py-3 text-center">
-                                @if ($pct >= $rubro->porcentaje_minimo)
-                                    <i class="fa-solid fa-circle-check text-green-500 fa-lg" title="Cumple {{ $rubro->nombre }}"></i>
-                                @else
-                                    <i class="fa-solid fa-circle-xmark text-red-500 fa-lg" title="No cumple {{ $rubro->nombre }}"></i>
-                                @endif
+                                <template x-if="al.pct >= {{ $rubro->porcentaje_minimo }}">
+                                    <i class="fa-solid fa-circle-check text-green-500 fa-lg"></i>
+                                </template>
+                                <template x-if="al.pct < {{ $rubro->porcentaje_minimo }}">
+                                    <i class="fa-solid fa-circle-xmark text-red-500 fa-lg"></i>
+                                </template>
                             </td>
                         @endforeach
                         <td class="px-5 py-3 text-right">
-                            <a href="{{ route('ca.reportes.alumno', [$grupo->id_grupo, $al->id_usuario]) }}"
+                            <a :href="al.url"
                                class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-pastel hover:bg-omg-nile hover:text-white text-omg-nile rounded-lg text-xs font-body transition-colors ml-auto w-fit">
                                 <i class="fa-solid fa-chart-line"></i> Ver historial
                             </a>
                         </td>
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="{{ 6 + $rubros->count() }}" class="px-5 py-8 text-center text-sm font-body text-omg-kashmir">
-                            Sin alumnos inscritos
-                        </td>
-                    </tr>
-                @endforelse
+                </template>
             </tbody>
         </table>
     </div>

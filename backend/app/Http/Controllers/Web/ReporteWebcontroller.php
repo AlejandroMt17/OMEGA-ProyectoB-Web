@@ -79,6 +79,7 @@ class ReporteWebController extends Controller
             $reportes = $reportes->filter(fn($r) => $r['porcentaje'] <= (float) $maxPct);
         }
 
+        $grupos = $this->grupos->todosPorInstitucion($institucionId, Auth::user()->id_usuario);
         return view('modules.reportes.index', compact(
             'reportes', 'periodos',
             'busqueda', 'periodo', 'minPct', 'maxPct'
@@ -118,7 +119,9 @@ class ReporteWebController extends Controller
             ];
         });
 
-        if ($busqueda) $reportes = $reportes->filter(fn($r) => str_contains(strtolower($r['nombre'].$r['materia']), strtolower($busqueda)));
+        if ($busqueda) $reportes = $reportes->filter(fn($r) => strtolower($r['nombre']) === strtolower($busqueda) || str_contains(strtolower($r['nombre'].$r['materia']), strtolower($busqueda)));
+        $grupo = $request->query('grupo', '');
+        if ($grupo) $reportes = $reportes->filter(fn($r) => strtolower($r['nombre']) === strtolower($grupo));
         if ($periodo)  $reportes = $reportes->filter(fn($r) => $r['periodo'] === $periodo);
         if ($minPct !== '') $reportes = $reportes->filter(fn($r) => $r['porcentaje'] >= (float)$minPct);
         if ($maxPct !== '') $reportes = $reportes->filter(fn($r) => $r['porcentaje'] <= (float)$maxPct);
@@ -126,29 +129,80 @@ class ReporteWebController extends Controller
         return response()->json($reportes->values());
     }
 
-    public function detalle(int $idGrupo)
+    public function detalle(Request $request, int $idGrupo)
     {
         $grupo = $this->grupos->buscarPorId($idGrupo);
         abort_if(!$grupo || $grupo->id_docente !== Auth::user()->id_usuario, 403);
 
+        $orden = $request->query('orden', 'asc'); // asc = primera sesión primero
+
         $sesiones = Sesion::where('id_grupo', $idGrupo)
-            ->orderByDesc('fec_sesion')
+            ->orderBy('fec_sesion', $orden === 'desc' ? 'desc' : 'asc')
             ->get()
-            ->map(function ($sesion) {
+            ->map(function ($sesion, $i) {
                 return [
                     'sesion'    => $sesion,
                     'presentes' => Asistencia::where('id_sesion', $sesion->id_sesion)->where('est_asistencia', 1)->count(),
                     'ausentes'  => Asistencia::where('id_sesion', $sesion->id_sesion)->where('est_asistencia', 2)->count(),
                     'justif'    => Asistencia::where('id_sesion', $sesion->id_sesion)->where('est_asistencia', 3)->count(),
+                    'num'       => $i + 1,
                 ];
             });
 
-        return view('modules.reportes.detalle', compact('grupo', 'sesiones'));
+        return view('modules.reportes.detalle', compact('grupo', 'sesiones', 'orden'));
     }
 
     /**
      * RF-06 — Exportar reporte de asistencia por alumno en Excel.
      */
+    public function alumnosJson(Request $request, int $idGrupo)
+    {
+        $grupo = $this->grupos->buscarPorId($idGrupo);
+        abort_if(!$grupo || $grupo->id_docente !== Auth::user()->id_usuario, 403);
+
+        $busqueda  = $request->query('nombre', '');
+        $ordenarPor = $request->query('ordenar', ''); // 'asistencias', 'faltas', 'justificaciones'
+        $dirOrden  = $request->query('dir', 'desc');
+
+        $sesionesIds = Sesion::where('id_grupo', $idGrupo)->where('est_sesion', 0)->pluck('id_sesion');
+        $total = $sesionesIds->count();
+
+        $alumnos = GrupoAlumno::where('id_grupo', $idGrupo)->with('alumno')->get()
+            ->map(function ($ga) use ($sesionesIds, $total) {
+                $al = $ga->alumno;
+                $p  = Asistencia::whereIn('id_sesion', $sesionesIds)->where('id_alumno', $al->id_usuario)->where('est_asistencia', 1)->count();
+                $a  = Asistencia::whereIn('id_sesion', $sesionesIds)->where('id_alumno', $al->id_usuario)->where('est_asistencia', 2)->count();
+                $j  = Asistencia::whereIn('id_sesion', $sesionesIds)->where('id_alumno', $al->id_usuario)->where('est_asistencia', 3)->count();
+                $pct = $total > 0 ? round((($p + $j) / $total) * 100, 1) : 0;
+                return [
+                    'id'       => $al->id_usuario,
+                    'nombre'   => $al->ap_pat . ' ' . $al->ap_mat . ', ' . $al->nombre,
+                    'email'    => $al->email,
+                    'p'        => $p,
+                    'a'        => $a,
+                    'j'        => $j,
+                    'pct'      => $pct,
+                    'url'      => route('ca.reportes.alumno', [$idGrupo, $al->id_usuario]),
+                ];
+            });
+
+        if ($busqueda) {
+            $alumnos = $alumnos->filter(fn($al) => str_contains(strtolower($al['nombre']), strtolower($busqueda)));
+        }
+
+        if ($ordenarPor === 'asistencias') {
+            $alumnos = $dirOrden === 'asc' ? $alumnos->sortBy('p') : $alumnos->sortByDesc('p');
+        } elseif ($ordenarPor === 'faltas') {
+            $alumnos = $dirOrden === 'asc' ? $alumnos->sortBy('a') : $alumnos->sortByDesc('a');
+        } elseif ($ordenarPor === 'justificaciones') {
+            $alumnos = $dirOrden === 'asc' ? $alumnos->sortBy('j') : $alumnos->sortByDesc('j');
+        } else {
+            $alumnos = $alumnos->sortBy('nombre');
+        }
+
+        return response()->json($alumnos->values());
+    }
+
     public function detalleAlumnoJson(Request $request, int $idGrupo, int $idAlumno)
     {
         $grupo = $this->grupos->buscarPorId($idGrupo);

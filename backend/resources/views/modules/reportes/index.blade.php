@@ -3,21 +3,11 @@
 @section('content')
 
 {{-- Header --}}
-<div class="flex items-start justify-between mb-6">
-    <div>
+<div class="mb-6">
         <h1 class="text-2xl font-heading font-semibold text-omg-nile">Reportes</h1>
         <p class="text-sm font-body text-omg-kashmir mt-1">Visualiza el resumen de asistencias por grupo</p>
     </div>
-    <div class="flex items-center gap-2">
-        <a href="{{ route('ca.dashboard.index') }}"
-           class="flex items-center gap-2 px-4 py-2.5 bg-omg-chardon hover:bg-omg-pastel text-omg-nile font-heading font-semibold rounded-lg transition-colors text-sm">
-            <i class="fa-solid fa-house"></i> Inicio
-        </a>
-        <a href="javascript:history.back()"
-           class="flex items-center gap-2 px-4 py-2.5 bg-omg-chardon hover:bg-omg-pastel text-omg-nile font-heading font-semibold rounded-lg transition-colors text-sm">
-            <i class="fa-solid fa-arrow-left"></i> Volver
-        </a>
-    </div>
+
 </div>
 
 {{-- Componente Alpine con AJAX --}}
@@ -33,7 +23,7 @@
     async cargar() {
         this.cargando = true;
         const params = new URLSearchParams();
-        if (this.busqueda) params.set('busqueda', this.busqueda);
+        if (this.busqueda) params.set('grupo', this.busqueda);
         if (this.periodo)  params.set('periodo',  this.periodo);
         if (this.minPct)   params.set('min_pct',  this.minPct);
         if (this.maxPct)   params.set('max_pct',  this.maxPct);
@@ -84,13 +74,14 @@
     <div class="bg-white rounded-xl border border-omg-kashmir-dark p-4 mb-6">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div>
-                <label class="block text-xs font-body text-omg-kashmir mb-1">Buscar grupo o materia</label>
-                <div class="relative">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-omg-kashmir text-xs"></i>
-                    <input type="text" x-model="busqueda" @input="onBusqueda()"
-                           placeholder="Ej: Auditoria..."
-                           class="w-full pl-8 pr-3 py-2 bg-white border border-omg-kashmir rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile"/>
-                </div>
+                <label class="block text-xs font-body text-omg-kashmir mb-1">Grupo</label>
+                <select x-model="busqueda" @change="cargar()"
+                        class="w-full px-3 py-2 bg-white border border-omg-kashmir rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile">
+                    <option value="">Todos los grupos</option>
+                    @foreach ($grupos as $g)
+                        <option value="{{ $g->nombre }}">{{ $g->nombre }} — {{ $g->materia }}</option>
+                    @endforeach
+                </select>
             </div>
             <div>
                 <label class="block text-xs font-body text-omg-kashmir mb-1">Periodo</label>
@@ -149,8 +140,7 @@
                             <p class="text-xs font-body text-omg-kashmir mt-0.5"
                                x-text="r.periodo + ' · ' + r.total_sesiones + ' sesión(es)'"></p>
                             {{-- Porcentaje debajo del periodo --}}
-                            <p class="text-sm font-heading font-bold mt-1"
-                               :class="colorPct(r.porcentaje)"
+                            <p class="text-sm font-heading font-bold mt-1 text-omg-dark"
                                x-text="'Porcentaje de asistencias totales: ' + r.porcentaje + '%'"></p>
                         </div>
                         <a :href="r.url_detalle"

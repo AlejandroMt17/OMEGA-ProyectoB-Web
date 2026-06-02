@@ -58,15 +58,38 @@
                     </td>
                     <td class="px-5 py-4">
                         <div class="flex items-center justify-end gap-2">
-                            {{-- Seleccionar institución activa --}}
-                            <form method="POST" action="{{ route('ca.instituciones.seleccionar', $institucion->id_institucion) }}">
-                                @csrf
-                                <button type="submit"
-                                    class="flex items-center gap-1.5 px-3 py-1.5 {{ session('institucion_id') == $institucion->id_institucion ? 'bg-omg-coral text-white' : 'bg-omg-chardon hover:bg-omg-coral hover:text-white text-omg-nile' }} rounded-lg text-xs font-body transition-colors">
-                                    <i class="fa-solid fa-check"></i>
-                                    {{ session('institucion_id') == $institucion->id_institucion ? 'Activa' : 'Seleccionar' }}
-                                </button>
-                            </form>
+                            {{-- Seleccionar institución activa via AJAX --}}
+                            <button type="button"
+                                x-data="{ activa: {{ session('institucion_id') == $institucion->id_institucion ? 'true' : 'false' }} }"
+                                @click="
+                                    fetch('{{ route('ca.instituciones.seleccionar', $institucion->id_institucion) }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                            'X-Requested-With': 'XMLHttpRequest',
+                                            'Accept': 'application/json',
+                                        }
+                                    })
+                                    .then(r => r.json())
+                                    .then(d => {
+                                        if (d.ok) {
+                                            // Actualizar todos los botones
+                                            document.querySelectorAll('[data-sel-btn]').forEach(b => {
+                                                b._x_dataStack[0].activa = false;
+                                            });
+                                            activa = true;
+                                            // Actualizar sidebar
+                                            const instNombre = document.getElementById('sidebar-inst-nombre');
+                                            if (instNombre) instNombre.textContent = d.nombre;
+                                        }
+                                    });
+                                "
+                                data-sel-btn
+                                :class="activa ? 'bg-omg-coral text-white' : 'bg-omg-chardon hover:bg-omg-coral hover:text-white text-omg-nile'"
+                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-body transition-colors">
+                                <i class="fa-solid fa-check"></i>
+                                <span x-text="activa ? 'Activa' : 'Seleccionar'"></span>
+                            </button>
                             <a href="{{ route('ca.rubros.index', $institucion->id_institucion) }}"
                                class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-chardon hover:bg-omg-nile hover:text-white text-omg-nile rounded-lg text-xs font-body transition-colors">
                                 <i class="fa-solid fa-chart-pie"></i>
