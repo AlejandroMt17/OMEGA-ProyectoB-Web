@@ -36,10 +36,14 @@
 @endif
 
 {{-- Agregar periodo --}}
+@php
+    $periodosExistentes = $periodos->pluck('nombre')->map(fn($n) => strtolower(trim($n)))->toArray();
+@endphp
 <div class="bg-white rounded-xl border border-omg-kashmir-dark p-5 mb-6"
      x-data="{
         mostrarPersonalizado: false,
         personalizado: '',
+        existentes: @json($periodosExistentes),
         get opciones() {
             const anio = new Date().getFullYear();
             return [
@@ -53,11 +57,7 @@
     <h2 class="text-sm font-heading font-semibold text-omg-nile mb-3">Agregar periodo</h2>
 
     {{-- Opciones rápidas --}}
-    @php
-        $periodosExistentes = $periodos->pluck('nombre')->map(fn($n) => strtolower(trim($n)))->toArray();
-    @endphp
-    <div class="flex flex-wrap gap-2 mb-4"
-         x-data="{ existentes: @json($periodosExistentes) }">
+    <div class="flex flex-wrap gap-2 mb-4">
         <template x-for="op in opciones" :key="op">
             <span>
                 <form x-show="!existentes.includes(op.toLowerCase())"
