@@ -19,49 +19,84 @@ class JustificanteWebController extends Controller
         private readonly AsistenciaService             $asistenciaService,
     ) {}
 
-    public function index()
+    public function index(Request $request)
     {
         $institucionId = session('institucion_id');
 
-        // Requerir institución activa
         if (!$institucionId) {
             return redirect()->route('ca.instituciones.index')
                 ->with('info', 'Selecciona una institución para ver sus justificantes');
         }
 
+        // Filtros
+        $filtroPeriodo  = $request->query('periodo', '');
+        $filtroDesde    = $request->query('desde', '');
+        $filtroHasta    = $request->query('hasta', '');
+
+        // Validar rango de fechas
+        $errorFecha = null;
+        if ($filtroDesde && $filtroHasta && $filtroDesde > $filtroHasta) {
+            $errorFecha = 'La fecha inicial no puede ser posterior a la fecha final.';
+            $filtroDesde = '';
+            $filtroHasta = '';
+        }
+
         $grupos = $this->grupos
             ->todosPorInstitucion($institucionId, Auth::user()->id_usuario)
             ->load([
-                'sesiones' => fn($q) => $q->where('est_sesion', 0)->orderByDesc('fec_sesion'),
+                'sesiones' => function($q) use ($filtroDesde, $filtroHasta) {
+                    $q->where('est_sesion', 0)->orderByDesc('fec_sesion');
+                    if ($filtroDesde) $q->whereDate('fec_sesion', '>=', $filtroDesde);
+                    if ($filtroHasta) $q->whereDate('fec_sesion', '<=', $filtroHasta);
+                },
                 'sesiones.asistencias' => fn($q) => $q->whereIn('est_asistencia', [2, 3]),
                 'sesiones.asistencias.alumno',
             ]);
 
-        return view('modules.justificantes.index', compact('grupos'));
+        // Filtrar por periodo
+        if ($filtroPeriodo) {
+            $grupos = $grupos->filter(fn($g) => $g->periodo === $filtroPeriodo);
+        }
+
+        // Periodos únicos para el select
+        $periodos = $this->grupos
+            ->todosPorInstitucion($institucionId, Auth::user()->id_usuario)
+            ->pluck('periodo')->unique()->filter()->sort()->values();
+
+        return view('modules.justificantes.index', compact(
+            'grupos', 'periodos',
+            'filtroPeriodo', 'filtroDesde', 'filtroHasta', 'errorFecha'
+        ));
     }
 
-    public function justificar(Asistencia $asistencia)
+    public function justificar(Request $request, Asistencia $asistencia)
     {
         try {
-            $this->asistenciaService->editarEstado($asistencia, [
-                'est_asistencia' => 3,
-            ]);
+            $this->asistenciaService->editarEstado($asistencia, ['est_asistencia' => 3]);
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['ok' => true, 'nuevo_estado' => 3]);
+            }
             return redirect()->route('ca.justificantes.index')
-                ->with('success', 'La información se actualizó correctamente');
+                ->with('success', 'Asistencia justificada correctamente');
         } catch (ValidationException $e) {
+            if ($request->ajax()) return response()->json(['ok' => false], 422);
             return back()->withErrors($e->errors());
         }
     }
 
-    public function marcarAusente(Asistencia $asistencia)
+    public function marcarAusente(Request $request, Asistencia $asistencia)
     {
         try {
-            $this->asistenciaService->editarEstado($asistencia, [
-                'est_asistencia' => 2,
-            ]);
+            $this->asistenciaService->editarEstado($asistencia, ['est_asistencia' => 2]);
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['ok' => true, 'nuevo_estado' => 2]);
+            }
             return redirect()->route('ca.justificantes.index')
-                ->with('success', 'La información se actualizó correctamente');
+                ->with('success', 'Asistencia revertida a ausente');
         } catch (ValidationException $e) {
+            if ($request->ajax()) return response()->json(['ok' => false], 422);
             return back()->withErrors($e->errors());
         }
     }
