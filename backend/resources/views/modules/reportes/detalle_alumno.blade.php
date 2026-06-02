@@ -54,7 +54,8 @@
         if (this.estado) params.set('estado', this.estado);
 
         const res  = await fetch('{{ route('ca.reportes.alumno.json', [$grupo->id_grupo, $alumno->id_usuario]) }}?' + params.toString(), {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
         const data = await res.json();
         this.sesiones = data.sesiones;

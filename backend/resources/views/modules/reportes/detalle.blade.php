@@ -51,6 +51,7 @@
          async cargar() {
              this.cargando = true;
              const res = await fetch('{{ route('ca.reportes.sesiones.json', $grupo->id_grupo) }}?orden=' + this.orden, {
+                 credentials: 'same-origin',
                  headers: { 'X-Requested-With': 'XMLHttpRequest' }
              });
              this.sesiones = await res.json();
@@ -145,6 +146,7 @@
              if (this.nombre)    params.set('nombre',   this.nombre);
              if (this.ordenarPor) { params.set('ordenar', this.ordenarPor); params.set('dir', this.dir); }
              const res = await fetch('{{ route('ca.reportes.alumnos.json', $grupo->id_grupo) }}?' + params.toString(), {
+                 credentials: 'same-origin',
                  headers: { 'X-Requested-With': 'XMLHttpRequest' }
              });
              this.alumnos = await res.json();
