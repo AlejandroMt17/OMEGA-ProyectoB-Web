@@ -22,18 +22,7 @@
     </a>
 </div>
 
-@if (session('success'))
-    <div class="flex items-center gap-3 bg-white border border-green-200 rounded-lg px-4 py-3 mb-6">
-        <i class="fa-solid fa-circle-check text-green-500"></i>
-        <p class="text-sm font-body text-omg-dark">{{ session('success') }}</p>
-    </div>
-@endif
-@if (session('error'))
-    <div class="flex items-center gap-3 bg-white border border-orange-200 rounded-lg px-4 py-3 mb-6">
-        <i class="fa-solid fa-triangle-exclamation text-orange-500"></i>
-        <p class="text-sm font-body text-omg-dark">{{ session('error') }}</p>
-    </div>
-@endif
+
 
 {{-- Agregar periodo --}}
 @php
