@@ -156,10 +156,16 @@
             </button>
 
             <div class="flex justify-between mt-6">
-                <button type="button" @click="paso = 1"
-                        class="flex items-center gap-2 px-4 py-2.5 bg-omg-chardon text-omg-nile font-heading font-semibold rounded-lg text-sm hover:bg-omg-pastel transition-colors">
-                    <i class="fa-solid fa-arrow-left"></i> Atrás
-                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" @click="paso = 1"
+                            class="flex items-center gap-2 px-4 py-2.5 bg-omg-chardon text-omg-nile font-heading font-semibold rounded-lg text-sm hover:bg-omg-pastel transition-colors">
+                        <i class="fa-solid fa-arrow-left"></i> Atrás
+                    </button>
+                    <a href="{{ route('ca.instituciones.index') }}"
+                       class="flex items-center gap-2 px-4 py-2.5 bg-omg-chardon text-omg-kashmir font-heading font-semibold rounded-lg text-sm hover:bg-omg-pastel transition-colors">
+                        <i class="fa-solid fa-ban"></i> Cancelar
+                    </a>
+                </div>
                 <button type="button" @click="if(paso2Valido()) paso = 3"
                         :class="paso2Valido() ? 'bg-omg-coral hover:bg-omg-coral-dark text-white' : 'bg-omg-chardon text-omg-kashmir cursor-not-allowed'"
                         class="flex items-center gap-2 px-5 py-2.5 font-heading font-semibold rounded-lg transition-colors text-sm">
@@ -229,10 +235,16 @@
             </div>
 
             <div class="flex justify-between mt-6">
-                <button type="button" @click="paso = 2"
-                        class="flex items-center gap-2 px-4 py-2.5 bg-omg-chardon text-omg-nile font-heading font-semibold rounded-lg text-sm hover:bg-omg-pastel transition-colors">
-                    <i class="fa-solid fa-arrow-left"></i> Atrás
-                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" @click="paso = 2"
+                            class="flex items-center gap-2 px-4 py-2.5 bg-omg-chardon text-omg-nile font-heading font-semibold rounded-lg text-sm hover:bg-omg-pastel transition-colors">
+                        <i class="fa-solid fa-arrow-left"></i> Atrás
+                    </button>
+                    <a href="{{ route('ca.instituciones.index') }}"
+                       class="flex items-center gap-2 px-4 py-2.5 bg-omg-chardon text-omg-kashmir font-heading font-semibold rounded-lg text-sm hover:bg-omg-pastel transition-colors">
+                        <i class="fa-solid fa-ban"></i> Cancelar
+                    </a>
+                </div>
                 <button type="submit"
                         :disabled="!paso3Valido()"
                         :class="paso3Valido() ? 'bg-omg-coral hover:bg-omg-coral-dark text-white' : 'bg-omg-chardon text-omg-kashmir cursor-not-allowed'"
