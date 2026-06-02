@@ -29,26 +29,65 @@
     </div>
 @endif
 
-{{-- Formulario para agregar --}}
-<div class="bg-white rounded-xl border border-omg-kashmir-dark p-5 mb-6">
+{{-- Agregar periodo --}}
+<div class="bg-white rounded-xl border border-omg-kashmir-dark p-5 mb-6"
+     x-data="{
+        mostrarPersonalizado: false,
+        personalizado: '',
+        get opciones() {
+            const anio = new Date().getFullYear();
+            return [
+                'Ene-Jun ' + anio,
+                'Ago-Dic ' + anio,
+                'Ene-Jun ' + (anio + 1),
+                'Ago-Dic ' + (anio + 1),
+            ];
+        }
+     }">
     <h2 class="text-sm font-heading font-semibold text-omg-nile mb-3">Agregar periodo</h2>
-    <form method="POST" action="{{ route('ca.periodos.store', $institucion->id_institucion) }}"
-          class="flex items-end gap-3">
-        @csrf
-        <div class="flex-1">
-            <label class="block text-xs font-body text-omg-kashmir mb-1">Nombre del periodo</label>
-            <input type="text" name="nombre" value="{{ old('nombre') }}" required
-                   placeholder="Ej: Enero Junio 2026, Agosto Diciembre 2026..."
-                   class="w-full px-3 py-2.5 bg-white border border-omg-kashmir rounded-lg text-sm font-body text-omg-dark focus:outline-none focus:ring-2 focus:ring-omg-nile @error('nombre') border-red-400 @enderror"/>
-            @error('nombre')
-                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-            @enderror
-        </div>
-        <button type="submit"
-            class="flex items-center gap-1.5 px-4 py-2.5 bg-omg-coral hover:bg-omg-coral-dark text-white rounded-lg text-sm font-body transition-colors">
-            <i class="fa-solid fa-plus"></i> Agregar
-        </button>
-    </form>
+
+    {{-- Opciones rápidas --}}
+    @php
+        $periodosExistentes = $periodos->pluck('nombre')->toArray();
+    @endphp
+    <div class="flex flex-wrap gap-2 mb-4">
+        <template x-for="op in opciones" :key="op">
+            <form method="POST" action="{{ route('ca.periodos.store', $institucion->id_institucion) }}">
+                @csrf
+                <input type="hidden" name="nombre" :value="op">
+                <button type="submit"
+                        class="px-3 py-1.5 border rounded-lg text-xs font-body transition-colors bg-white text-omg-nile border-omg-kashmir hover:border-omg-nile hover:bg-omg-chardon"
+                        x-text="op">
+                </button>
+            </form>
+        </template>
+    </div>
+
+    {{-- Periodo personalizado --}}
+    <button type="button" @click="mostrarPersonalizado = !mostrarPersonalizado"
+            class="text-xs font-body text-omg-nile hover:underline flex items-center gap-1 mb-3">
+        <i class="fa-solid fa-plus text-xs"></i>
+        Agregar periodo personalizado
+    </button>
+
+    <div x-show="mostrarPersonalizado" x-transition>
+        <form method="POST" action="{{ route('ca.periodos.store', $institucion->id_institucion) }}"
+              class="flex items-end gap-3">
+            @csrf
+            <div class="flex-1">
+                <input type="text" name="nombre" x-model="personalizado" required
+                       placeholder="Ej: Feb-Jul 2026"
+                       class="w-full px-3 py-2.5 bg-white border border-omg-kashmir rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile @error('nombre') border-red-400 @enderror"/>
+                @error('nombre')
+                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+            <button type="submit"
+                class="flex items-center gap-1.5 px-4 py-2.5 bg-omg-coral hover:bg-omg-coral-dark text-white rounded-lg text-sm font-body transition-colors">
+                <i class="fa-solid fa-plus"></i> Agregar
+            </button>
+        </form>
+    </div>
 </div>
 
 {{-- Lista de periodos --}}
