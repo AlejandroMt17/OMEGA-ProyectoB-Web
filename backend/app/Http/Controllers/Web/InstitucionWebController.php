@@ -90,6 +90,12 @@ class InstitucionWebController extends Controller
     public function destroy(Institucion $institucion)
     {
         $this->instituciones->eliminar($institucion, Auth::user());
+
+        // Si la institución eliminada era la activa, limpiar la sesión
+        if (session('institucion_id') == $institucion->id_institucion) {
+            session()->forget(['institucion_id', 'institucion_nombre']);
+        }
+
         return redirect()->route('ca.instituciones.index')
             ->with('success', 'El registro se eliminó correctamente');
     }

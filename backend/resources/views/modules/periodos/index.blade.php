@@ -2,18 +2,24 @@
 @section('title', 'Periodos — ' . $institucion->nombre)
 @section('content')
 
-<div class="mb-6">
-    <div class="flex items-center gap-2 text-sm font-body text-omg-kashmir mb-1">
-        <a href="{{ route('ca.instituciones.index') }}" class="hover:text-omg-nile">Mis Instituciones</a>
-        <i class="fa-solid fa-chevron-right text-xs"></i>
-        <span>{{ $institucion->nombre }}</span>
-        <i class="fa-solid fa-chevron-right text-xs"></i>
-        <span>Periodos</span>
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <div class="flex items-center gap-2 text-sm font-body text-omg-kashmir mb-1">
+            <a href="{{ route('ca.instituciones.index') }}" class="hover:text-omg-nile">Mis Instituciones</a>
+            <i class="fa-solid fa-chevron-right text-xs"></i>
+            <span>{{ $institucion->nombre }}</span>
+            <i class="fa-solid fa-chevron-right text-xs"></i>
+            <span>Periodos</span>
+        </div>
+        <h1 class="text-2xl font-heading font-semibold text-omg-nile">Periodos Académicos</h1>
+        <p class="text-sm font-body text-omg-kashmir mt-1">
+            Define los periodos de <strong>{{ $institucion->nombre }}</strong>. Al crear un aula podrás seleccionar uno de estos periodos.
+        </p>
     </div>
-    <h1 class="text-2xl font-heading font-semibold text-omg-nile">Periodos Académicos</h1>
-    <p class="text-sm font-body text-omg-kashmir mt-1">
-        Define los periodos de <strong>{{ $institucion->nombre }}</strong>. Al crear un aula podrás seleccionar uno de estos periodos.
-    </p>
+    <a href="{{ route('ca.instituciones.index') }}"
+       class="flex items-center gap-2 px-4 py-2.5 bg-omg-chardon hover:bg-omg-pastel text-omg-nile font-heading font-semibold rounded-lg transition-colors text-sm">
+        <i class="fa-solid fa-arrow-left"></i> Volver
+    </a>
 </div>
 
 @if (session('success'))

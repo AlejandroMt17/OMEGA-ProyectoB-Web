@@ -14,6 +14,10 @@
             Configura los porcentajes mínimos de asistencia para {{ $institucion->nombre }}
         </p>
     </div>
+    <a href="{{ route('ca.instituciones.index') }}"
+       class="flex items-center gap-2 px-4 py-2.5 bg-omg-chardon hover:bg-omg-pastel text-omg-nile font-heading font-semibold rounded-lg transition-colors text-sm">
+        <i class="fa-solid fa-arrow-left"></i> Volver
+    </a>
 </div>
 
 {{-- Formulario nuevo rubro --}}
