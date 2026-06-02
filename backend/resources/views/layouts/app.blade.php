@@ -23,8 +23,8 @@
 
     @include('partials.sidebar')
 
-    <div class="flex-1 flex flex-col min-h-screen ml-64">
-        @include('partials.header')
+    <div class="flex-1 flex flex-col min-h-screen transition-all duration-300 ml-64"
+         id="main-content">
         @include('partials.session-messages')
         <main class="flex-1 p-6">
             @yield('content')
