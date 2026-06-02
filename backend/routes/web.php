@@ -101,10 +101,12 @@ Route::prefix('p/ca')->group(function () {
 
         // Reportes
         Route::get('reportes',                [ReporteWebController::class, 'index'])->middleware('plan.basico:reportes')->name('ca.reportes.index');
+        Route::get('reportes-json',           [ReporteWebController::class, 'indexJson'])->middleware('plan.basico:reportes')->name('ca.reportes.json');
         Route::get('reportes/{idGrupo}',      [ReporteWebController::class, 'detalle'])->name('ca.reportes.detalle');
         Route::get('reportes/{idGrupo}/excel',  [ReporteWebController::class, 'exportarExcel'])->name('ca.reportes.excel');
         Route::get('reportes/{idGrupo}/pdf',    [ReporteWebController::class, 'exportarPdf'])->name('ca.reportes.pdf');
-        Route::get('reportes/{idGrupo}/alumno/{idAlumno}', [ReporteWebController::class, 'detalleAlumno'])->name('ca.reportes.alumno');
+        Route::get('reportes/{idGrupo}/alumno/{idAlumno}',      [ReporteWebController::class, 'detalleAlumno'])->name('ca.reportes.alumno');
+        Route::get('reportes/{idGrupo}/alumno/{idAlumno}/json', [ReporteWebController::class, 'detalleAlumnoJson'])->name('ca.reportes.alumno.json');
 
 
         // Suscripción

@@ -26,7 +26,12 @@ class ReporteWebController extends Controller
 
     public function index(Request $request)
     {
-        $grupos = $this->grupos->todosPorDocente(Auth::user()->id_usuario);
+        $institucionId = session('institucion_id');
+        if (!$institucionId) {
+            return redirect()->route('ca.instituciones.index')
+                ->with('info', 'Selecciona una institución para ver sus reportes');
+        }
+        $grupos = $this->grupos->todosPorInstitucion($institucionId, Auth::user()->id_usuario);
 
         // Filtros
         $busqueda = $request->query('busqueda', '');
@@ -74,17 +79,51 @@ class ReporteWebController extends Controller
             $reportes = $reportes->filter(fn($r) => $r['porcentaje'] <= (float) $maxPct);
         }
 
-        // Agrupar por institución
-        $reportesPorInstitucion = $reportes->groupBy(fn($r) => $r['grupo']->id_institucion)
-            ->map(function($items) {
-                $institucion = \App\Models\Institucion::find($items->first()['grupo']->id_institucion);
-                return ['institucion' => $institucion, 'reportes' => $items];
-            })->values();
-
         return view('modules.reportes.index', compact(
-            'reportesPorInstitucion', 'periodos',
+            'reportes', 'periodos',
             'busqueda', 'periodo', 'minPct', 'maxPct'
         ));
+    }
+
+    public function indexJson(Request $request)
+    {
+        // Reutiliza la misma lógica pero devuelve JSON para AJAX
+        $institucionId = session('institucion_id');
+        if (!$institucionId) return response()->json([]);
+
+        $grupos   = $this->grupos->todosPorInstitucion($institucionId, Auth::user()->id_usuario);
+        $busqueda = $request->query('busqueda', '');
+        $periodo  = $request->query('periodo', '');
+        $minPct   = $request->query('min_pct', '');
+        $maxPct   = $request->query('max_pct', '');
+
+        $reportes = $grupos->map(function ($grupo) {
+            $sesiones  = Sesion::where('id_grupo', $grupo->id_grupo)->get();
+            $sesionIds = $sesiones->pluck('id_sesion');
+            $tp = Asistencia::whereIn('id_sesion', $sesionIds)->where('est_asistencia', 1)->count();
+            $ta = Asistencia::whereIn('id_sesion', $sesionIds)->where('est_asistencia', 2)->count();
+            $tj = Asistencia::whereIn('id_sesion', $sesionIds)->where('est_asistencia', 3)->count();
+            $tt = $tp + $ta + $tj;
+            return [
+                'id'             => $grupo->id_grupo,
+                'nombre'         => $grupo->nombre,
+                'materia'        => $grupo->materia,
+                'periodo'        => $grupo->periodo,
+                'total_sesiones' => $sesiones->count(),
+                'presentes'      => $tp,
+                'ausentes'       => $ta,
+                'justif'         => $tj,
+                'porcentaje'     => $tt > 0 ? round(($tp / $tt) * 100, 1) : 0,
+                'url_detalle'    => route('ca.reportes.detalle', $grupo->id_grupo),
+            ];
+        });
+
+        if ($busqueda) $reportes = $reportes->filter(fn($r) => str_contains(strtolower($r['nombre'].$r['materia']), strtolower($busqueda)));
+        if ($periodo)  $reportes = $reportes->filter(fn($r) => $r['periodo'] === $periodo);
+        if ($minPct !== '') $reportes = $reportes->filter(fn($r) => $r['porcentaje'] >= (float)$minPct);
+        if ($maxPct !== '') $reportes = $reportes->filter(fn($r) => $r['porcentaje'] <= (float)$maxPct);
+
+        return response()->json($reportes->values());
     }
 
     public function detalle(int $idGrupo)
@@ -110,6 +149,50 @@ class ReporteWebController extends Controller
     /**
      * RF-06 — Exportar reporte de asistencia por alumno en Excel.
      */
+    public function detalleAlumnoJson(Request $request, int $idGrupo, int $idAlumno)
+    {
+        $grupo = $this->grupos->buscarPorId($idGrupo);
+        abort_if(!$grupo || $grupo->id_docente !== Auth::user()->id_usuario, 403);
+
+        $filtroDesde  = $request->query('desde', '');
+        $filtroHasta  = $request->query('hasta', '');
+        $filtroEstado = $request->query('estado', '');
+
+        $query = \App\Models\Sesion::where('id_grupo', $idGrupo)->orderBy('fec_sesion');
+        if ($filtroDesde) $query->whereDate('fec_sesion', '>=', $filtroDesde);
+        if ($filtroHasta) $query->whereDate('fec_sesion', '<=', $filtroHasta);
+
+        $sesiones = $query->get()->map(function ($sesion, $i) use ($idAlumno) {
+            $asistencia = \App\Models\Asistencia::where('id_sesion', $sesion->id_sesion)
+                ->where('id_alumno', $idAlumno)->first();
+            return [
+                'num'    => $i + 1,
+                'fecha'  => $sesion->fec_sesion->format('d/m/Y'),
+                'hora'   => $sesion->hora_apertura->format('H:i'),
+                'estado' => $asistencia?->est_asistencia ?? null,
+                'hora_registro' => $asistencia?->hora_registro?->format('H:i') ?? '—',
+            ];
+        });
+
+        if ($filtroEstado !== '') {
+            $sesiones = $sesiones->filter(fn($s) => $s['estado'] == (int)$filtroEstado)->values();
+        }
+
+        $p = $sesiones->where('estado', 1)->count();
+        $a = $sesiones->where('estado', 2)->count();
+        $j = $sesiones->where('estado', 3)->count();
+        $t = $sesiones->count();
+
+        return response()->json([
+            'sesiones'     => $sesiones->values(),
+            'presentes'    => $p,
+            'ausentes'     => $a,
+            'justificadas' => $j,
+            'total'        => $t,
+            'porcentaje'   => $t > 0 ? round((($p + $j) / $t) * 100, 1) : 0,
+        ]);
+    }
+
     public function exportarExcel(int $idGrupo)
     {
         $grupo = $this->grupos->buscarPorId($idGrupo);
