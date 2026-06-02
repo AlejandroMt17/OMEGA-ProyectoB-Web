@@ -26,15 +26,14 @@ class ReporteWebController extends Controller
 
     public function index(Request $request)
     {
-        $grupos  = $this->grupos->todosPorDocente(Auth::user()->id_usuario);
+        $grupos = $this->grupos->todosPorDocente(Auth::user()->id_usuario);
 
         // Filtros
-        $busqueda   = $request->query('busqueda', '');
-        $periodo    = $request->query('periodo', '');
-        $minPct     = $request->query('min_pct', '');
-        $maxPct     = $request->query('max_pct', '');
+        $busqueda = $request->query('busqueda', '');
+        $periodo  = $request->query('periodo', '');
+        $minPct   = $request->query('min_pct', '');
+        $maxPct   = $request->query('max_pct', '');
 
-        // Lista de periodos disponibles para el selector
         $periodos = $grupos->pluck('periodo')->unique()->sort()->values();
 
         $reportes = $grupos->map(function ($grupo) {
@@ -59,7 +58,6 @@ class ReporteWebController extends Controller
             ];
         });
 
-        // Aplicar filtros
         if ($busqueda) {
             $reportes = $reportes->filter(fn($r) =>
                 str_contains(strtolower($r['grupo']->nombre), strtolower($busqueda)) ||
@@ -76,7 +74,17 @@ class ReporteWebController extends Controller
             $reportes = $reportes->filter(fn($r) => $r['porcentaje'] <= (float) $maxPct);
         }
 
-        return view('modules.reportes.index', compact('reportes', 'periodos', 'busqueda', 'periodo', 'minPct', 'maxPct'));
+        // Agrupar por institución
+        $reportesPorInstitucion = $reportes->groupBy(fn($r) => $r['grupo']->id_institucion)
+            ->map(function($items) {
+                $institucion = \App\Models\Institucion::find($items->first()['grupo']->id_institucion);
+                return ['institucion' => $institucion, 'reportes' => $items];
+            })->values();
+
+        return view('modules.reportes.index', compact(
+            'reportesPorInstitucion', 'periodos',
+            'busqueda', 'periodo', 'minPct', 'maxPct'
+        ));
     }
 
     public function detalle(int $idGrupo)
@@ -168,28 +176,42 @@ class ReporteWebController extends Controller
     /**
      * Detalle de asistencia sesión a sesión de un alumno en un grupo.
      */
-    public function detalleAlumno(int $idGrupo, int $idAlumno)
+    public function detalleAlumno(Request $request, int $idGrupo, int $idAlumno)
     {
         $grupo = $this->grupos->buscarPorId($idGrupo);
         abort_if(!$grupo || $grupo->id_docente !== Auth::user()->id_usuario, 403);
 
         $alumno = \App\Models\Usuario::findOrFail($idAlumno);
 
-        $sesiones = \App\Models\Sesion::where('id_grupo', $idGrupo)
-            ->orderBy('fec_sesion')
-            ->get()
-            ->map(function ($sesion) use ($idAlumno) {
-                $asistencia = \App\Models\Asistencia::where('id_sesion', $sesion->id_sesion)
-                    ->where('id_alumno', $idAlumno)
-                    ->first();
+        $filtroDesde  = $request->query('desde', '');
+        $filtroHasta  = $request->query('hasta', '');
+        $filtroEstado = $request->query('estado', '');
 
-                return [
-                    'sesion'      => $sesion,
-                    'asistencia'  => $asistencia,
-                    'estado'      => $asistencia?->est_asistencia ?? null,
-                    'hora'        => $asistencia?->hora_registro?->format('H:i:s') ?? '—',
-                ];
-            });
+        $errorFecha = null;
+        if ($filtroDesde && $filtroHasta && $filtroDesde > $filtroHasta) {
+            $errorFecha   = 'La fecha inicial no puede ser posterior a la fecha final.';
+            $filtroDesde  = '';
+            $filtroHasta  = '';
+        }
+
+        $query = \App\Models\Sesion::where('id_grupo', $idGrupo)->orderBy('fec_sesion');
+        if ($filtroDesde) $query->whereDate('fec_sesion', '>=', $filtroDesde);
+        if ($filtroHasta) $query->whereDate('fec_sesion', '<=', $filtroHasta);
+
+        $sesiones = $query->get()->map(function ($sesion) use ($idAlumno) {
+            $asistencia = \App\Models\Asistencia::where('id_sesion', $sesion->id_sesion)
+                ->where('id_alumno', $idAlumno)->first();
+            return [
+                'sesion'     => $sesion,
+                'asistencia' => $asistencia,
+                'estado'     => $asistencia?->est_asistencia ?? null,
+                'hora'       => $asistencia?->hora_registro?->format('H:i') ?? '—',
+            ];
+        });
+
+        if ($filtroEstado !== '') {
+            $sesiones = $sesiones->filter(fn($s) => $s['estado'] == (int) $filtroEstado);
+        }
 
         $presentes    = $sesiones->where('estado', 1)->count();
         $ausentes     = $sesiones->where('estado', 2)->count();
@@ -199,7 +221,8 @@ class ReporteWebController extends Controller
 
         return view('modules.reportes.detalle_alumno', compact(
             'grupo', 'alumno', 'sesiones',
-            'presentes', 'ausentes', 'justificadas', 'total', 'porcentaje'
+            'presentes', 'ausentes', 'justificadas', 'total', 'porcentaje',
+            'filtroDesde', 'filtroHasta', 'filtroEstado', 'errorFecha'
         ));
     }
 }
