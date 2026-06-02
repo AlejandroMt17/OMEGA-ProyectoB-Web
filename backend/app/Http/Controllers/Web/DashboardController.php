@@ -184,7 +184,8 @@ class DashboardController extends Controller
                     $enRiesgoProyectado = ($ausentes + 1) > $faltasPermProyect;
                 }
 
-                if (!$perdio && $pct > 90.0 && !$enRiesgoProyectado) continue;
+                // Un alumno entra en riesgo solo si está a 5% o menos por encima del mínimo del rubro principal
+                if (!$perdio && $pct > ($pctPrincipal + 5.0) && !$enRiesgoProyectado) continue;
 
                 if ($perdio || ($faltasRestantes <= 2 && $faltasPermitidas > 0) || $enRiesgoProyectado) {
                     // Calcular a qué rubro tiene derecho según su porcentaje actual
