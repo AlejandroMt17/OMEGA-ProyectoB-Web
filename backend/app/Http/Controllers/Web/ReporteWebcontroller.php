@@ -195,6 +195,7 @@ class ReporteWebController extends Controller
         $total = $sesionesIds->count();
 
         $alumnos = GrupoAlumno::where('id_grupo', $idGrupo)->with('alumno')->get()
+            ->filter(fn($ga) => $ga->alumno !== null)
             ->map(function ($ga) use ($sesionesIds, $total) {
                 $al = $ga->alumno;
                 $p  = Asistencia::whereIn('id_sesion', $sesionesIds)->where('id_alumno', $al->id_usuario)->where('est_asistencia', 1)->count();
@@ -202,14 +203,14 @@ class ReporteWebController extends Controller
                 $j  = Asistencia::whereIn('id_sesion', $sesionesIds)->where('id_alumno', $al->id_usuario)->where('est_asistencia', 3)->count();
                 $pct = $total > 0 ? round((($p + $j) / $total) * 100, 1) : 0;
                 return [
-                    'id'       => $al->id_usuario,
-                    'nombre'   => $al->ap_pat . ' ' . $al->ap_mat . ', ' . $al->nombre,
-                    'email'    => $al->email,
-                    'p'        => $p,
-                    'a'        => $a,
-                    'j'        => $j,
-                    'pct'      => $pct,
-                    'url'      => route('ca.reportes.alumno', [$idGrupo, $al->id_usuario]),
+                    'id'     => $al->id_usuario,
+                    'nombre' => trim($al->ap_pat . ' ' . $al->ap_mat . ', ' . $al->nombre),
+                    'email'  => $al->email ?? '',
+                    'p'      => (int) $p,
+                    'a'      => (int) $a,
+                    'j'      => (int) $j,
+                    'pct'    => (float) $pct,
+                    'url'    => route('ca.reportes.alumno', [$idGrupo, $al->id_usuario]),
                 ];
             });
 
