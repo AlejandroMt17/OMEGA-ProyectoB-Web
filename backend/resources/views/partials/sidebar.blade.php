@@ -32,24 +32,34 @@
 
     {{-- Institución activa --}}
     @auth
-    <div class="{{ session('institucion_id') ? 'bg-omg-nile-dark' : 'bg-orange-900' }} px-4 py-3"
-         x-show="!colapsado">
-        <p class="text-omg-kashmir text-xs">Institución activa</p>
-        @if (session('institucion_id'))
-            <p class="text-omg-white text-sm font-semibold truncate" id="sidebar-inst-nombre">{{ session('institucion_nombre') }}</p>
-        @else
-            <a href="{{ route('ca.instituciones.index') }}" id="sidebar-inst-aviso"
-               class="flex items-center gap-1.5 text-orange-300 text-xs font-semibold hover:text-white transition-colors">
-                <i class="fa-solid fa-triangle-exclamation text-xs"></i>
-                Selecciona una institución
-            </a>
-        @endif
-    </div>
-    {{-- Icono cuando colapsado --}}
-    <div class="{{ session('institucion_id') ? 'bg-omg-nile-dark' : 'bg-orange-900' }} flex justify-center py-2"
-         x-show="colapsado">
-        <i class="fa-solid fa-building text-omg-kashmir text-sm"
-           title="{{ session('institucion_nombre', 'Sin institución') }}"></i>
+    <div x-data="{
+            instNombre: '{{ session('institucion_nombre') }}',
+            instId: '{{ session('institucion_id') }}',
+            init() {
+                window.addEventListener('inst-seleccionada', (e) => {
+                    this.instNombre = e.detail.nombre;
+                    this.instId     = e.detail.id;
+                });
+            }
+         }">
+        {{-- Expandido --}}
+        <div :class="instId ? 'bg-omg-nile-dark' : 'bg-orange-900'" class="px-4 py-3" x-show="!colapsado">
+            <p class="text-omg-kashmir text-xs">Institución activa</p>
+            <template x-if="instId">
+                <p class="text-omg-white text-sm font-semibold truncate" x-text="instNombre"></p>
+            </template>
+            <template x-if="!instId">
+                <a href="{{ route('ca.instituciones.index') }}"
+                   class="flex items-center gap-1.5 text-orange-300 text-xs font-semibold hover:text-white transition-colors">
+                    <i class="fa-solid fa-triangle-exclamation text-xs"></i>
+                    Selecciona una institución
+                </a>
+            </template>
+        </div>
+        {{-- Colapsado --}}
+        <div :class="instId ? 'bg-omg-nile-dark' : 'bg-orange-900'" class="flex justify-center py-2" x-show="colapsado">
+            <i class="fa-solid fa-building text-omg-kashmir text-sm" :title="instNombre || 'Sin institución'"></i>
+        </div>
     </div>
     @endauth
 

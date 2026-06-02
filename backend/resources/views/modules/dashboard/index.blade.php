@@ -200,21 +200,11 @@
                     });
                     if (res.ok) {
                         const data = await res.json();
-                        // Desmarcar todas las demás instituciones
-                        document.querySelectorAll('[data-inst-badge]').forEach(el => {
-                            if (el !== $el.closest('[data-inst-badge]')) {
-                                Alpine.$data(el).seleccionada = false;
-                            }
-                        });
                         this.seleccionada = true;
-                        // Actualizar sidebar sin recargar
-                        const sidebarNombre = document.getElementById('sidebar-inst-nombre');
-                        const sidebarAviso  = document.getElementById('sidebar-inst-aviso');
-                        if (sidebarNombre) {
-                            sidebarNombre.textContent = data.nombre;
-                            sidebarNombre.closest('div')?.classList.replace('bg-orange-900', 'bg-omg-nile-dark');
-                        }
-                        if (sidebarAviso) sidebarAviso.style.display = 'none';
+                        // Desmarcar todas las demás instituciones via evento
+                        window.dispatchEvent(new CustomEvent('inst-seleccionada', {
+                            detail: { id: data.id, nombre: data.nombre }
+                        }));
                     }
                     this.cargando = false;
                 }
