@@ -78,9 +78,10 @@
                                                 b._x_dataStack[0].activa = false;
                                             });
                                             activa = true;
-                                            // Actualizar sidebar
-                                            const instNombre = document.getElementById('sidebar-inst-nombre');
-                                            if (instNombre) instNombre.textContent = d.nombre;
+                                            // Disparar evento para que el sidebar se actualice
+                                            window.dispatchEvent(new CustomEvent('inst-seleccionada', {
+                                                detail: { id: d.id, nombre: d.nombre }
+                                            }));
                                         }
                                     });
                                 "
