@@ -184,7 +184,33 @@
          x-data="{ abierto: false }">
 
         {{-- Header institución (siempre visible) --}}
-        <div class="flex items-center gap-4 px-5 py-4 bg-omg-chardon">
+        <div class="flex items-center gap-4 px-5 py-4 bg-omg-chardon"
+             x-data="{
+                seleccionada: {{ session('institucion_id') == $inst->id_institucion ? 'true' : 'false' }},
+                cargando: false,
+                async seleccionar() {
+                    this.cargando = true;
+                    const res = await fetch('{{ route('ca.instituciones.seleccionar', $inst->id_institucion) }}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        }
+                    });
+                    if (res.ok) {
+                        // Desmarcar todas las demás instituciones
+                        document.querySelectorAll('[data-inst-badge]').forEach(el => {
+                            el.dataset.instSelected = 'false';
+                            el._x_dataStack?.[0] && (el._x_dataStack[0].seleccionada = false);
+                        });
+                        this.seleccionada = true;
+                    }
+                    this.cargando = false;
+                }
+             }"
+             data-inst-badge
+             :data-inst-selected="seleccionada">
             {{-- Logo --}}
             <div class="w-10 h-10 rounded-lg border border-omg-kashmir-dark bg-white flex items-center justify-center overflow-hidden flex-shrink-0">
                 @if ($inst->logo)
@@ -204,13 +230,19 @@
             </div>
             {{-- Acciones --}}
             <div class="flex items-center gap-2">
-                <form method="POST" action="{{ route('ca.instituciones.seleccionar', $inst->id_institucion) }}">
-                    @csrf
-                    <button type="submit"
-                        class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-coral hover:bg-omg-coral-dark text-white rounded-lg text-xs font-body transition-colors">
-                        <i class="fa-solid fa-check"></i> Seleccionar
+                {{-- Botón seleccionar / badge seleccionada --}}
+                <template x-if="!seleccionada">
+                    <button @click="seleccionar()" :disabled="cargando"
+                        class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-coral hover:bg-omg-coral-dark text-white rounded-lg text-xs font-body transition-colors disabled:opacity-60">
+                        <i class="fa-solid" :class="cargando ? 'fa-spinner fa-spin' : 'fa-check'"></i>
+                        <span x-text="cargando ? 'Guardando...' : 'Seleccionar'"></span>
                     </button>
-                </form>
+                </template>
+                <template x-if="seleccionada">
+                    <span class="flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs font-body">
+                        <i class="fa-solid fa-circle-check"></i> Seleccionada
+                    </span>
+                </template>
                 {{-- Botón desplegar grupos --}}
                 <button @click="abierto = !abierto"
                     class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-pastel hover:bg-omg-nile hover:text-white text-omg-nile rounded-lg text-xs font-body transition-colors">
