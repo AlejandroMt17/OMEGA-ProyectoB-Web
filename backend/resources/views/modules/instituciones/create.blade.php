@@ -20,7 +20,8 @@
         { nombre: 'Extraordinario', porcentaje: 60 }
     ],
     periodos: [],
-    periodoPersonalizado: '',
+    periodoFechaInicio: '',
+    periodoFechaFin: '',
     mostrarPersonalizado: false,
 
     agregarRubro() {
@@ -46,6 +47,22 @@
             'Ene-Jun ' + (anio + 1),
             'Ago-Dic ' + (anio + 1),
         ];
+    },
+    get periodoNombreGenerado() {
+        if (!this.periodoFechaInicio || !this.periodoFechaFin) return '';
+        const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                       'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+        const [anioI, mesI] = this.periodoFechaInicio.split('-').map(Number);
+        const [anioF, mesF] = this.periodoFechaFin.split('-').map(Number);
+        const nomI = meses[mesI - 1];
+        const nomF = meses[mesF - 1];
+        return anioI === anioF
+            ? `${nomI} - ${nomF} ${anioI}`
+            : `${nomI} ${anioI} - ${nomF} ${anioF}`;
+    },
+    get periodoFechasValidas() {
+        return this.periodoFechaInicio !== '' && this.periodoFechaFin !== ''
+            && this.periodoFechaFin >= this.periodoFechaInicio;
     },
     paso1Valido() {
         return this.nombre.trim().length >= 3 && this.logo.trim().length >= 20;
@@ -201,22 +218,61 @@
                 </template>
             </div>
 
-            {{-- Periodo personalizado --}}
+            {{-- Periodo personalizado con selector de fechas --}}
             <div class="mb-4">
                 <button type="button" @click="mostrarPersonalizado = !mostrarPersonalizado"
                         class="text-xs font-body text-omg-nile hover:underline flex items-center gap-1">
-                    <i class="fa-solid fa-plus text-xs"></i>
+                    <i class="fa-solid fa-plus text-xs" :class="mostrarPersonalizado ? 'rotate-45' : ''"></i>
                     Agregar periodo personalizado
                 </button>
-                <div x-show="mostrarPersonalizado" class="flex gap-2 mt-2">
-                    <input type="text" x-model="periodoPersonalizado"
-                           placeholder="Ej: Feb-Jul 2026"
-                           class="flex-1 px-3 py-1.5 bg-white border border-omg-kashmir rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile"/>
-                    <button type="button"
-                            @click="if(periodoPersonalizado.trim() && !periodos.map(p=>p.toLowerCase()).includes(periodoPersonalizado.trim().toLowerCase())) { agregarPeriodo(periodoPersonalizado); periodoPersonalizado = ''; mostrarPersonalizado = false; } else if(periodos.map(p=>p.toLowerCase()).includes(periodoPersonalizado.trim().toLowerCase())) { alert('Este periodo ya fue agregado') }"
-                            class="px-3 py-1.5 bg-omg-coral text-white rounded-lg text-sm font-body hover:bg-omg-coral-dark transition-colors">
-                        Agregar
-                    </button>
+
+                <div x-show="mostrarPersonalizado" x-transition class="mt-3 space-y-2 p-3 bg-omg-chardon rounded-xl border border-omg-kashmir-dark">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-body text-omg-dark mb-1">
+                                Fecha de inicio <span class="text-red-500">*</span>
+                            </label>
+                            <input type="date" x-model="periodoFechaInicio"
+                                   min="{{ now()->year }}-01-01"
+                                   max="{{ now()->year + 1 }}-12-31"
+                                   class="w-full px-3 py-1.5 bg-white border border-omg-kashmir rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile"/>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-body text-omg-dark mb-1">
+                                Fecha de término <span class="text-red-500">*</span>
+                            </label>
+                            <input type="date" x-model="periodoFechaFin"
+                                   :min="periodoFechaInicio || '{{ now()->year }}-01-01'"
+                                   max="{{ now()->year + 1 }}-12-31"
+                                   class="w-full px-3 py-1.5 bg-white border border-omg-kashmir rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile"/>
+                        </div>
+                    </div>
+
+                    <div x-show="periodoNombreGenerado"
+                         class="flex items-center gap-2 bg-white border border-omg-kashmir-dark rounded-lg px-3 py-1.5 text-xs font-body text-omg-dark">
+                        <i class="fa-solid fa-calendar-check text-omg-nile text-xs"></i>
+                        <span>Periodo: <strong x-text="periodoNombreGenerado" class="text-omg-nile"></strong></span>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button type="button"
+                                :disabled="!periodoFechasValidas"
+                                @click="
+                                    if (periodoFechasValidas && periodoNombreGenerado) {
+                                        if (!periodos.map(p=>p.toLowerCase()).includes(periodoNombreGenerado.toLowerCase())) {
+                                            agregarPeriodo(periodoNombreGenerado);
+                                            periodoFechaInicio = ''; periodoFechaFin = '';
+                                            mostrarPersonalizado = false;
+                                        } else {
+                                            alert('Este periodo ya fue agregado');
+                                        }
+                                    }
+                                "
+                                :class="periodoFechasValidas ? 'bg-omg-coral hover:bg-omg-coral-dark text-white' : 'bg-omg-chardon text-omg-kashmir cursor-not-allowed'"
+                                class="px-3 py-1.5 rounded-lg text-xs font-body transition-colors">
+                            Agregar
+                        </button>
+                    </div>
                 </div>
             </div>
 

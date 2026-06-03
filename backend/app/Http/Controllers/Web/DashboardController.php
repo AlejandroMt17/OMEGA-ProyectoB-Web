@@ -20,27 +20,28 @@ class DashboardController extends Controller
 
     public function index(\Illuminate\Http\Request $request)
     {
-        $docente    = Auth::user();
-        $gruposIds  = $this->grupos->todosPorDocente($docente->id_usuario)->pluck('id_grupo');
+        $docente   = Auth::user();
+        $gruposAll = $this->grupos->todosPorDocente($docente->id_usuario);
+        $gruposIds = $gruposAll->pluck('id_grupo');
 
-        // Instituciones con grupos
-        $instituciones = $this->instituciones->todasPorDocente($docente->id_usuario)
-            ->map(function ($inst) {
-                $grupos = $this->grupos->todosPorInstitucion($inst->id_institucion)
-                    ->map(function ($grupo) {
-                        $sesionActiva = Sesion::where('id_grupo', $grupo->id_grupo)
-                            ->where('est_sesion', 1)->first();
-                        return [
-                            'grupo'        => $grupo,
-                            'sesionActiva' => $sesionActiva,
-                            'totalAlumnos' => $grupo->grupoAlumnos()->count(),
-                        ];
-                    });
-                return ['institucion' => $inst, 'grupos' => $grupos];
-            });
+        // Filtros GET (antes de calcular métricas para usarlos en las tarjetas)
+        $filtroInst   = $request->query('inst', '');
+        $filtroGrupo  = $request->query('grupo', '');
+        $filtroEstado = $request->query('estado', '');
 
-        // Sesiones de hoy
-        $sesionesHoy = Sesion::whereIn('id_grupo', $gruposIds)
+        // Subconjunto de grupos para las tarjetas de resumen
+        if ($filtroGrupo) {
+            $gruposIdsFiltrados = collect([$filtroGrupo]);
+        } elseif ($filtroInst) {
+            $gruposIdsFiltrados = $gruposAll
+                ->filter(fn($g) => $g->id_institucion == $filtroInst)
+                ->pluck('id_grupo');
+        } else {
+            $gruposIdsFiltrados = $gruposIds;
+        }
+
+        // Sesiones de hoy (filtradas)
+        $sesionesHoy = Sesion::whereIn('id_grupo', $gruposIdsFiltrados)
             ->whereDate('fec_sesion', today())
             ->with('grupo')
             ->orderByDesc('hora_apertura')
@@ -55,32 +56,30 @@ class DashboardController extends Controller
                 ];
             });
 
-        // RF-76: Alumnos en riesgo
+        // RF-76: Alumnos en riesgo (global, para los selects y la sección completa)
         $alumnosEnRiesgo = $this->calcularAlumnosEnRiesgo($gruposIds);
 
-        // Contadores
-        $aulasActivas      = $gruposIds->count();
-        $justificantesPend = Asistencia::whereHas('sesion', fn($q) => $q->whereIn('id_grupo', $gruposIds))
+        // Tarjetas de resumen (valores sincronizados con el filtro activo)
+        $aulasActivas      = $gruposIdsFiltrados->count();
+        $justificantesPend = Asistencia::whereHas('sesion', fn($q) => $q->whereIn('id_grupo', $gruposIdsFiltrados))
             ->where('est_asistencia', 2)->count();
 
-        // Filtros GET
-        $filtroInst   = $request->query('inst', '');
-        $filtroGrupo  = $request->query('grupo', '');
-        $filtroEstado = $request->query('estado', '');
-
+        // Filtrar alumnos en riesgo según los tres filtros
         $alumnosFiltrados = $alumnosEnRiesgo;
         if ($filtroInst)   $alumnosFiltrados = $alumnosFiltrados->filter(fn($i) => $i['id_institucion'] == $filtroInst);
         if ($filtroGrupo)  $alumnosFiltrados = $alumnosFiltrados->filter(fn($i) => $i['grupo']->id_grupo == $filtroGrupo);
         if ($filtroEstado === 'excedido') $alumnosFiltrados = $alumnosFiltrados->filter(fn($i) => $i['perdio']);
         if ($filtroEstado === 'riesgo')   $alumnosFiltrados = $alumnosFiltrados->filter(fn($i) => !$i['perdio']);
 
-        $riesgoPorGrupo = $alumnosFiltrados->groupBy(fn($i) => $i['grupo']->id_grupo);
+        $riesgoPorGrupo      = $alumnosFiltrados->groupBy(fn($i) => $i['grupo']->id_grupo);
+        $countRiesgoFiltrado = $alumnosFiltrados->count();
 
-        // Instituciones para el select: TODAS las del docente
-        $instSelect = $instituciones->map(fn($i) => [
-            'id'     => $i['institucion']->id_institucion,
-            'nombre' => $i['institucion']->nombre,
-        ])->values();
+        // Instituciones para el select
+        $instSelect = $this->instituciones->todasPorDocente($docente->id_usuario)
+            ->map(fn($inst) => [
+                'id'     => $inst->id_institucion,
+                'nombre' => $inst->nombre,
+            ])->values();
 
         // Grupos para el select (filtrados por institución)
         $gruposSelect = $alumnosEnRiesgo
@@ -91,8 +90,6 @@ class DashboardController extends Controller
                 'nombre' => $items->first()['grupo']->nombre . ' — ' . $items->first()['grupo']->materia,
             ])->values();
 
-        // Rubros para la leyenda: los de la institución filtrada,
-        // o los de la primera institución con alumnos en riesgo
         $idInstLeyenda = $filtroInst
             ?: $alumnosEnRiesgo->first()['id_institucion'] ?? null;
         $rubrosLeyenda = $idInstLeyenda
@@ -101,8 +98,8 @@ class DashboardController extends Controller
             : collect();
 
         return view('modules.dashboard.index', compact(
-            'instituciones', 'sesionesHoy', 'aulasActivas',
-            'justificantesPend', 'alumnosEnRiesgo',
+            'sesionesHoy', 'aulasActivas',
+            'justificantesPend', 'alumnosEnRiesgo', 'countRiesgoFiltrado',
             'riesgoPorGrupo', 'instSelect', 'gruposSelect',
             'filtroInst', 'filtroGrupo', 'filtroEstado',
             'rubrosLeyenda'

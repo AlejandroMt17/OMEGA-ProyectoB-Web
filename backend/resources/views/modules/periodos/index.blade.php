@@ -22,16 +22,16 @@
     </a>
 </div>
 
-
-
 {{-- Agregar periodo --}}
 @php
     $periodosExistentes = $periodos->pluck('nombre')->map(fn($n) => strtolower(trim($n)))->toArray();
+    $anioActual         = now()->year;
+    $anioSiguiente      = $anioActual + 1;
+    $hayErrorFecha      = $errors->has('fecha_inicio') || $errors->has('fecha_fin');
 @endphp
 <div class="bg-white rounded-xl border border-omg-kashmir-dark p-5 mb-6"
      x-data="{
-        mostrarPersonalizado: false,
-        personalizado: '',
+        mostrarPersonalizado: {{ $hayErrorFecha ? 'true' : 'false' }},
         existentes: JSON.parse('{{ addslashes(json_encode($periodosExistentes)) }}'),
         get opciones() {
             const anio = new Date().getFullYear();
@@ -52,7 +52,8 @@
                 <form x-show="!existentes.includes(op.toLowerCase())"
                       method="POST" action="{{ route('ca.periodos.store', $institucion->id_institucion) }}">
                     @csrf
-                    <input type="hidden" name="nombre" :value="op">
+                    {{-- Las opciones rápidas envían nombre directo como texto --}}
+                    <input type="hidden" name="nombre_rapido" :value="op">
                     <button type="submit"
                             class="px-3 py-1.5 border rounded-lg text-xs font-body transition-colors bg-white text-omg-nile border-omg-kashmir hover:border-omg-nile hover:bg-omg-chardon"
                             x-text="op">
@@ -67,29 +68,89 @@
         </template>
     </div>
 
-    {{-- Periodo personalizado --}}
+    {{-- Periodo personalizado con selector de fechas --}}
     <button type="button" @click="mostrarPersonalizado = !mostrarPersonalizado"
             class="text-xs font-body text-omg-nile hover:underline flex items-center gap-1 mb-3">
-        <i class="fa-solid fa-plus text-xs"></i>
+        <i class="fa-solid fa-plus text-xs" :class="mostrarPersonalizado ? 'rotate-45' : ''"></i>
         Agregar periodo personalizado
     </button>
 
-    <div x-show="mostrarPersonalizado" x-transition>
+    <div x-show="mostrarPersonalizado" x-transition
+         x-data="{
+             fechaInicio: '{{ old('fecha_inicio') }}',
+             fechaFin:    '{{ old('fecha_fin') }}',
+             get nombreGenerado() {
+                 if (!this.fechaInicio || !this.fechaFin) return '';
+                 const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                                'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+                 const [anioI, mesI] = this.fechaInicio.split('-').map(Number);
+                 const [anioF, mesF] = this.fechaFin.split('-').map(Number);
+                 const nomI = meses[mesI - 1];
+                 const nomF = meses[mesF - 1];
+                 return anioI === anioF
+                     ? `${nomI} - ${nomF} ${anioI}`
+                     : `${nomI} ${anioI} - ${nomF} ${anioF}`;
+             },
+             get fechaFinMin() {
+                 return this.fechaInicio || '{{ $anioActual }}-01-01';
+             },
+             get valido() {
+                 return this.fechaInicio !== '' && this.fechaFin !== '' && this.fechaFin >= this.fechaInicio;
+             }
+         }">
         <form method="POST" action="{{ route('ca.periodos.store', $institucion->id_institucion) }}"
-              class="flex items-end gap-3">
+              class="space-y-3 p-4 bg-omg-chardon rounded-xl border border-omg-kashmir-dark">
             @csrf
-            <div class="flex-1">
-                <input type="text" name="nombre" x-model="personalizado" required
-                       placeholder="Ej: Feb-Jul 2026"
-                       class="w-full px-3 py-2.5 bg-white border border-omg-kashmir rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile @error('nombre') border-red-400 @enderror"/>
-                @error('nombre')
-                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                @enderror
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-body text-omg-dark mb-1">
+                        Fecha de inicio <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" name="fecha_inicio" x-model="fechaInicio" required
+                           min="{{ $anioActual }}-01-01"
+                           max="{{ $anioSiguiente }}-12-31"
+                           class="w-full px-3 py-2 bg-white border border-omg-kashmir rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile @error('fecha_inicio') border-red-400 @enderror"/>
+                    @error('fecha_inicio')
+                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
+                    <label class="block text-xs font-body text-omg-dark mb-1">
+                        Fecha de término <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" name="fecha_fin" x-model="fechaFin" required
+                           :min="fechaFinMin"
+                           max="{{ $anioSiguiente }}-12-31"
+                           class="w-full px-3 py-2 bg-white border border-omg-kashmir rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile @error('fecha_fin') border-red-400 @enderror"/>
+                    @error('fecha_fin')
+                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
-            <button type="submit"
-                class="flex items-center gap-1.5 px-4 py-2.5 bg-omg-coral hover:bg-omg-coral-dark text-white rounded-lg text-sm font-body transition-colors">
-                <i class="fa-solid fa-plus"></i> Agregar
-            </button>
+
+            {{-- Preview del nombre generado --}}
+            <div x-show="nombreGenerado"
+                 class="flex items-center gap-2 bg-white border border-omg-kashmir-dark rounded-lg px-3 py-2 text-xs font-body text-omg-dark">
+                <i class="fa-solid fa-calendar-check text-omg-nile text-xs"></i>
+                <span>Periodo: <strong x-text="nombreGenerado" class="text-omg-nile"></strong></span>
+            </div>
+
+            <p class="text-xs font-body text-omg-kashmir">
+                Solo se permiten fechas entre <strong>{{ $anioActual }}-01-01</strong> y <strong>{{ $anioSiguiente }}-12-31</strong>.
+            </p>
+
+            <div class="flex items-center justify-end gap-2">
+                <button type="button"
+                        @click="mostrarPersonalizado = false; fechaInicio = ''; fechaFin = ''"
+                        class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-omg-kashmir text-omg-kashmir rounded-lg text-xs font-body hover:bg-omg-chardon transition-colors">
+                    <i class="fa-solid fa-xmark"></i> Cancelar
+                </button>
+                <button type="submit" :disabled="!valido"
+                        :class="valido ? 'bg-omg-coral hover:bg-omg-coral-dark text-white' : 'bg-omg-chardon text-omg-kashmir cursor-not-allowed'"
+                        class="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-body transition-colors">
+                    <i class="fa-solid fa-plus"></i> Agregar
+                </button>
+            </div>
         </form>
     </div>
 </div>
@@ -106,7 +167,7 @@
     <div class="divide-y divide-omg-kashmir-dark">
         @forelse ($periodos as $periodo)
             <div class="px-5 py-3 hover:bg-omg-chardon transition-colors"
-                 x-data="{ editando: false, nombre: '{{ addslashes($periodo->nombre) }}' }">
+                 x-data="{ editando: false }">
 
                 {{-- Vista normal --}}
                 <div x-show="!editando" class="flex items-center gap-3">
@@ -140,19 +201,71 @@
                     </div>
                 </div>
 
-                {{-- Vista edición --}}
-                <div x-show="editando">
-                    <form method="POST" action="{{ route('ca.periodos.update', [$institucion->id_institucion, $periodo->id_periodo]) }}">
+                {{-- Vista edición con selector de fechas --}}
+                <div x-show="editando"
+                     x-data="{
+                         fechaInicio: '',
+                         fechaFin: '',
+                         get nombreGenerado() {
+                             if (!this.fechaInicio || !this.fechaFin) return '';
+                             const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                                            'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+                             const [anioI, mesI] = this.fechaInicio.split('-').map(Number);
+                             const [anioF, mesF] = this.fechaFin.split('-').map(Number);
+                             const nomI = meses[mesI - 1];
+                             const nomF = meses[mesF - 1];
+                             return anioI === anioF
+                                 ? `${nomI} - ${nomF} ${anioI}`
+                                 : `${nomI} ${anioI} - ${nomF} ${anioF}`;
+                         },
+                         get valido() {
+                             return this.fechaInicio !== '' && this.fechaFin !== '' && this.fechaFin >= this.fechaInicio;
+                         }
+                     }">
+                    <form method="POST" action="{{ route('ca.periodos.update', [$institucion->id_institucion, $periodo->id_periodo]) }}"
+                          class="space-y-2">
                         @csrf @method('PATCH')
-                        <div class="flex flex-wrap items-center gap-2">
-                            <input type="text" name="nombre" x-model="nombre" required
-                                   class="flex-1 min-w-0 px-3 py-1.5 border border-omg-nile rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile"/>
-                            <button type="button" @click="editando = false; nombre = '{{ addslashes($periodo->nombre) }}'"
-                                class="flex items-center gap-1 px-2.5 py-1.5 bg-omg-chardon text-omg-nile rounded-lg text-xs font-body hover:bg-omg-pastel transition-colors whitespace-nowrap">
+
+                        <p class="text-xs font-body text-omg-kashmir">
+                            Periodo actual: <strong class="text-omg-nile">{{ $periodo->nombre }}</strong>
+                        </p>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-body text-omg-dark mb-1">
+                                    Nueva fecha de inicio <span class="text-red-500">*</span>
+                                </label>
+                                <input type="date" name="fecha_inicio" x-model="fechaInicio" required
+                                       min="{{ $anioActual }}-01-01"
+                                       max="{{ $anioSiguiente }}-12-31"
+                                       class="w-full px-3 py-1.5 border border-omg-nile rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile"/>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-body text-omg-dark mb-1">
+                                    Nueva fecha de término <span class="text-red-500">*</span>
+                                </label>
+                                <input type="date" name="fecha_fin" x-model="fechaFin" required
+                                       :min="fechaInicio || '{{ $anioActual }}-01-01'"
+                                       max="{{ $anioSiguiente }}-12-31"
+                                       class="w-full px-3 py-1.5 border border-omg-nile rounded-lg text-sm font-body focus:outline-none focus:ring-2 focus:ring-omg-nile"/>
+                            </div>
+                        </div>
+
+                        <div x-show="nombreGenerado"
+                             class="flex items-center gap-2 bg-omg-chardon border border-omg-kashmir-dark rounded-lg px-3 py-1.5 text-xs font-body text-omg-dark">
+                            <i class="fa-solid fa-calendar-check text-omg-nile text-xs"></i>
+                            <span>Nuevo nombre: <strong x-text="nombreGenerado" class="text-omg-nile"></strong></span>
+                        </div>
+
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <button type="button"
+                                    @click="editando = false; fechaInicio = ''; fechaFin = ''"
+                                    class="flex items-center gap-1 px-2.5 py-1.5 bg-omg-chardon text-omg-nile rounded-lg text-xs font-body hover:bg-omg-pastel transition-colors whitespace-nowrap">
                                 <i class="fa-solid fa-xmark"></i> Cancelar
                             </button>
-                            <button type="submit"
-                                class="flex items-center gap-1 px-2.5 py-1.5 bg-omg-coral text-white rounded-lg text-xs font-body hover:bg-omg-coral-dark transition-colors whitespace-nowrap">
+                            <button type="submit" :disabled="!valido"
+                                    :class="valido ? 'bg-omg-coral hover:bg-omg-coral-dark text-white' : 'bg-omg-chardon text-omg-kashmir cursor-not-allowed'"
+                                    class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-body transition-colors whitespace-nowrap">
                                 <i class="fa-solid fa-check"></i> Guardar
                             </button>
                         </div>

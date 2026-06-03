@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Institucion;
+use App\Models\Sesion;
+use App\Repositories\Contracts\GrupoRepositoryInterface;
 use App\Repositories\Contracts\InstitucionRepositoryInterface;
 use App\Services\InstitucionService;
 use Illuminate\Http\Request;
@@ -17,13 +19,29 @@ use Illuminate\Validation\ValidationException;
 class InstitucionWebController extends Controller
 {
     public function __construct(
-        private readonly InstitucionService            $instituciones,
+        private readonly InstitucionService             $instituciones,
         private readonly InstitucionRepositoryInterface $repo,
+        private readonly GrupoRepositoryInterface       $grupos,
     ) {}
 
     public function index()
     {
-        $instituciones = $this->repo->todasPorDocente(Auth::user()->id_usuario);
+        $docente       = Auth::user();
+        $instituciones = $this->repo->todasPorDocente($docente->id_usuario)
+            ->map(function ($inst) {
+                $grupos = $this->grupos->todosPorInstitucion($inst->id_institucion)
+                    ->map(function ($grupo) {
+                        $sesionActiva = Sesion::where('id_grupo', $grupo->id_grupo)
+                            ->where('est_sesion', 1)->first();
+                        return [
+                            'grupo'        => $grupo,
+                            'sesionActiva' => $sesionActiva,
+                            'totalAlumnos' => $grupo->grupoAlumnos()->count(),
+                        ];
+                    });
+                return ['institucion' => $inst, 'grupos' => $grupos];
+            });
+
         return view('modules.instituciones.index', compact('instituciones'));
     }
 

@@ -33,13 +33,13 @@
         </div>
     </div>
     <a href="#alumnos-riesgo"
-       class="bg-white rounded-xl border {{ $alumnosEnRiesgo->count() > 0 ? 'border-orange-300' : 'border-omg-kashmir-dark' }} p-5 flex items-center gap-4 hover:shadow-sm transition-shadow">
-        <div class="w-12 h-12 {{ $alumnosEnRiesgo->count() > 0 ? 'bg-orange-50' : 'bg-omg-chardon' }} rounded-xl flex items-center justify-center flex-shrink-0">
-            <i class="fa-solid fa-triangle-exclamation {{ $alumnosEnRiesgo->count() > 0 ? 'text-orange-500' : 'text-omg-coral' }} fa-lg"></i>
+       class="bg-white rounded-xl border {{ $countRiesgoFiltrado > 0 ? 'border-orange-300' : 'border-omg-kashmir-dark' }} p-5 flex items-center gap-4 hover:shadow-sm transition-shadow">
+        <div class="w-12 h-12 {{ $countRiesgoFiltrado > 0 ? 'bg-orange-50' : 'bg-omg-chardon' }} rounded-xl flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-triangle-exclamation {{ $countRiesgoFiltrado > 0 ? 'text-orange-500' : 'text-omg-coral' }} fa-lg"></i>
         </div>
         <div>
-            <p class="text-2xl font-heading font-semibold {{ $alumnosEnRiesgo->count() > 0 ? 'text-orange-500' : 'text-omg-nile' }}">
-                {{ $alumnosEnRiesgo->count() }}
+            <p class="text-2xl font-heading font-semibold {{ $countRiesgoFiltrado > 0 ? 'text-orange-500' : 'text-omg-nile' }}">
+                {{ $countRiesgoFiltrado }}
             </p>
             <p class="text-xs font-body text-omg-kashmir">En riesgo</p>
         </div>
@@ -98,13 +98,13 @@
 @endif
 
 @if ($alumnosEnRiesgo->count() > 0)
-<div class="bg-white rounded-xl border border-orange-200 overflow-hidden mb-6">
+<div id="alumnos-riesgo" class="bg-white rounded-xl border border-orange-200 overflow-hidden mb-6">
 
     {{-- Header --}}
     <div class="flex items-center gap-3 px-5 py-4 bg-orange-50 border-b border-orange-200">
         <i class="fa-solid fa-triangle-exclamation text-orange-500"></i>
         <h2 class="text-base font-heading font-semibold text-orange-700">
-            Alumnos en Riesgo ({{ $alumnosEnRiesgo->count() }})
+            Alumnos en Riesgo ({{ $countRiesgoFiltrado }})
         </h2>
     </div>
 
@@ -172,138 +172,6 @@
 
 </div>
 @endif
-
-
-{{-- Mis Instituciones (acordeón — grupos ocultos por defecto) --}}
-<div class="mb-2">
-    <h2 class="text-base font-heading font-semibold text-omg-nile mb-3">Mis Instituciones</h2>
-</div>
-@forelse ($instituciones as $item)
-    @php $inst = $item['institucion']; $grupos = $item['grupos']; @endphp
-    <div class="bg-white rounded-xl border border-omg-kashmir-dark mb-4 overflow-hidden"
-         x-data="{ abierto: false }">
-
-        {{-- Header institución (siempre visible) --}}
-        <div class="flex items-center gap-4 px-5 py-4 bg-omg-chardon"
-             x-data="{
-                seleccionada: {{ session('institucion_id') == $inst->id_institucion ? 'true' : 'false' }},
-                cargando: false,
-                async seleccionar() {
-                    this.cargando = true;
-                    const res = await fetch('{{ route('ca.instituciones.seleccionar', $inst->id_institucion) }}', {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json',
-                        }
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        this.seleccionada = true;
-                        // Desmarcar todas las demás instituciones via evento
-                        window.dispatchEvent(new CustomEvent('inst-seleccionada', {
-                            detail: { id: data.id, nombre: data.nombre }
-                        }));
-                    }
-                    this.cargando = false;
-                }
-             }"
-             data-inst-badge
-             :data-inst-selected="seleccionada">
-            {{-- Logo --}}
-            <div class="w-10 h-10 rounded-lg border border-omg-kashmir-dark bg-white flex items-center justify-center overflow-hidden flex-shrink-0">
-                @if ($inst->logo)
-                    <img src="{{ $inst->logo }}" alt="{{ $inst->nombre }}" class="h-8 w-auto object-contain"
-                         onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-                    <div style="display:none" class="items-center justify-center w-full h-full">
-                        <i class="fa-solid fa-building-columns text-omg-kashmir text-sm"></i>
-                    </div>
-                @else
-                    <i class="fa-solid fa-building-columns text-omg-kashmir text-sm"></i>
-                @endif
-            </div>
-            {{-- Nombre y contador --}}
-            <div class="flex-1">
-                <p class="text-sm font-heading font-semibold text-omg-nile">{{ $inst->nombre }}</p>
-                <p class="text-xs font-body text-omg-kashmir">{{ $grupos->count() }} grupo(s)</p>
-            </div>
-            {{-- Acciones --}}
-            <div class="flex items-center gap-2">
-                {{-- Botón seleccionar / badge seleccionada --}}
-                <template x-if="!seleccionada">
-                    <button @click="seleccionar()" :disabled="cargando"
-                        class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-coral hover:bg-omg-coral-dark text-white rounded-lg text-xs font-body transition-colors disabled:opacity-60">
-                        <i class="fa-solid" :class="cargando ? 'fa-spinner fa-spin' : 'fa-check'"></i>
-                        <span x-text="cargando ? 'Guardando...' : 'Seleccionar'"></span>
-                    </button>
-                </template>
-                <template x-if="seleccionada">
-                    <span class="flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs font-body">
-                        <i class="fa-solid fa-circle-check"></i> Seleccionada
-                    </span>
-                </template>
-                {{-- Botón desplegar grupos --}}
-                <button @click="abierto = !abierto"
-                    class="flex items-center gap-1.5 px-3 py-1.5 bg-omg-pastel hover:bg-omg-nile hover:text-white text-omg-nile rounded-lg text-xs font-body transition-colors">
-                    <i class="fa-solid fa-layer-group"></i>
-                    <span x-text="abierto ? 'Ocultar grupos' : 'Ver grupos'"></span>
-                    <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200"
-                       :class="abierto ? 'rotate-180' : ''"></i>
-                </button>
-            </div>
-        </div>
-
-        {{-- Grupos (colapsados por defecto) --}}
-        <div x-show="abierto" x-collapse>
-            @if ($grupos->count() > 0)
-                <div class="divide-y divide-omg-kashmir-dark">
-                    @foreach ($grupos as $g)
-                        @php $grupo = $g['grupo']; @endphp
-                        <div class="flex items-center px-5 py-3 hover:bg-omg-chardon transition-colors">
-                            <div class="flex-1">
-                                <p class="text-sm font-body font-semibold text-omg-dark">
-                                    {{ $grupo->nombre }} — {{ $grupo->materia }}
-                                </p>
-                                <p class="text-xs font-body text-omg-kashmir">
-                                    {{ $grupo->periodo }} · {{ $g['totalAlumnos'] }} alumno(s)
-                                </p>
-                            </div>
-                            @if ($g['sesionActiva'])
-                                <span class="bg-green-100 text-green-600 text-xs font-body px-2 py-0.5 rounded-full mr-3 animate-pulse">
-                                    EN VIVO
-                                </span>
-                            @endif
-                            <div class="flex items-center gap-2">
-                                <a href="{{ route('ca.instituciones.ir', [$inst->id_institucion, 'destino' => route('ca.grupos.sesiones', $grupo)]) }}"
-                                   class="flex items-center gap-1 px-3 py-1.5 bg-omg-nile hover:bg-omg-nile-dark text-white rounded-lg text-xs font-body transition-colors">
-                                    <i class="fa-solid fa-calendar-check"></i> Sesiones
-                                </a>
-                                <a href="{{ route('ca.instituciones.ir', [$inst->id_institucion, 'destino' => route('ca.grupos.alumnos', $grupo)]) }}"
-                                   class="flex items-center gap-1 px-3 py-1.5 bg-omg-pastel hover:bg-omg-nile hover:text-white text-omg-nile rounded-lg text-xs font-body transition-colors">
-                                    <i class="fa-solid fa-users"></i> Alumnos
-                                </a>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            @else
-                <div class="px-5 py-6 text-center">
-                    <p class="text-sm font-body text-omg-kashmir">Sin grupos en esta institución</p>
-                </div>
-            @endif
-        </div>
-    </div>
-@empty
-    <div class="bg-white rounded-xl border border-omg-kashmir-dark p-12 text-center">
-        <i class="fa-solid fa-building-columns text-omg-kashmir fa-2x mb-3"></i>
-        <p class="text-sm font-body text-omg-kashmir">No tienes instituciones registradas</p>
-        <a href="{{ route('ca.instituciones.create') }}"
-           class="inline-flex items-center gap-1.5 mt-3 px-4 py-2 bg-omg-coral text-white rounded-lg text-sm font-body">
-            <i class="fa-solid fa-plus"></i> Nueva institución
-        </a>
-    </div>
-@endforelse
 
 
 @endsection
